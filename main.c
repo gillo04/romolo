@@ -5,6 +5,7 @@
 #include "log.h"
 #include "lexer.h"
 #include "data-structures.h"
+#include "parser.h"
 
 int main(int argc, char* argv[]) {
   char* source_code = load(argc, argv);
@@ -16,7 +17,13 @@ int main(int argc, char* argv[]) {
   if (tokens == 0) {
     return 1;
   }
-  //print_tokens(tokens);
+  // print_tokens(tokens);
+  
+  Ast ast = parser(tokens);
+  if (ast.node_type == 0) {
+    return 1;
+  }  
+  print_ast(&ast, 0);
 
   free(source_code);
   free_tokens(tokens);

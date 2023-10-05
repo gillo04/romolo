@@ -1,5 +1,5 @@
 run: all
-	./romolo examples/lexing-test.c
+	./romolo examples/arithmetic.c
 
 all:
 	gcc -o romolo *.c

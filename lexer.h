@@ -8,12 +8,11 @@ enum {
   T_PUNCTUATOR
 };
 
-
 typedef struct {
   int type;
   union {
-    long long num;
     char* str;
+    long long num;
   } val;
   int line;
 } Token;
