@@ -6,14 +6,14 @@ char* load(int argc, char* argv[]) {
   FILE* ptr;
 
   if (argc < 2) {
-    printf("No file inputted\n");
+    printf("Loader error:\tNo file inputted\n");
     return 0;
   } else {
     ptr = fopen(argv[1], "r");
   }
 
   if (NULL == ptr) {
-    printf("File can't be opened \n");
+    printf("Loader error:\tFile can't be opened \n");
     return 0;
   }
 
@@ -67,7 +67,7 @@ void save(int argc, char* argv[], char* src) {
   file = fopen(filename, "w");
   
   if (file == NULL) {
-      printf("Failed to open the file.\n");
+      printf("Loader error:\tFailed to open the file.\n");
       return;
   }
   

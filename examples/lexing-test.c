@@ -1,11 +1,45 @@
-int main() {
-  unsigned long int foo_BAR2000 = 1234+0x89aB   -   0b11010 * 'A';
-  const char* str = "Hello world";
+// Keywords
+auto break case char
+const continue default do
+double else enum extern
+float for goto if
+inline int long register
+restrict return short signed
+sizeof static struct switch
+typedef union unsigned void
+volatile while _Alignas _Alignof
+_Atomic _Bool _Complex _Generic
+_Imaginary _Noreturn _Static_assert _Thread_local
 
-  func(5, foo_bar);
-  if (a >= 5) {
-    return 5;
-  } else if (a > = 7) {
-    return 6;
-  }
-}
+// Identifiers
+HelloWorld _helloWorld hello_world hello4you_
+
+// Integer constants
+123 0123 0x123 0X123 0
+
+// Character constants
+'A' '\'' ' '  '"'  '\?' '\n' '\a' '\x123' '\123'
+
+// String literals 
+"Hello\x20world" "'" "\"" 
+
+// Punctuators
+[ ] ( ) { } . ->
+++ -- & * + - ~ !
+/ % << >> < > <= >= == != ^ | && ||
+? : ; ...
+= *= /= %= += -= <<= >>= &= ^= |=
+, # ##
+<: :> <% %> %: %:%:
+
+// Comments
+// hello /*
+*/
+
+hel/*foo*/lo
+
+/* This
+ * is a
+ * multiline
+ * comment
+ */

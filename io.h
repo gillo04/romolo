@@ -1,3 +1,4 @@
+#pragma once
 // Loads source code from file specified in command line arguments
 char* load(int argc, char* argv[]);
 
