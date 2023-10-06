@@ -6,6 +6,11 @@ enum {
   A_IDENTIFIER,
   A_CONSTANT,
   A_STRING_LITERAL,
+  A_MEMBER,
+  A_MEMBER_DEREFERENCE,
+  A_POST_INCREMENT,
+  A_POST_DECREMENT,
+  A_ARRAY_SUBSCRIPT,
 };
 
 enum {
@@ -22,18 +27,20 @@ enum {
   E_ULONG_LONG
 };
 
+typedef struct Ast_s Ast;
+
 typedef union {
-  void* ptr;
+  Ast* ptr;
   char* str;
   long long num;
 } Arg;
 
-typedef struct {
+struct Ast_s {
   int node_type;
   int exp_type; // Expressio  type
   Arg a1;
   Arg a2;
   Arg a3;
-} Ast;
+};
 
 Ast parser(Token* tokens);

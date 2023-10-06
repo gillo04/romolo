@@ -37,9 +37,8 @@ void print_source_line(char* source, int line) {
 }
 
 void print_ast(Ast* ast, int indent) {
-  for (int i = 0; i < indent; i++) {
-    printf("  ");
-  }
+  for (int i = 0; i < indent; i++) printf("  ");
+
   switch (ast->node_type) {
     case A_IDENTIFIER:
       printf("IDENTIFIER %s\n", ast->a1.str);
@@ -50,7 +49,31 @@ void print_ast(Ast* ast, int indent) {
     case A_STRING_LITERAL:
       printf("STRING LITERAL \"%s\"\n", ast->a1.str);
       break;
+    case A_MEMBER:
+      printf("MEMBER %s\n", ast->a2.str);
+      print_ast(ast->a1.ptr, indent+1);
+      break;
+    case A_MEMBER_DEREFERENCE:
+      printf("MEMBER DEREFERENCE %s\n", ast->a2.str);
+      print_ast(ast->a1.ptr, indent+1);
+      break;
+    case A_POST_INCREMENT:
+      printf("POST INCREMENT\n");
+      print_ast(ast->a1.ptr, indent+1);
+      break;
+    case A_POST_DECREMENT:
+      printf("POST DECREMENT\n");
+      print_ast(ast->a1.ptr, indent+1);
+      break;
+    case A_ARRAY_SUBSCRIPT:
+      printf("ARRAY SUBSCRIPT\n");
+      print_ast(ast->a1.ptr, indent+1);
+      for (int i = 0; i < indent; i++) printf("  ");
+      printf("AT INDEX\n");
+      print_ast(ast->a2.ptr, indent+1);
+      break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);
   }
 }
+
