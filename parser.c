@@ -109,9 +109,61 @@ Ast m_postfix_expression(int* i) {
   return out;
 }
 
-Ast m_expression(int* i) {
+Ast m_unary_expression(int* i) {
+  // TODO: implement sizeof and _Alignof
   int j = *i;
   Ast out = m_postfix_expression(&j);
+
+  if (out.node_type == A_NONE) {
+    int k = j+1;
+    out = m_unary_expression(&k);
+    if (out.node_type != A_NONE) {
+      Ast tmp = {A_NONE};
+      if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "++"})) {
+        tmp.node_type = A_PRE_INCREMENT;
+        astcpy(&tmp.a1.ptr, out);
+        *i = k;
+      } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "--"})) {
+        tmp.node_type = A_PRE_DECREMENT;
+        astcpy(&tmp.a1.ptr, out);
+        *i = k;
+      } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "&"})) {
+        tmp.node_type = A_ADDRESS;
+        astcpy(&tmp.a1.ptr, out);
+        *i = k;
+      } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "*"})) {
+        tmp.node_type = A_DEREFERENCE;
+        astcpy(&tmp.a1.ptr, out);
+        *i = k;
+      } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "+"})) {
+        tmp.node_type = A_UNARY_PLUS;
+        astcpy(&tmp.a1.ptr, out);
+        *i = k;
+      } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "-"})) {
+        tmp.node_type = A_UNARY_MINUS;
+        astcpy(&tmp.a1.ptr, out);
+        *i = k;
+      } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "~"})) {
+        tmp.node_type = A_BITWISE_NOT;
+        astcpy(&tmp.a1.ptr, out);
+        *i = k;
+      } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "!"})) {
+        tmp.node_type = A_LOGIC_NOT;
+        astcpy(&tmp.a1.ptr, out);
+        *i = k;
+      }
+      out = tmp;
+    }
+  } else {
+    *i = j;
+  }
+
+  return out;
+}
+
+Ast m_expression(int* i) {
+  int j = *i;
+  Ast out = m_unary_expression(&j);
   if (out.node_type != A_NONE) {
     *i = j;
     return out;

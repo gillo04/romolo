@@ -1,1 +1,3 @@
-hello.lol[foo ++] -> hello.world --
+
+--~!-+&*++hello[12]
+

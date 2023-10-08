@@ -97,6 +97,7 @@ Token lex_identifier(char* source, int* i) {
 }
 
 Token lex_integer(char* source, int* i) {
+  // TODO: implement int type notation
   int j = *i;
   Token out = {T_CONSTANT};
 
@@ -233,6 +234,7 @@ Token lex_character_constant(char* source, int* i) {
 }
 
 Token lex_string_literal(char* source, int* i) {
+  // TODO: implement string type notation
   int j = *i;
   if (source[j] == '"') {
     j++;

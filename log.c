@@ -72,8 +72,39 @@ void print_ast(Ast* ast, int indent) {
       printf("AT INDEX\n");
       print_ast(ast->a2.ptr, indent+1);
       break;
+    case A_PRE_INCREMENT:
+      printf("PRE INCREMENT\n");
+      print_ast(ast->a1.ptr, indent+1);
+      break;
+    case A_PRE_DECREMENT:
+      printf("PRE DECREMENT\n");
+      print_ast(ast->a1.ptr, indent+1);
+      break;
+    case A_ADDRESS:
+      printf("ADDRESS\n");
+      print_ast(ast->a1.ptr, indent+1);
+      break;
+    case A_DEREFERENCE:
+      printf("DEREFERENCE\n");
+      print_ast(ast->a1.ptr, indent+1);
+      break;
+    case A_UNARY_PLUS:
+      printf("UNARY PLUS\n");
+      print_ast(ast->a1.ptr, indent+1);
+      break;
+    case A_UNARY_MINUS:
+      printf("UNARY MINUS\n");
+      print_ast(ast->a1.ptr, indent+1);
+      break;
+    case A_BITWISE_NOT:
+      printf("BITWISE NOT\n");
+      print_ast(ast->a1.ptr, indent+1);
+      break;
+    case A_LOGIC_NOT:
+      printf("LOGIC NOT\n");
+      print_ast(ast->a1.ptr, indent+1);
+      break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);
   }
 }
-
