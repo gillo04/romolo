@@ -161,33 +161,32 @@ Ast m_unary_expression(int* i) {
   return out;
 }
 
-Ast m_multiplicative_expression(int* i) {
+Ast m_binary_expression(int* i, Ast (*prev_exp)(), char* strings[], int* types) {
   int j = *i;
-  Ast out = m_unary_expression(&j); // Replace with cast expression once implemented
+  Ast out = prev_exp(&j); 
   if (out.node_type != A_NONE) {
     Ast right, op = out;
     int k, found_op = 1;
     while (found_op && toks[j].type != T_NONE && toks[j+1].type != T_NONE) {
       k = j+1;
-      right = m_unary_expression(&k);
+      right = prev_exp(&k); 
 
       if (right.node_type != A_NONE) {
-        if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "*"})) {
-          op.node_type = A_MULTIPLICATION;
-          astcpy(&op.a1.ptr, out);
-          astcpy(&op.a2.ptr, right);
-          j = k;
-        } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "/"})) {
-          op.node_type = A_DIVISION;
-          astcpy(&op.a1.ptr, out);
-          astcpy(&op.a2.ptr, right);
-          j = k;
-        } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "%"})) {
-          op.node_type = A_MODULO;
-          astcpy(&op.a1.ptr, out);
-          astcpy(&op.a2.ptr, right);
-          j = k;
-        } else {
+        int l = 0, found_match = 0;
+        while (strings[l] != 0) {
+          if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, strings[l]})) {
+            op.node_type = types[l];
+            astcpy(&op.a1.ptr, out);
+            astcpy(&op.a2.ptr, right);
+            j = k;
+            found_match = 1;
+            break;
+          } else {
+            l++;
+          }
+        }
+
+        if (!found_match) {
           found_op = 0;
         }
         out = op;
@@ -202,9 +201,23 @@ Ast m_multiplicative_expression(int* i) {
   return out;
 }
 
+char* mult_strs[] = {"*", "/", "%"};
+int mult_types[] = {A_MULTIPLICATION, A_DIVISION, A_MODULO};
+Ast m_multiplicative_expression(int* i) {
+  Ast out = m_binary_expression(i, m_unary_expression, mult_strs, mult_types);
+  return out;
+}
+
+char* add_strs[] = {"+", "-"};
+int add_types[] = {A_ADDITION, A_SUBTRACTION};
+Ast m_additive_expression(int* i) {
+  Ast out = m_binary_expression(i, m_multiplicative_expression, add_strs, add_types);
+  return out;
+}
+
 Ast m_expression(int* i) {
   int j = *i;
-  Ast out = m_multiplicative_expression(&j);
+  Ast out = m_additive_expression(&j);
   if (out.node_type != A_NONE) {
     *i = j;
     return out;

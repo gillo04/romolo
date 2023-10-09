@@ -119,8 +119,16 @@ void print_ast(Ast* ast, int indent) {
       print_ast(ast->a1.ptr, indent+1);
       print_ast(ast->a2.ptr, indent+1);
       break;
-
-
+    case A_ADDITION:
+      printf("ADDITION\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_SUBTRACTION:
+      printf("SUBTRACTION\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
 
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);

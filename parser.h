@@ -21,7 +21,9 @@ enum {
   A_LOGIC_NOT,
   A_MULTIPLICATION,
   A_DIVISION,
-  A_MODULO
+  A_MODULO,
+  A_ADDITION,
+  A_SUBTRACTION
 };
 
 enum {
