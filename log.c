@@ -104,7 +104,26 @@ void print_ast(Ast* ast, int indent) {
       printf("LOGIC NOT\n");
       print_ast(ast->a1.ptr, indent+1);
       break;
+    case A_MULTIPLICATION:
+      printf("MULTIPLICATION\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_DIVISION:
+      printf("DIVISION\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_MODULO:
+      printf("MODULO\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+
+
+
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);
   }
 }
+

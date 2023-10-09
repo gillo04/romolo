@@ -18,7 +18,10 @@ enum {
   A_UNARY_PLUS,
   A_UNARY_MINUS,
   A_BITWISE_NOT,
-  A_LOGIC_NOT
+  A_LOGIC_NOT,
+  A_MULTIPLICATION,
+  A_DIVISION,
+  A_MODULO
 };
 
 enum {
@@ -32,8 +35,23 @@ enum {
   E_LONG,
   E_ULONG,
   E_LONG_LONG,
-  E_ULONG_LONG
+  E_ULONG_LONG,
+
+  E_RAW,
+  E_POINTER,
+  E_ARRAY,
+  E_STRUCT,
+  E_UNION
 };
+
+typedef struct {
+  int class;    // raw, pointer, array, ...
+  int value;    // int, unsigned int, ...
+  union {
+    int len;      // array length
+    char* name;   // struct/union name
+  } info;
+} Type;
 
 typedef struct Ast_s Ast;
 
@@ -45,7 +63,8 @@ typedef union {
 
 struct Ast_s {
   int node_type;
-  int exp_type; // Expressio  type
+  Type type; // Expression  type
+ 
   Arg a1;
   Arg a2;
   Arg a3;

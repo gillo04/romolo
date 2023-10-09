@@ -24,6 +24,7 @@ int tokcmp(Token a, Token b) {
   }
 }
 
+// The "m_" stands for "match"
 Ast m_expression(int* i);
 
 Ast m_primary_expression(int* i) {
@@ -32,24 +33,23 @@ Ast m_primary_expression(int* i) {
   Ast out = {A_NONE};
   if (toks[j].type == T_IDENTIFIER) {
     out.node_type = A_IDENTIFIER;
-    out.exp_type = E_NONE;
+    out.type = (Type) {E_NONE, E_NONE};
     ast_strcpy(&out.a1.str, toks[j].val.str);
     *i = j+1;
   } else if (toks[j].type == T_CONSTANT) {
     out.node_type = A_CONSTANT;
-    out.exp_type = E_NONE;
+    out.type = (Type) {E_RAW, E_INT};
     out.a1.num = toks[j].val.num;
     *i = j+1;
   } else if (toks[j].type == T_STRING_LITERAL) {
     out.node_type = A_STRING_LITERAL;
-    out.exp_type = E_NONE;
+    out.type = (Type) {E_ARRAY, E_CHAR};
     ast_strcpy(&out.a1.str, toks[j].val.str);
     *i = j+1;
   } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "("})) {
     j++;
     out = m_expression(&j);
     if (out.node_type != A_NONE && tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"})) {
-      out.exp_type = E_NONE;
       *i = j+1;
     } else {
       out.node_type = A_NONE;
@@ -161,9 +161,50 @@ Ast m_unary_expression(int* i) {
   return out;
 }
 
+Ast m_multiplicative_expression(int* i) {
+  int j = *i;
+  Ast out = m_unary_expression(&j); // Replace with cast expression once implemented
+  if (out.node_type != A_NONE) {
+    Ast right, op = out;
+    int k, found_op = 1;
+    while (found_op && toks[j].type != T_NONE && toks[j+1].type != T_NONE) {
+      k = j+1;
+      right = m_unary_expression(&k);
+
+      if (right.node_type != A_NONE) {
+        if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "*"})) {
+          op.node_type = A_MULTIPLICATION;
+          astcpy(&op.a1.ptr, out);
+          astcpy(&op.a2.ptr, right);
+          j = k;
+        } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "/"})) {
+          op.node_type = A_DIVISION;
+          astcpy(&op.a1.ptr, out);
+          astcpy(&op.a2.ptr, right);
+          j = k;
+        } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "%"})) {
+          op.node_type = A_MODULO;
+          astcpy(&op.a1.ptr, out);
+          astcpy(&op.a2.ptr, right);
+          j = k;
+        } else {
+          found_op = 0;
+        }
+        out = op;
+      } else {
+        found_op = 0;
+      }
+    }
+    *i = j;
+
+  }
+
+  return out;
+}
+
 Ast m_expression(int* i) {
   int j = *i;
-  Ast out = m_unary_expression(&j);
+  Ast out = m_multiplicative_expression(&j);
   if (out.node_type != A_NONE) {
     *i = j;
     return out;
