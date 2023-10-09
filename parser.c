@@ -215,6 +215,62 @@ Ast m_additive_expression(int* i) {
   return out;
 }
 
+char* shift_strs[] = {"<<", ">>"};
+int shift_types[] = {A_LEFT_SHIFT, A_RIGHT_SHIFT};
+Ast m_shift_expression(int* i) {
+  Ast out = m_binary_expression(i, m_additive_expression, shift_strs, shift_types);
+  return out;
+}
+
+char* rel_strs[] = {">", "<", ">=", "<="};
+int rel_types[] = {A_GRATER, A_LESS, A_GRATER_EQUAL, A_LESS_EQUAL};
+Ast m_relational_expression(int* i) {
+  Ast out = m_binary_expression(i, m_shift_expression, rel_strs, rel_types);
+  return out;
+}
+
+char* eq_strs[] = {"==", "!="};
+int eq_types[] = {A_EQUAL, A_NOT_EQUAL};
+Ast m_equality_expression(int* i) {
+  Ast out = m_binary_expression(i, m_relational_expression, eq_strs, eq_types);
+  return out;
+}
+
+char* b_and_strs[] = {"&"};
+int b_and_types[] = {A_BITWISE_AND};
+Ast m_bitwise_and_expression(int* i) {
+  Ast out = m_binary_expression(i, m_equality_expression, b_and_strs, b_and_types);
+  return out;
+}
+
+char* b_xor_strs[] = {"^"};
+int b_xor_types[] = {A_BITWISE_XOR};
+Ast m_bitwise_xor_expression(int* i) {
+  Ast out = m_binary_expression(i, m_bitwise_and_expression, b_xor_strs, b_xor_types);
+  return out;
+}
+
+char* b_or_strs[] = {"|"};
+int b_or_types[] = {A_BITWISE_OR};
+Ast m_bitwise_or_expression(int* i) {
+  Ast out = m_binary_expression(i, m_bitwise_xor_expression, b_or_strs, b_or_types);
+  return out;
+}
+
+char* l_and_strs[] = {"&&"};
+int l_and_types[] = {A_LOGIC_AND};
+Ast m_logic_and_expression(int* i) {
+  Ast out = m_binary_expression(i, m_bitwise_or_expression, l_and_strs, l_and_types);
+  return out;
+}
+
+char* l_or_strs[] = {"||"};
+int l_or_types[] = {A_LOGIC_OR};
+Ast m_logic_or_expression(int* i) {
+  Ast out = m_binary_expression(i, m_logic_and_expression, l_or_strs, l_or_types);
+  return out;
+}
+
 Ast m_expression(int* i) {
   int j = *i;
   Ast out = m_additive_expression(&j);

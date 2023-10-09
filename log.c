@@ -129,7 +129,71 @@ void print_ast(Ast* ast, int indent) {
       print_ast(ast->a1.ptr, indent+1);
       print_ast(ast->a2.ptr, indent+1);
       break;
-
+    case A_LEFT_SHIFT:
+      printf("LEFT SHIFT\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_RIGHT_SHIFT:
+      printf("RIGHT SHIFT\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_GRATER:
+      printf("GRATER\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_LESS:
+      printf("LESS\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_GRATER_EQUAL:
+      printf("GRATER EQUAL\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_LESS_EQUAL:
+      printf("LESS EQUAL\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_EQUAL:
+      printf("EQUAL\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_NOT_EQUAL:
+      printf("NOT EQUAL\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_BITWISE_AND:
+      printf("BITWISE AND\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_BITWISE_XOR:
+      printf("BITWISE XOR\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_BITWISE_OR:
+      printf("BITWISE OR\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_LOGIC_AND:
+      printf("LOGIC AND\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_LOGIC_OR:
+      printf("LOGIC OR\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);
   }
