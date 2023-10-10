@@ -204,6 +204,61 @@ void print_ast(Ast* ast, int indent) {
       printf("ELSE\n");
       print_ast(ast->a3.ptr, indent+1);
       break;
+    case A_ASSIGN:
+      printf("ASSIGN\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_MULT_ASSIGN:
+      printf("MULTIPLY ASSIGN\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_DIV_ASSIGN:
+      printf("DIVISION ASSIGN\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_MOD_ASSIGN:
+      printf("MODULO ASSIGN\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_ADD_ASSIGN:
+      printf("ADD ASSIGN\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_SUB_ASSIGN:
+      printf("SUB ASSIGN\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_L_SHIFT_ASSIGN:
+      printf("LEFT SHIFT ASSIGN\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_R_SHIFT_ASSIGN:
+      printf("RIGHT SHIFT ASSIGN\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_AND_ASSIGN:
+      printf("AND ASSIGN\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_XOR_ASSIGN:
+      printf("XOR ASSIGN\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_OR_ASSIGN:
+      printf("OR ASSIGN\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);
   }

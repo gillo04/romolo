@@ -17,6 +17,10 @@ void astcpy(Ast** dest, Ast src) {
 }
 
 int tokcmp(Token a, Token b) {
+  if (a.type == T_NONE || b.type == T_NONE) {
+    return 0;
+  }
+
   if (a.type == T_CONSTANT) {
     return a.val.num == b.val.num && a.type == b.type;
   } else {
@@ -201,70 +205,70 @@ Ast m_binary_expression(int* i, Ast (*prev_exp)(), char* strings[], int* types) 
   return out;
 }
 
-char* mult_strs[] = {"*", "/", "%"};
+char* mult_strs[] = {"*", "/", "%", 0};
 int mult_types[] = {A_MULTIPLICATION, A_DIVISION, A_MODULO};
 Ast m_multiplicative_expression(int* i) {
   Ast out = m_binary_expression(i, m_unary_expression, mult_strs, mult_types);
   return out;
 }
 
-char* add_strs[] = {"+", "-"};
+char* add_strs[] = {"+", "-", 0};
 int add_types[] = {A_ADDITION, A_SUBTRACTION};
 Ast m_additive_expression(int* i) {
   Ast out = m_binary_expression(i, m_multiplicative_expression, add_strs, add_types);
   return out;
 }
 
-char* shift_strs[] = {"<<", ">>"};
+char* shift_strs[] = {"<<", ">>", 0};
 int shift_types[] = {A_LEFT_SHIFT, A_RIGHT_SHIFT};
 Ast m_shift_expression(int* i) {
   Ast out = m_binary_expression(i, m_additive_expression, shift_strs, shift_types);
   return out;
 }
 
-char* rel_strs[] = {">", "<", ">=", "<="};
+char* rel_strs[] = {">", "<", ">=", "<=", 0};
 int rel_types[] = {A_GRATER, A_LESS, A_GRATER_EQUAL, A_LESS_EQUAL};
 Ast m_relational_expression(int* i) {
   Ast out = m_binary_expression(i, m_shift_expression, rel_strs, rel_types);
   return out;
 }
 
-char* eq_strs[] = {"==", "!="};
+char* eq_strs[] = {"==", "!=", 0};
 int eq_types[] = {A_EQUAL, A_NOT_EQUAL};
 Ast m_equality_expression(int* i) {
   Ast out = m_binary_expression(i, m_relational_expression, eq_strs, eq_types);
   return out;
 }
 
-char* b_and_strs[] = {"&"};
+char* b_and_strs[] = {"&", 0};
 int b_and_types[] = {A_BITWISE_AND};
 Ast m_bitwise_and_expression(int* i) {
   Ast out = m_binary_expression(i, m_equality_expression, b_and_strs, b_and_types);
   return out;
 }
 
-char* b_xor_strs[] = {"^"};
+char* b_xor_strs[] = {"^", 0};
 int b_xor_types[] = {A_BITWISE_XOR};
 Ast m_bitwise_xor_expression(int* i) {
   Ast out = m_binary_expression(i, m_bitwise_and_expression, b_xor_strs, b_xor_types);
   return out;
 }
 
-char* b_or_strs[] = {"|"};
+char* b_or_strs[] = {"|", 0};
 int b_or_types[] = {A_BITWISE_OR};
 Ast m_bitwise_or_expression(int* i) {
   Ast out = m_binary_expression(i, m_bitwise_xor_expression, b_or_strs, b_or_types);
   return out;
 }
 
-char* l_and_strs[] = {"&&"};
+char* l_and_strs[] = {"&&", 0};
 int l_and_types[] = {A_LOGIC_AND};
 Ast m_logic_and_expression(int* i) {
   Ast out = m_binary_expression(i, m_bitwise_or_expression, l_and_strs, l_and_types);
   return out;
 }
 
-char* l_or_strs[] = {"||"};
+char* l_or_strs[] = {"||", 0};
 int l_or_types[] = {A_LOGIC_OR};
 Ast m_logic_or_expression(int* i) {
   Ast out = m_binary_expression(i, m_logic_and_expression, l_or_strs, l_or_types);
@@ -300,9 +304,50 @@ Ast m_conditional_expression(int* i) {
   return out;
 }
 
+char* assign_strs[] = {"=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", "&=", "^=", "|=", 0};
+int assign_types[] = {A_ASSIGN, A_MULT_ASSIGN, A_DIV_ASSIGN, A_MOD_ASSIGN, A_ADD_ASSIGN, A_SUB_ASSIGN, A_L_SHIFT_ASSIGN, A_R_SHIFT_ASSIGN, A_AND_ASSIGN, A_XOR_ASSIGN, A_OR_ASSIGN};
+Ast m_assignment_expression(int* i) {
+  int j = *i;
+  Ast out = {A_NONE};
+  
+  Ast unary = m_unary_expression(&j);
+  if (unary.node_type != A_NONE) {
+    int k = 0, found = 0;
+    while (assign_strs[k] != 0) {
+      if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, assign_strs[k]})) {
+        out.node_type = assign_types[k];
+        found = 1;
+        break;
+      }
+      k++;
+    }
+
+    if (found) {
+      j++;
+      Ast assign = m_assignment_expression(&j);
+      if (assign.node_type != A_NONE) {
+        astcpy(&out.a1.ptr, unary);
+        astcpy(&out.a2.ptr, assign);
+        *i = j;
+        return out;
+      }
+    }
+  }
+
+  out.node_type = A_NONE;
+  j = *i;
+  Ast cexp = m_conditional_expression(&j);
+  if (cexp.node_type != A_NONE) {
+    out = cexp;
+    *i = j;
+  }
+  
+  return out;
+}
+
 Ast m_expression(int* i) {
   int j = *i;
-  Ast out = m_conditional_expression(&j);
+  Ast out = m_assignment_expression(&j);
   if (out.node_type != A_NONE) {
     *i = j;
     return out;

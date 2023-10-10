@@ -1,1 +1,1 @@
-(a && b) ? 55 : 66
+hello[10] = world.wow
