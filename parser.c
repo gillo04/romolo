@@ -271,9 +271,38 @@ Ast m_logic_or_expression(int* i) {
   return out;
 }
 
+Ast m_conditional_expression(int* i) {
+  int j = *i;
+  Ast out = {A_NONE};
+
+  Ast lor = m_logic_or_expression(&j);
+  if (lor.node_type != A_NONE) {
+    if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "?"})) {
+      j++;
+      Ast exp = m_expression(&j);
+      if (exp.node_type != A_NONE && tokcmp(toks[j], (Token) {T_PUNCTUATOR, ":"})) {
+        j++;
+        Ast cexp = m_conditional_expression(&j);
+        if (cexp.node_type != A_NONE) {
+          out.node_type = A_CONDITIONAL_EXP;
+          astcpy(&out.a1.ptr, lor);
+          astcpy(&out.a2.ptr, exp);
+          astcpy(&out.a3.ptr, cexp);
+          *i = j;
+        }
+      }
+    } else {
+      out = lor;
+      *i = j;
+    }
+  }
+
+  return out;
+}
+
 Ast m_expression(int* i) {
   int j = *i;
-  Ast out = m_additive_expression(&j);
+  Ast out = m_conditional_expression(&j);
   if (out.node_type != A_NONE) {
     *i = j;
     return out;

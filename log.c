@@ -194,6 +194,16 @@ void print_ast(Ast* ast, int indent) {
       print_ast(ast->a1.ptr, indent+1);
       print_ast(ast->a2.ptr, indent+1);
       break;
+    case A_CONDITIONAL_EXP:
+      printf("CONDITIONAL EXPRESSION\n");
+      print_ast(ast->a1.ptr, indent+1);
+      for (int i = 0; i < indent; i++) printf("  ");
+      printf("THEN\n");
+      print_ast(ast->a2.ptr, indent+1);
+      for (int i = 0; i < indent; i++) printf("  ");
+      printf("ELSE\n");
+      print_ast(ast->a3.ptr, indent+1);
+      break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);
   }
