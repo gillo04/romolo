@@ -345,14 +345,36 @@ Ast m_assignment_expression(int* i) {
   return out;
 }
 
-Ast m_expression(int* i) {
+Ast m_comma_expression(int* i) {
   int j = *i;
-  Ast out = m_assignment_expression(&j);
-  if (out.node_type != A_NONE) {
-    *i = j;
-    return out;
+  Ast out = {A_COMMA_EXP};
+  Ast assign = m_assignment_expression(&j);
+
+  if (assign.node_type == A_NONE) {
+    return (Ast) {A_NONE};
   }
-  return (Ast) {A_NONE};
+
+  int k = 1;
+  out.a1.ptr = malloc(sizeof(Ast));
+  while (assign.node_type != A_NONE) {
+    *i = j;
+    out.a1.ptr = realloc(out.a1.ptr, sizeof(Ast) * k);
+    out.a1.ptr[k-1] = assign;
+    k++;
+    if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, ","})) {
+      j++;
+      assign = m_assignment_expression(&j);
+    } else {
+      assign.node_type = A_NONE;
+    }
+  }
+  out.a1.ptr = realloc(out.a1.ptr, sizeof(Ast) * k);
+  out.a1.ptr[k-1] = (Ast) {A_NONE};
+  return out;
+}
+
+Ast m_expression(int* i) {
+  return m_comma_expression(i);
 }
 
 Ast parser(Token* tokens) {

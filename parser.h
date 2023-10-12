@@ -48,8 +48,8 @@ enum {
   A_R_SHIFT_ASSIGN,
   A_AND_ASSIGN,
   A_XOR_ASSIGN,
-  A_OR_ASSIGN
-
+  A_OR_ASSIGN,
+  A_COMMA_EXP,
 };
 
 enum {

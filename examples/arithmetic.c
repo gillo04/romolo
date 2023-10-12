@@ -1,1 +1,1 @@
-hello[10] = world.wow
+a = 5, b = 7
