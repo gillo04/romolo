@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "log.h"
 #include "lexer.h"
 #include "parser.h"
 
@@ -267,8 +268,104 @@ void print_ast(Ast* ast, int indent) {
         i++;
       }
       break;
+    case A_DECLARATION:
+      printf("DECLARATION < ");
+      print_type(&ast->type);
+      printf(">\n");
+      break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);
+  }
+}
+
+void print_type(Type* t) {
+  if (t == 0 || t->node_type == E_NONE) {
+    return;
+  }
+
+  switch (t->type) {
+    case E_TYPEDEF:
+      printf("TYPEDEF ");
+      print_type(t->next);
+      break;
+    case E_EXTERN:
+      printf("EXTERN ");
+      print_type(t->next);
+      break;
+    case E_STATIC:
+      printf("STATIC ");
+      print_type(t->next);
+      break;
+    case E_AUTO:
+      printf("AUTO ");
+      print_type(t->next);
+      break;
+    case E_REGISTER:
+      printf("REGISTER ");
+      print_type(t->next);
+      break;
+    case E_VOID:
+      printf("VOID ");
+      print_type(t->next);
+      break;
+    case E_CHAR:
+      printf("CHAR ");
+      print_type(t->next);
+      break;
+    case E_SHORT:
+      printf("SHORT ");
+      print_type(t->next);
+      break;
+    case E_INT:
+      printf("INT ");
+      print_type(t->next);
+      break;
+    case E_LONG:
+      printf("LONG ");
+      print_type(t->next);
+      break;
+    case E_FLOAT:
+      printf("FLOAT ");
+      print_type(t->next);
+      break;
+    case E_DOUBLE:
+      printf("DOUBLE ");
+      print_type(t->next);
+      break;
+    case E_SIGNED:
+      printf("SIGNED ");
+      print_type(t->next);
+      break;
+    case E_UNSIGNED:
+      printf("UNSIGNED ");
+      print_type(t->next);
+      break;
+    case E_BOOL:
+      printf("BOOL ");
+      print_type(t->next);
+      break;
+    case E_CONST:
+      printf("CONST ");
+      print_type(t->next);
+      break;
+    case E_RESTRIC:
+      printf("RESTRICT ");
+      print_type(t->next);
+      break;
+    case E_VIOLATE:
+      printf("VIOLATE ");
+      print_type(t->next);
+      break;
+    case E_INLINE:
+      printf("INLINE ");
+      print_type(t->next);
+      break;
+    case E_NORETURN:
+      printf("NORETURN ");
+      print_type(t->next);
+      break;
+    default:
+      printf("Couldn't recognize type %d\n", t->node_type);
   }
 }
 

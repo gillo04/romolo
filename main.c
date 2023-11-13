@@ -13,21 +13,24 @@ int main(int argc, char* argv[]) {
   if (source_code == 0) {
     return 1;
   }
+  printf("SOURCE LOADED\n");
 
   Token* tokens = lexer(source_code);
   if (tokens == 0) {
     return 1;
   }
+  printf("LEXER FINISHED\n");
+  // print_tokens(tokens);
   
   Ast ast = parser(tokens);
   if (ast.node_type == 0) {
     return 1;
   }  
+  printf("PARSER FINISHED\n");
   print_ast(&ast, 0);
 
-  printf("---\n");
-  optimizer(&ast);
-  print_ast(&ast, 0);
+  // optimizer(&ast);
+  // printf("OPTIMIZER FINISHED\n");
 
   free(source_code);
   free_tokens(tokens);

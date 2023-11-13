@@ -37,17 +37,14 @@ Ast m_primary_expression(int* i) {
   Ast out = {A_NONE};
   if (toks[j].type == T_IDENTIFIER) {
     out.node_type = A_IDENTIFIER;
-    out.type = (Type) {E_NONE, E_NONE};
     ast_strcpy(&out.a1.str, toks[j].val.str);
     *i = j+1;
   } else if (toks[j].type == T_CONSTANT) {
     out.node_type = A_CONSTANT;
-    out.type = (Type) {E_RAW, E_INT};
     out.a1.num = toks[j].val.num;
     *i = j+1;
   } else if (toks[j].type == T_STRING_LITERAL) {
     out.node_type = A_STRING_LITERAL;
-    out.type = (Type) {E_ARRAY, E_CHAR};
     ast_strcpy(&out.a1.str, toks[j].val.str);
     *i = j+1;
   } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "("})) {
@@ -377,10 +374,90 @@ Ast m_expression(int* i) {
   return m_comma_expression(i);
 }
 
+const char* ds_strs[] = {"typedef", "extern", "static", "auto", "register", "void", "char", "short", "int", "long", "float", "double", "signed", "unsigned", "_Bool", "const", "restrict", "volatile", "inline", "_Noreturn"};
+const int ds_types[] = {E_TYPEDEF, E_EXTERN, E_STATIC, E_AUTO, E_REGISTER, E_VOID, E_CHAR, E_SHORT, E_INT, E_LONG, E_FLOAT, E_DOUBLE, E_SIGNED, E_UNSIGNED, E_BOOL, E_CONST, E_RESTRIC, E_VIOLATE, E_INLINE, E_NORETURN};
+Type m_declaration_specifier(int* i) {
+  Type out = {E_NONE};
+  if (toks[*i].type == T_NONE) {
+    return out;
+  }
+
+  for (int j = 0; j < sizeof(ds_strs)/sizeof(char*); j++) {
+    if (strcmp(toks[*i].val.str, ds_strs[j]) == 0) {
+      (*i)++;
+      out.node_type = E_DECLARATION_SPECIFIERS;
+      out.type = ds_types[j];
+      out.next = 0;
+      break;
+    }
+  }
+  return out;
+}
+
+Type m_storage_class_spec(int* i) {
+  return (Type) {E_NONE};
+}
+
+Type m_type_spec(int* i) {
+  return (Type) {E_NONE};
+}
+
+Type m_type_qualifier(int* i) {
+  return (Type) {E_NONE};
+}
+
+Type m_function_spec(int* i) {
+  return (Type) {E_NONE};
+}
+
+Type m_alignment_specifier(int* i) {
+  return (Type) {E_NONE};
+}
+
+Type(*declaration_specifiers[])(int*) = {m_storage_class_spec, m_type_spec, m_type_qualifier, m_function_spec, m_alignment_specifier};
+Type m_declaration_specifier_list(int* i) {
+  int j = *i;
+  Type out = {E_NONE};
+  Type tmp;
+  do {
+    for (int k = 0; k < sizeof(declaration_specifiers)/sizeof(void*); k++) {
+      tmp = declaration_specifiers[k](&j);
+      if (tmp.node_type != E_NONE) {
+        break;
+      }
+    }
+
+    if (tmp.node_type != E_NONE) {
+      tmp.next = (Type*) malloc(sizeof(Type));
+      *tmp.next = out;
+      out = tmp;
+    }
+  } while (tmp.node_type != E_NONE);
+  // TODO: Check that type follows the rules
+
+  *i = j;
+  return out;
+}
+
+Ast m_declaration(int* i) {
+  Ast out = {A_DECLARATION};
+  out.type = m_declaration_specifier_list(i);
+  if (out.type.node_type == E_NONE) {
+    return (Ast) {A_NONE};
+  }
+
+  out.a1.ptr = m_init_declarator_list(i);
+  if (out.a1.ptr == 0) {
+    return (Ast) {A_NONE};
+  } 
+  
+  return out;
+}
+
 Ast parser(Token* tokens) {
   toks = tokens;
   int i = 0;
-  Ast out = m_expression(&i);
+  Ast out = m_declaration(&i);
 
   return out;
 }

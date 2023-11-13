@@ -10,3 +10,6 @@ void print_source_line(char* source, int line);
 
 // Prints the abstract syntax tree with some indentation
 void print_ast(Ast* ast, int indent);
+
+// Prints a type tree
+void print_type(Type* t);

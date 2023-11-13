@@ -50,38 +50,52 @@ enum {
   A_XOR_ASSIGN,
   A_OR_ASSIGN,
   A_COMMA_EXP,
+  A_DECLARATION
 };
 
 enum {
   E_NONE = 0,
-  E_CHAR,
-  E_UCHAR,
-  E_SHORT,
-  E_USHORT,
-  E_INT,
-  E_UINT,
-  E_LONG,
-  E_ULONG,
-  E_LONG_LONG,
-  E_ULONG_LONG,
 
+  // Storage class
+  E_TYPEDEF,
+  E_EXTERN,
+  E_STATIC,
+  E_AUTO,
+  E_REGISTER,
+
+  // Type specifier
+  E_VOID,
+  E_CHAR,
+  E_SHORT,
+  E_INT,
+  E_LONG,
+  E_FLOAT,
+  E_DOUBLE,
+  E_SIGNED,
+  E_UNSIGNED,
+  E_BOOL,
+
+  // Typer qualifiers
+  E_CONST,
+  E_RESTRIC,
+  E_VIOLATE,
+  
+  // Function specifiers
+  E_INLINE,
+  E_NORETURN,
+
+  // Node category 
   E_RAW,
   E_POINTER,
   E_ARRAY,
   E_STRUCT,
-  E_UNION
+  E_UNION,
+  E_DECLARATION_SPECIFIERS
 };
 
-typedef struct {
-  int class;    // raw, pointer, array, ...
-  int value;    // int, unsigned int, ...
-  union {
-    int len;      // array length
-    char* name;   // struct/union name
-  } info;
-} Type;
 
-typedef struct Ast_s Ast;
+typedef struct s_ast Ast;
+typedef struct s_type Type;
 
 typedef union {
   Ast* ptr;
@@ -89,7 +103,13 @@ typedef union {
   long long num;
 } Arg;
 
-struct Ast_s {
+struct s_type{
+  int node_type;
+  int type;
+  Type* next;
+};
+
+struct s_ast {
   int node_type;
   Type type; // Expression  type
  
