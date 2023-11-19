@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
   printf("LEXER FINISHED\n");
   // print_tokens(tokens);
   
-  Ast ast = parser(tokens);
+  Ast ast = parser(tokens, source_code);
   if (ast.node_type == 0) {
     return 1;
   }  

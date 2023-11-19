@@ -50,7 +50,10 @@ enum {
   A_XOR_ASSIGN,
   A_OR_ASSIGN,
   A_COMMA_EXP,
-  A_DECLARATION
+  A_DECLARATION,
+  A_INIT_DECLARATOR,
+  A_DECLARATOR,
+  A_INITIALIZER
 };
 
 enum {
@@ -118,4 +121,4 @@ struct s_ast {
   Arg a3;
 };
 
-Ast parser(Token* tokens);
+Ast parser(Token* tokens, char* source);

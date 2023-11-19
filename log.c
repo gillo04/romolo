@@ -261,17 +261,39 @@ void print_ast(Ast* ast, int indent) {
       print_ast(ast->a2.ptr, indent+1);
       break;
     case A_COMMA_EXP:
-      printf("COMMA EXPRESSION\n");
-      int i = 0;
-      while (ast->a1.ptr[i].node_type != A_NONE) {
-        print_ast(&ast->a1.ptr[i], indent+1);
-        i++;
+      {
+        printf("COMMA EXPRESSION\n");
+        int i = 0;
+        while (ast->a1.ptr[i].node_type != A_NONE) {
+          print_ast(&ast->a1.ptr[i], indent+1);
+          i++;
+        }
       }
       break;
     case A_DECLARATION:
-      printf("DECLARATION < ");
-      print_type(&ast->type);
-      printf(">\n");
+      {
+        printf("DECLARATION < ");
+        print_type(&ast->type);
+        printf(">\n");
+        int i = 0;
+        while (ast->a1.ptr[i].node_type != A_NONE) {
+          print_ast(&ast->a1.ptr[i], indent+1);
+          i++;
+        }
+      }
+      break;
+    case A_INIT_DECLARATOR:
+      printf("INIT DECLARATOR\n");
+      print_ast(ast->a1.ptr, indent+1);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        print_ast(ast->a2.ptr, indent+1);
+      }
+      break;
+    case A_DECLARATOR:
+      printf("DECLARATOR\n");
+      break;
+    case A_INITIALIZER:
+      printf("INITIALIZER\n");
       break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);
@@ -283,7 +305,7 @@ void print_type(Type* t) {
     return;
   }
 
-  switch (t->type) {
+  switch (t->node_type) {
     case E_TYPEDEF:
       printf("TYPEDEF ");
       print_type(t->next);
