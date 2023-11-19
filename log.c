@@ -295,6 +295,17 @@ void print_ast(Ast* ast, int indent) {
     case A_INITIALIZER:
       printf("INITIALIZER\n");
       break;
+    case A_POINTER:
+      printf("POINTER < \n");
+      print_type(&ast->type);
+      printf(">\n");
+      if (ast->a1.ptr->node_type != A_NONE) {
+        print_ast(ast->a1.ptr, indent + 1);
+      }
+      break;
+    case A_DIRECT_DECLARATOR:
+      printf("DIRECT DECLARATOR\n");
+      break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);
   }
