@@ -1,3 +1,4 @@
+#pragma once
 #include "parser.h"
 
 Type m_type_token(int* i, const char* tt_strs[], const int tt_types[]);

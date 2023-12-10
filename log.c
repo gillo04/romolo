@@ -37,6 +37,14 @@ void print_source_line(char* source, int line) {
   }
 }
 
+void print_ast_stack(Ast* ast, int indent) {
+  int i = 0;
+  while (ast[i].node_type != A_NONE) {
+    print_ast(&ast[i], indent);
+    i++;
+  }
+}
+
 void print_ast(Ast* ast, int indent) {
   for (int i = 0; i < indent; i++) printf("  ");
 
@@ -261,26 +269,14 @@ void print_ast(Ast* ast, int indent) {
       print_ast(ast->a2.ptr, indent+1);
       break;
     case A_COMMA_EXP:
-      {
-        printf("COMMA EXPRESSION\n");
-        int i = 0;
-        while (ast->a1.ptr[i].node_type != A_NONE) {
-          print_ast(&ast->a1.ptr[i], indent+1);
-          i++;
-        }
-      }
+      printf("COMMA EXPRESSION\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
       break;
     case A_DECLARATION:
-      {
-        printf("DECLARATION < ");
-        print_type(&ast->type);
-        printf(">\n");
-        int i = 0;
-        while (ast->a1.ptr[i].node_type != A_NONE) {
-          print_ast(&ast->a1.ptr[i], indent+1);
-          i++;
-        }
-      }
+      printf("DECLARATION < ");
+      print_type(&ast->type);
+      printf(">\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
       break;
     case A_INIT_DECLARATOR:
       printf("INIT DECLARATOR\n");
@@ -305,6 +301,24 @@ void print_ast(Ast* ast, int indent) {
       break;
     case A_DIRECT_DECLARATOR:
       printf("DIRECT DECLARATOR\n");
+      break;
+    case A_PARAMETER_TYPE_LIST:
+      printf("PARAMETER TYPE LIST\n");
+      print_ast(ast->a1.ptr, indent+1);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        print_ast(ast->a2.ptr, indent+1);
+      }
+      break;
+    case A_PARAMETER_LIST:
+      printf("PARAMETER LIST\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
+      break;
+    case A_THREE_DOTS:
+      printf("THREE DOTS\n");
+      break;
+    case A_IDENTIFIER_LIST:
+      printf("IDENTIFIER LIST\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
       break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);

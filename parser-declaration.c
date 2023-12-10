@@ -1,6 +1,7 @@
 #include "log.h"
 #include "parser.h"
 #include "parser-utils.h"
+#include "parser-expression.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -105,21 +106,8 @@ Ast m_init_declarator(int* i) {
 
 // TODO: Optimize stack resizing
 Ast* m_init_declarator_list(int* i) {
-  int j = *i;
-  Ast* out = malloc(sizeof(Ast));
-  *out = m_init_declarator(&j);
-  int k = 0;
-  while (out[k].node_type != A_NONE && tokcmp(toks[j], (Token) {T_PUNCTUATOR, ","})) {
-    j++;
-    k++;
-    realloc(out, sizeof(Ast)*(k+1));
-    out[k] = m_init_declarator(&j);
-  }
-  if (tokcmp(toks[j-1], (Token) {T_PUNCTUATOR, ","})) {
-    j--;
-  }
-  *i = j;
-  return out;
+  Ast out = m_comma_list(i, m_init_declarator, A_INIT_DECLARATOR);
+  return out.a1.ptr;
 }
 
 Ast m_declaration(int* i) {

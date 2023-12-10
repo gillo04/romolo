@@ -36,4 +36,6 @@ Ast m_conditional_expression(int* i);
 
 Ast m_assignment_expression(int* i);
 
+Ast m_comma_list(int* i, Ast(*match)(int*), int node_type);
+
 Ast m_comma_expression(int* i);

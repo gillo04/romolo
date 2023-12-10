@@ -322,10 +322,10 @@ Ast m_assignment_expression(int* i) {
   return out;
 }
 
-Ast m_comma_expression(int* i) {
+Ast m_comma_list(int* i, Ast(*match)(int*), int node_type) {
   int j = *i;
-  Ast out = {A_COMMA_EXP};
-  Ast assign = m_assignment_expression(&j);
+  Ast out = {node_type};
+  Ast assign = match(&j);
 
   if (assign.node_type == A_NONE) {
     return (Ast) {A_NONE};
@@ -340,7 +340,7 @@ Ast m_comma_expression(int* i) {
     k++;
     if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, ","})) {
       j++;
-      assign = m_assignment_expression(&j);
+      assign = match(&j);
     } else {
       assign.node_type = A_NONE;
     }
@@ -348,6 +348,10 @@ Ast m_comma_expression(int* i) {
   out.a1.ptr = realloc(out.a1.ptr, sizeof(Ast) * k);
   out.a1.ptr[k-1] = (Ast) {A_NONE};
   return out;
+}
+
+Ast m_comma_expression(int* i) {
+  return m_comma_list(i, m_assignment_expression, A_COMMA_EXP);
 }
 
 Ast m_expression(int* i) {
