@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
 
   Token* tokens = lexer(source_code);
   if (tokens == 0) {
+    printf("Error lexing\n");
     return 1;
   }
   printf("LEXER FINISHED\n");
@@ -24,6 +25,7 @@ int main(int argc, char* argv[]) {
   
   Ast ast = parser(tokens, source_code);
   if (ast.node_type == 0) {
+    printf("Error parsing\n");
     return 1;
   }  
   printf("PARSER FINISHED\n");

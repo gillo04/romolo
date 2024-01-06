@@ -49,6 +49,9 @@ void print_ast(Ast* ast, int indent) {
   for (int i = 0; i < indent; i++) printf("  ");
 
   switch (ast->node_type) {
+    case A_NONE:
+      printf("NONE\n");
+      break;
     case A_IDENTIFIER:
       printf("IDENTIFIER %s\n", ast->a1.str);
       break;
@@ -319,6 +322,80 @@ void print_ast(Ast* ast, int indent) {
     case A_IDENTIFIER_LIST:
       printf("IDENTIFIER LIST\n");
       print_ast_stack(ast->a1.ptr, indent+1);
+      break;
+    case A_LABEL:
+      printf("LABEL %s\n", ast->a1.str);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_CASE:
+      printf("CASE\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_DEFAULT:
+      printf("DEFAULT\n");
+      print_ast(ast->a1.ptr, indent+1);
+      break;
+    case A_COMPOUND_STATEMENT:
+      printf("COMPOUND STATEMENT\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
+      break;
+    case A_NULL_STATEMENT:
+      printf("NULL STATEMENT\n");
+      break;
+    case A_IF:
+      printf("IF\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_IF_ELSE:
+      printf("IF\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      for (int i = 0; i < indent; i++) printf("  ");
+      printf("ELSE\n");
+      print_ast(ast->a3.ptr, indent+1);
+      break;
+    case A_SWITCH:
+      printf("SWITCH\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_WHILE:
+      printf("WHILE\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_DO_WHILE:
+      printf("DO\n");
+      print_ast(ast->a2.ptr, indent+1);
+      for (int i = 0; i < indent; i++) printf("  ");
+      printf("WHILE\n");
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_FOR:
+      printf("FOR\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;    
+    case A_FOR_CLAUSES:
+      printf("FOR CLAUSES\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      print_ast(ast->a3.ptr, indent+1);
+      break; 
+    case A_GOTO:
+      printf("GOTO %s\n", ast->a1.str);
+      break;    
+    case A_CONTINUE:
+      printf("CONTINUE\n");
+      break;
+    case A_BREAK:
+      printf("BREAK\n");
+      break;
+    case A_RETURN:
+      printf("RETURN\n");
+      print_ast(ast->a1.ptr, indent+1);
       break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);

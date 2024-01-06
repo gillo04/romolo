@@ -95,7 +95,7 @@ Ast m_unary_expression(int* i) {
   int j = *i;
   Ast out = m_postfix_expression(&j);
 
-  if (out.node_type == A_NONE) {
+  if (out.node_type == A_NONE && toks[j+1].type != T_NONE) {
     int k = j+1;
     out = m_unary_expression(&k);
     if (out.node_type != A_NONE) {
@@ -319,34 +319,6 @@ Ast m_assignment_expression(int* i) {
     *i = j;
   }
   
-  return out;
-}
-
-Ast m_comma_list(int* i, Ast(*match)(int*), int node_type) {
-  int j = *i;
-  Ast out = {node_type};
-  Ast assign = match(&j);
-
-  if (assign.node_type == A_NONE) {
-    return (Ast) {A_NONE};
-  }
-
-  int k = 1;
-  out.a1.ptr = malloc(sizeof(Ast));
-  while (assign.node_type != A_NONE) {
-    *i = j;
-    out.a1.ptr = realloc(out.a1.ptr, sizeof(Ast) * k);
-    out.a1.ptr[k-1] = assign;
-    k++;
-    if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, ","})) {
-      j++;
-      assign = match(&j);
-    } else {
-      assign.node_type = A_NONE;
-    }
-  }
-  out.a1.ptr = realloc(out.a1.ptr, sizeof(Ast) * k);
-  out.a1.ptr[k-1] = (Ast) {A_NONE};
   return out;
 }
 
