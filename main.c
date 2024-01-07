@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   printf("LEXER FINISHED\n");
-  print_tokens(tokens);
+  // print_tokens(tokens);
   
   Ast ast = parser(tokens, source_code);
   if (ast.node_type == 0) {
@@ -32,15 +32,15 @@ int main(int argc, char* argv[]) {
   printf("PARSER FINISHED\n");
   print_ast(&ast, 0);
 
-  optimizer(&ast);
-  printf("OPTIMIZER FINISHED\n");
+  // optimizer(&ast);
+  // printf("OPTIMIZER FINISHED\n");
 
   char* assembly_code = generator(&ast);
   if (assembly_code == 0) {
     printf("Error generating code\n");
     return 1;
   }  
-  printf("CODE GENERATION FINISHED\n");
+  printf("CODE GENERATION FINISHED\n\n");
   printf("%s\n", assembly_code);
 
   free(source_code);

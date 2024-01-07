@@ -1,6 +1,3 @@
-int constant_one() {return 1;}
-
 int main() {
-  a += 5;
-  return 0;
+  return (10 + (5 + 1) >> 3)*15;
 }

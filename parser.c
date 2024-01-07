@@ -33,6 +33,7 @@ Ast m_function_def(int* i) {
   Ast comp_stat = m_compound_statement(&j);
   astcpy(&out.a2.ptr, comp_stat);
 
+  *i = j;
   return out;
 }
 
@@ -47,7 +48,6 @@ Ast m_translation_unit(int* i) {
     out.a1.ptr = (Ast*) realloc(out.a1.ptr, sizeof(Ast) * (k+1));
     out.a1.ptr[k++] = m_function_def(&j);
   } while (out.a1.ptr[k-1].node_type != A_NONE);
-  printf("%d\n", k);
 
   *i = j;
   return out;

@@ -53,3 +53,8 @@ void set_string(String* dest, char* src);
 // Append a char to a String
 void append_char(String* dest, char c);
 
+// Append c string to a String
+void append_string(String* dest, char* src);
+
+// Append long long int to a String
+void append_int(String* dest, long long num);
