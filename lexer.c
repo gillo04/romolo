@@ -31,9 +31,15 @@ const char* keywords[] = {
 };
 
 Token lex_keyword(char* source, int* i) {
+  int j = *i;
   Token out = lex_from_array(source, i, keywords, sizeof(keywords)/sizeof(char*));
   if (out.type != T_NONE) {
     out.type = T_KEYWORD;
+  }
+
+  if (isalnum(*(source + *i)) || *(source + *i) == '_') {
+    *i = j;
+    return (Token) {T_NONE};
   }
 
   return out;

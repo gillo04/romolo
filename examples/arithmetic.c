@@ -1,13 +1,6 @@
-while (1) {
-  max  = 0;
-  for (i = 0; i < 5; i++) {
-    if (a > b) {
-      max = a;
-    }
-  }
+int constant_one() {return 1;}
 
-  if (max == 0) 
-    return 0;
-  else
-    return 1;
+int main() {
+  a += 5;
+  return 0;
 }

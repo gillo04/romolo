@@ -70,7 +70,6 @@ Ast m_compound_statement(int* i) {
   do {
     out.a1.ptr = (Ast*) realloc(out.a1.ptr, sizeof(Ast) * (k+1));
     out.a1.ptr[k++] = m_block_item(&j);
-    printf("%d\n", out.a1.ptr[k-1].node_type);
   } while (out.a1.ptr[k-1].node_type != A_NONE);
 
   if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, "}"})) {

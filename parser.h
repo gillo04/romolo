@@ -83,7 +83,10 @@ enum {
   A_GOTO,
   A_CONTINUE,
   A_BREAK,
-  A_RETURN
+  A_RETURN,
+
+  A_FUNCTION,
+  A_TRANSLATION_UNIT
 };
 
 enum {

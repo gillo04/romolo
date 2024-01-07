@@ -397,6 +397,14 @@ void print_ast(Ast* ast, int indent) {
       printf("RETURN\n");
       print_ast(ast->a1.ptr, indent+1);
       break;
+    case A_FUNCTION:
+      printf("FUNCTION %s\n", ast->a1.str);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_TRANSLATION_UNIT:
+      printf("TRANSLATION UNIT\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
+      break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);
   }
