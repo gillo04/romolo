@@ -196,10 +196,10 @@ Block g_ast(Ast* ast) {
       out = g_ast(ast->a1.ptr);
       break;
     case A_UNARY_MINUS:
-      out = g_unary_op(ast, "neg ");
+      out = g_unary_op(ast, "neg");
       break;
     case A_BITWISE_NOT:
-      out = g_unary_op(ast, "not ");
+      out = g_unary_op(ast, "not");
       break;
     case A_LOGIC_NOT:
       out = g_ast(ast->a1.ptr);
@@ -210,7 +210,7 @@ Block g_ast(Ast* ast) {
       );
       break;
     case A_MULTIPLICATION:
-      out = g_binary_op(ast, "imul ");
+      out = g_binary_op(ast, "imul");
       break;
     case A_DIVISION:
       printf("DIVISION\n");
@@ -223,16 +223,16 @@ Block g_ast(Ast* ast) {
       print_ast(ast->a2.ptr, indent+1);
       break;
     case A_ADDITION:
-      out = g_binary_op(ast, "add ");
+      out = g_binary_op(ast, "add");
       break;
     case A_SUBTRACTION:
-      out = g_binary_op(ast, "sub ");
+      out = g_binary_op(ast, "sub");
       break;
     case A_LEFT_SHIFT:
-      out = g_binary_op(ast, "shl ");
+      out = g_binary_op(ast, "shl");
       break;
     case A_RIGHT_SHIFT:
-      out = g_binary_op(ast, "shr ");
+      out = g_binary_op(ast, "shr");
       break;
     case A_GRATER:
       printf("GRATER\n");

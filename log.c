@@ -368,7 +368,7 @@ void print_ast(Ast* ast, int indent) {
       break;
     case A_DO_WHILE:
       printf("DO\n");
-      print_ast(ast->a2.ptr, indent+1);
+      print_ast(ast->a1.ptr, indent+1);
       for (int i = 0; i < indent; i++) printf("  ");
       printf("WHILE\n");
       print_ast(ast->a2.ptr, indent+1);

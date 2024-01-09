@@ -30,10 +30,10 @@ int main(int argc, char* argv[]) {
     return 1;
   }  
   printf("PARSER FINISHED\n");
-  // print_ast(&ast, 0);
 
   // optimizer(&ast);
   // printf("OPTIMIZER FINISHED\n");
+  // print_ast(&ast, 0);
 
   char* assembly_code = generator(&ast);
   if (assembly_code == 0) {
