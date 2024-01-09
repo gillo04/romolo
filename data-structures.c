@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include "data-structures.h"
 
 void set_string(String* dest, char* src) {
@@ -28,6 +29,10 @@ void append_char(String* dest, char c) {
 }
 
 void append_string(String* dest, char* src) {
+  if (dest->str == 0) {
+    set_string(dest, "");
+  }
+
   int src_len = strlen(src);
   if (dest->cap <= dest->len + src_len) {
     dest->str = realloc(dest->str, dest->len + src_len + 1);
@@ -39,6 +44,10 @@ void append_string(String* dest, char* src) {
 }
 
 void append_int(String* dest, long long num) {
+  if (dest->str == 0) {
+    set_string(dest, "");
+  }
+
   char num_str[12];
   sprintf(num_str, "%lld", num);
   char num_len = strlen(num_str);
@@ -49,4 +58,25 @@ void append_int(String* dest, long long num) {
 
   strcpy(dest->str + dest->len, num_str);
   dest->len += num_len;
+}
+
+void append_format(String* dest, char* format, ...) {
+  if (dest->str == 0) {
+    set_string(dest, "");
+  }
+
+  va_list args;
+
+  va_start(args, format); 
+  int src_len = vsnprintf(NULL, 0, format, args);
+
+  if (dest->cap <= dest->len + src_len) {
+    dest->str = realloc(dest->str, dest->len + src_len + 1);
+    dest->cap = dest->len + src_len + 1;
+  }
+
+  va_start(args, format); 
+  vsprintf(dest->str + dest->len, format, args);
+  dest->len += src_len;
+  va_end(args);
 }

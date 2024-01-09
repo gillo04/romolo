@@ -107,11 +107,10 @@ Block g_ast(Ast* ast) {
     case A_CONSTANT:
       {
         int reg = ralloc();
-        set_string(&out.str, "\tmov ");
-        append_string(&out.str, registers[reg].name);
-        append_string(&out.str, ", ");
-        append_int(&out.str, ast->a1.num);
-        append_string(&out.str, "\n");
+        append_format(&out.str, 
+          "\tmov %s, %lld\n"
+          , registers[reg].name, ast->a1.num
+        );
         out.result = reg;
       }
       break;
