@@ -56,8 +56,5 @@ void append_char(String* dest, char c);
 // Append c string to a String
 void append_string(String* dest, char* src);
 
-// Append long long int to a String
-void append_int(String* dest, long long num);
-
 // Append a formatted string to a String
 void append_format(String* dest, char* format, ...);

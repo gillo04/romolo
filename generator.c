@@ -6,6 +6,7 @@
 
 #define CHECK(x) if (x.str == 0) { return (Block) {0, 0}; }
 #define REG_COUNT 14
+#define USED_REGS_COUNT 256
 
 Register registers[REG_COUNT+2] = {
   {0, 0},       // Null value 
@@ -26,24 +27,55 @@ Register registers[REG_COUNT+2] = {
   {0, 0}       // Means the value is on the stack
 };
 
-int ralloc() {
+Register* used_regs[USED_REGS_COUNT];
+
+Register** r_alloc() {
   for (int i = 1; i < REG_COUNT+1; i++) {
     if (!registers[i].used) {
       registers[i].used = 1;
-      return i;
+      for (int j = 0; j < USED_REGS_COUNT; j++) {
+        if (!used_regs[j]) {
+          used_regs[j] = &registers[i];
+          registers[i].owner = &used_regs[j];
+          break;
+        }
+      }
+      if (registers[i].owner == 0) {
+        printf("Error: exceeded maximum number of allocated values\n");
+        return 0;
+      }
+      return registers[i].owner;
     }
   }
-  return REG_COUNT+1;
+
+  printf("Error: stack is not yet handled\n");
+  return 0;
 }
 
-void rfree(int r) {
-  registers[r].used = 0;
+void r_free(Register** r) {
+  (*r)->used = 0;
+  *r = 0;
 }
 
-void rreset() {
+void r_reset() {
   for (int i = 1; i < REG_COUNT+1; i++) {
     registers[i].used = 0;
+    registers[i].owner = 0;
   }
+
+  for (int i = 1; i < USED_REGS_COUNT; i++) {
+    used_regs[i] = 0;
+  }
+}
+
+// Relocates the value at register req
+Block r_realloc(int req) {
+  Block out = {0, 0};
+  set_string(&out.str, "");
+  if (!registers[req].used) {
+    return out;
+  }
+  return out;
 }
 
 Block g_ast(Ast* ast);
@@ -67,11 +99,13 @@ Block g_unary_op(Ast* ast, char* op) {
   Block s = g_ast(ast->a1.ptr);
   CHECK(s.str);
 
-  set_string(&out.str, s.str.str);
-  append_string(&out.str, "\t");
-  append_string(&out.str, op);
-  append_string(&out.str, registers[s.result].name);
-  append_string(&out.str, "\n");
+  append_format(&out.str,
+    "%s"
+    "\t%s %s\n",
+    s.str.str,
+    op, (*s.result)->name
+  );
+
   out.result = s.result;
   return out;
 }
@@ -83,15 +117,16 @@ Block g_binary_op(Ast* ast, char* op) {
   Block r = g_ast(ast->a2.ptr);
   CHECK(r.str);
 
-  set_string(&out.str, l.str.str);
-  append_string(&out.str, r.str.str);
-  append_string(&out.str, "\t");
-  append_string(&out.str, op);
-  append_string(&out.str, registers[l.result].name);
-  append_string(&out.str, ", ");
-  append_string(&out.str, registers[r.result].name);
-  append_string(&out.str, "\n");
-  rfree(r.result);
+  append_format(&out.str,
+    "%s"
+    "%s"
+    "\t%s %s, %s\n",
+    l.str.str,
+    r.str.str,
+    op, (*l.result)->name, (*r.result)->name
+  );
+
+  r_free(r.result);
   out.result = l.result;
   return out;
 }
@@ -106,10 +141,10 @@ Block g_ast(Ast* ast) {
       break;
     case A_CONSTANT:
       {
-        int reg = ralloc();
+        Register** reg = r_alloc();
         append_format(&out.str, 
           "\tmov %s, %lld\n"
-          , registers[reg].name, ast->a1.num
+          , (*reg)->name, ast->a1.num
         );
         out.result = reg;
       }
@@ -167,18 +202,12 @@ Block g_ast(Ast* ast) {
       out = g_unary_op(ast, "not ");
       break;
     case A_LOGIC_NOT:
-      {
-        Block s = g_ast(ast->a1.ptr);
-        set_string(&out.str, s.str.str);
-        append_string(&out.str, "\tor ");
-        append_string(&out.str, registers[s.result].name);
-        append_string(&out.str, ", ");
-        append_string(&out.str, registers[s.result].name);
-        append_string(&out.str, "\n\tsete ");
-        append_string(&out.str, registers[s.result].name);
-        append_string(&out.str, "\n");
-        out.result = s.result;
-      }
+      out = g_ast(ast->a1.ptr);
+      append_format(&out.str,
+        "\tor %s, %s\n"
+        "\tsete %s\n",
+        (*out.result)->name, (*out.result)->name, (*out.result)->name
+      );
       break;
     case A_MULTIPLICATION:
       out = g_binary_op(ast, "imul ");
@@ -448,18 +477,20 @@ Block g_ast(Ast* ast) {
     case A_RETURN:
       out = g_ast(ast->a1.ptr);
       CHECK(out.str);
-      append_string(&out.str, "\tret\n\n");
+      append_string(&out.str, "\tret\n");
       break;
     case A_FUNCTION:
       {
         Block body = g_ast(ast->a2.ptr);
         CHECK(body.str);
 
-        set_string(&out.str, ast->a1.str);
-        append_string(&out.str, ":\n");
-        append_string(&out.str, body.str.str);
+        append_format(&out.str,
+          "%s:\n"
+          "%s\n",
+          ast->a1.str, body.str.str
+        );
 
-        rreset();
+        r_reset();
       }
       break;
     case A_TRANSLATION_UNIT:
@@ -473,7 +504,7 @@ Block g_ast(Ast* ast) {
 }
 
 void init_generator() {
-  rreset();
+  r_reset();
   return;
 }
 

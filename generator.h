@@ -6,11 +6,12 @@
 typedef struct register_s {
   char used;
   char* name;
+  struct register_s** owner;
 } Register;
 
 typedef struct {
   String str;
-  int result;
+  Register** result;
 } Block;
 
 

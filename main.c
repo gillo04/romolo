@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }  
   printf("PARSER FINISHED\n");
-  print_ast(&ast, 0);
+  // print_ast(&ast, 0);
 
   // optimizer(&ast);
   // printf("OPTIMIZER FINISHED\n");

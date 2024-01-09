@@ -43,23 +43,6 @@ void append_string(String* dest, char* src) {
   dest->len += src_len;
 }
 
-void append_int(String* dest, long long num) {
-  if (dest->str == 0) {
-    set_string(dest, "");
-  }
-
-  char num_str[12];
-  sprintf(num_str, "%lld", num);
-  char num_len = strlen(num_str);
-  if (dest->cap <= dest->len + num_len) {
-    dest->str = realloc(dest->str, dest->len + num_len + 1);
-    dest->cap = dest->len + num_len + 1;
-  }
-
-  strcpy(dest->str + dest->len, num_str);
-  dest->len += num_len;
-}
-
 void append_format(String* dest, char* format, ...) {
   if (dest->str == 0) {
     set_string(dest, "");
