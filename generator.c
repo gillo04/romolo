@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define CHECK(x) if (x == 0) { return (Block) {0, 0}; }
+#define CHECK(x) if (x.str == 0) { return (Block) {0, 0}; }
 #define REG_COUNT 14
 
 Register registers[REG_COUNT+2] = {
@@ -26,27 +26,10 @@ Register registers[REG_COUNT+2] = {
   {0, 0}       // Means the value is on the stack
 };
 
-Block generate_ast(Ast* ast);
-
-Block generate_ast_stack(Ast* ast) {
-  int i = 0;
-  String out = {0};
-  int last_result = 0;
-  while (ast[i].node_type != A_NONE) {
-    Block tmp = generate_ast(&ast[i]);
-    CHECK(tmp.str);
-
-    i++;
-    append_string(&out, tmp.str);
-    last_result = tmp.result;
-  }
-  return (Block) {out.str, last_result};
-}
-
 int ralloc() {
   for (int i = 1; i < REG_COUNT+1; i++) {
-    if (!registers[i].in_use) {
-      registers[i].in_use = 1;
+    if (!registers[i].used) {
+      registers[i].used = 1;
       return i;
     }
   }
@@ -54,59 +37,82 @@ int ralloc() {
 }
 
 void rfree(int r) {
-  registers[r].in_use = 0;
+  registers[r].used = 0;
 }
 
 void rreset() {
   for (int i = 1; i < REG_COUNT+1; i++) {
-    registers[i].in_use = 0;
+    registers[i].used = 0;
   }
 }
 
-// Returns result register
-int generate_unary_op(String* out, Ast* ast, char* op) {
-  Block s = generate_ast(ast->a1.ptr);
-  set_string(out, s.str);
-  append_string(out, "\t");
-  append_string(out, op);
-  append_string(out, registers[s.result].name);
-  append_string(out, "\n");
-  return s.result;
+Block g_ast(Ast* ast);
+
+Block g_ast_stack(Ast* ast) {
+  int i = 0;
+  Block out = {0, 0};
+  while (ast[i].node_type != A_NONE) {
+    Block tmp = g_ast(&ast[i]);
+    CHECK(tmp.str);
+
+    i++;
+    append_string(&out.str, tmp.str.str);
+    out.result = tmp.result;
+  }
+  return out;
 }
 
-int generate_binary_op(String* out, Ast* ast, char* op) {
-  Block l = generate_ast(ast->a1.ptr);
-  Block r = generate_ast(ast->a2.ptr);
-  set_string(out, l.str);
-  append_string(out, r.str);
-  append_string(out, "\t");
-  append_string(out, op);
-  append_string(out, registers[l.result].name);
-  append_string(out, ", ");
-  append_string(out, registers[r.result].name);
-  append_string(out, "\n");
+Block g_unary_op(Ast* ast, char* op) {
+  Block out = {0, 0};
+  Block s = g_ast(ast->a1.ptr);
+  CHECK(s.str);
+
+  set_string(&out.str, s.str.str);
+  append_string(&out.str, "\t");
+  append_string(&out.str, op);
+  append_string(&out.str, registers[s.result].name);
+  append_string(&out.str, "\n");
+  out.result = s.result;
+  return out;
+}
+
+Block g_binary_op(Ast* ast, char* op) {
+  Block out = {0, 0};
+  Block l = g_ast(ast->a1.ptr);
+  CHECK(l.str);
+  Block r = g_ast(ast->a2.ptr);
+  CHECK(r.str);
+
+  set_string(&out.str, l.str.str);
+  append_string(&out.str, r.str.str);
+  append_string(&out.str, "\t");
+  append_string(&out.str, op);
+  append_string(&out.str, registers[l.result].name);
+  append_string(&out.str, ", ");
+  append_string(&out.str, registers[r.result].name);
+  append_string(&out.str, "\n");
   rfree(r.result);
-  return l.result;
+  out.result = l.result;
+  return out;
 }
 
-Block generate_ast(Ast* ast) {
-  String out = {0};
-  int result = 0;
+Block g_ast(Ast* ast) {
+  Block out = {0, 0};
 
   int indent = 0;
   switch (ast->node_type) {
     case A_NONE:
-      set_string(&out, "");
+      set_string(&out.str, "");
       break;
     case A_CONSTANT:
       {
         int reg = ralloc();
-        set_string(&out, "\tmov ");
-        append_string(&out, registers[reg].name);
-        append_string(&out, ", ");
-        append_int(&out, ast->a1.num);
-        append_string(&out, "\n");
-        result = reg;
+        set_string(&out.str, "\tmov ");
+        append_string(&out.str, registers[reg].name);
+        append_string(&out.str, ", ");
+        append_int(&out.str, ast->a1.num);
+        append_string(&out.str, "\n");
+        out.result = reg;
       }
       break;
     case A_STRING_LITERAL:
@@ -153,34 +159,30 @@ Block generate_ast(Ast* ast) {
       break;
 
     case A_UNARY_PLUS:
-      {
-        Block s = generate_ast(ast->a1.ptr);
-        set_string(&out, s.str);
-        result = s.result;
-      }
+      out = g_ast(ast->a1.ptr);
       break;
     case A_UNARY_MINUS:
-      result = generate_unary_op(&out, ast, "neg ");
+      out = g_unary_op(ast, "neg ");
       break;
     case A_BITWISE_NOT:
-      result = generate_unary_op(&out, ast, "not ");
+      out = g_unary_op(ast, "not ");
       break;
     case A_LOGIC_NOT:
       {
-        Block s = generate_ast(ast->a1.ptr);
-        set_string(&out, s.str);
-        append_string(&out, "\tor ");
-        append_string(&out, registers[s.result].name);
-        append_string(&out, ", ");
-        append_string(&out, registers[s.result].name);
-        append_string(&out, "\n\tsete ");
-        append_string(&out, registers[s.result].name);
-        append_string(&out, "\n");
-        result = s.result;
+        Block s = g_ast(ast->a1.ptr);
+        set_string(&out.str, s.str.str);
+        append_string(&out.str, "\tor ");
+        append_string(&out.str, registers[s.result].name);
+        append_string(&out.str, ", ");
+        append_string(&out.str, registers[s.result].name);
+        append_string(&out.str, "\n\tsete ");
+        append_string(&out.str, registers[s.result].name);
+        append_string(&out.str, "\n");
+        out.result = s.result;
       }
       break;
     case A_MULTIPLICATION:
-      result = generate_binary_op(&out, ast, "imul ");
+      out = g_binary_op(ast, "imul ");
       break;
     case A_DIVISION:
       printf("DIVISION\n");
@@ -193,16 +195,16 @@ Block generate_ast(Ast* ast) {
       print_ast(ast->a2.ptr, indent+1);
       break;
     case A_ADDITION:
-      result = generate_binary_op(&out, ast, "add ");
+      out = g_binary_op(ast, "add ");
       break;
     case A_SUBTRACTION:
-      result = generate_binary_op(&out, ast, "sub ");
+      out = g_binary_op(ast, "sub ");
       break;
     case A_LEFT_SHIFT:
-      result = generate_binary_op(&out, ast, "shl ");
+      out = g_binary_op(ast, "shl ");
       break;
     case A_RIGHT_SHIFT:
-      result = generate_binary_op(&out, ast, "shr ");
+      out = g_binary_op(ast, "shr ");
       break;
     case A_GRATER:
       printf("GRATER\n");
@@ -325,12 +327,7 @@ Block generate_ast(Ast* ast) {
       print_ast(ast->a2.ptr, indent+1);
       break;
     case A_COMMA_EXP:
-      {
-        Block s = generate_ast_stack(ast->a1.ptr);
-        CHECK(s.str);
-        out.str = s.str;
-        result = s.result;
-      }
+      out = g_ast_stack(ast->a1.ptr);
       break;
     /*case A_DECLARATION:
       printf("DECLARATION < ");
@@ -394,12 +391,7 @@ Block generate_ast(Ast* ast) {
       print_ast(ast->a1.ptr, indent+1);
       break;
     case A_COMPOUND_STATEMENT:
-      {
-        Block s = generate_ast_stack(ast->a1.ptr);
-        CHECK(s.str);
-        out.str = s.str;
-        result = s.result;
-      }
+      out = g_ast_stack(ast->a1.ptr);
       break;
     case A_NULL_STATEMENT:
       printf("NULL STATEMENT\n");
@@ -455,48 +447,40 @@ Block generate_ast(Ast* ast) {
       printf("BREAK\n");
       break;
     case A_RETURN:
-      {
-        Block exp = generate_ast(ast->a1.ptr);
-        CHECK(exp.str);
-        
-        set_string(&out, exp.str);
-        append_string(&out, "\tret\n\n");
-        result = exp.result;
-      }
+      out = g_ast(ast->a1.ptr);
+      CHECK(out.str);
+      append_string(&out.str, "\tret\n\n");
       break;
     case A_FUNCTION:
       {
-        Block body = generate_ast(ast->a2.ptr);
+        Block body = g_ast(ast->a2.ptr);
         CHECK(body.str);
 
-        set_string(&out, ast->a1.str);
-        append_string(&out, ":\n");
-        append_string(&out, body.str);
+        set_string(&out.str, ast->a1.str);
+        append_string(&out.str, ":\n");
+        append_string(&out.str, body.str.str);
 
         rreset();
       }
       break;
     case A_TRANSLATION_UNIT:
-      {
-        Block s = generate_ast_stack(ast->a1.ptr);
-        CHECK(s.str);
-        out.str = s.str;
-        result = s.result;
-      }
+      out = g_ast_stack(ast->a1.ptr);
       break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);
   }
-  return (Block) {out.str, result};
+  CHECK(out.str);
+  return out;
 }
 
 void init_generator() {
+  rreset();
   return;
 }
 
 char* generator(Ast* ast) {
   init_generator();
-  char* out = generate_ast(ast).str;
+  Block out = g_ast(ast);
 
-  return out;
+  return out.str.str;
 }
