@@ -91,7 +91,7 @@ void r_reset() {
   }
 }
 
-// Relocates the value at register req
+// Relocates the value at register
 Register** r_realloc(int request, Block* correction) {
   Block out = {0, 0};
   set_string(&out.str, "");
@@ -108,6 +108,24 @@ Register** r_realloc(int request, Block* correction) {
   
   *correction = out;
   return insert_reg(request);
+}
+
+Block r_merge(Register** src, Register** dest) {
+  Block out = {0, 0};
+
+  if (!(*dest)->used) {
+    printf("Error: trying to merge to an unused register\n");
+    return out;
+  }
+
+  append_format(&out.str, 
+    "\tmov %s, %s\n",
+    (*dest)->name64, (*src)->name64
+  );
+
+  r_free(src);
+  out.result = dest;
+  return out;
 }
 
 Block g_ast(Ast* ast);
@@ -434,14 +452,41 @@ Block g_ast(Ast* ast) {
       }
       break;
     case A_CONDITIONAL_EXP:
-      printf("CONDITIONAL EXPRESSION\n");
-      print_ast(ast->a1.ptr, indent+1);
-      for (int i = 0; i < indent; i++) printf("  ");
-      printf("THEN\n");
-      print_ast(ast->a2.ptr, indent+1);
-      for (int i = 0; i < indent; i++) printf("  ");
-      printf("ELSE\n");
-      print_ast(ast->a3.ptr, indent+1);
+      {
+        Block cond = g_ast(ast->a1.ptr);
+        CHECK(cond.str);
+        append_format(&out.str,
+          "%s"
+          "\tcmp %s, 0\n"
+          "\tje cond_exp_else_%d\n",
+          cond.str.str,
+          (*cond.result)->name64,
+          label_count
+        );
+        r_free(cond.result);
+
+        Block t = g_ast(ast->a2.ptr);
+        CHECK(t.str);
+
+        Block f = g_ast(ast->a3.ptr);
+        CHECK(f.str);
+
+        Block f_merge = r_merge(f.result, t.result);
+
+        append_format(&out.str,
+          "%s"
+          "\tjmp cond_exp_end_%d\n"
+          "cond_exp_else_%d:\n"
+          "%s"
+          "%s"
+          "cond_exp_end_%d:\n",
+          t.str.str, label_count,
+          label_count, f.str.str, f_merge.str.str, label_count 
+        );
+
+        label_count ++;
+        out.result = t.result;
+      }
       break;
     case A_ASSIGN:
       printf("ASSIGN\n");
@@ -622,13 +667,18 @@ Block g_ast(Ast* ast) {
       {
         out = g_ast(ast->a1.ptr);
         CHECK(out.str);
-        Block realloc;
-        Register** rax = r_realloc(1, &realloc);
+        Block realloc = {0, 0};
+        if (*(out.result) - registers != 1) {
+          Register** rax = r_realloc(1, &realloc);
+          append_format(&out.str, 
+            "%s"
+            "\tmov rax, %s\n",
+            realloc.str.str, (*out.result)->name64
+          );
+        }
+
         append_format(&out.str, 
-          "%s"
-          "\tmov rax, %s\n"
-          "\tret\n",
-          realloc.str.str, (*out.result)->name64
+          "\tret\n"
         );
       }
       break;
