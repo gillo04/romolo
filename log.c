@@ -151,8 +151,8 @@ void print_ast(Ast* ast, int indent) {
       print_ast(ast->a1.ptr, indent+1);
       print_ast(ast->a2.ptr, indent+1);
       break;
-    case A_GRATER:
-      printf("GRATER\n");
+    case A_GREATER:
+      printf("GREATER\n");
       print_ast(ast->a1.ptr, indent+1);
       print_ast(ast->a2.ptr, indent+1);
       break;
@@ -161,8 +161,8 @@ void print_ast(Ast* ast, int indent) {
       print_ast(ast->a1.ptr, indent+1);
       print_ast(ast->a2.ptr, indent+1);
       break;
-    case A_GRATER_EQUAL:
-      printf("GRATER EQUAL\n");
+    case A_GREATER_EQUAL:
+      printf("GREATER EQUAL\n");
       print_ast(ast->a1.ptr, indent+1);
       print_ast(ast->a2.ptr, indent+1);
       break;

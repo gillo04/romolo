@@ -8,28 +8,30 @@
 #define REG_COUNT 14
 #define USED_REGS_COUNT 256
 
+int label_count = 0;
+
 Register registers[REG_COUNT+2] = {
-  {0, 0},       // Null value 
-  {0, "rax"},
-  {0, "rbx"},
-  {0, "rcx"},
-  {0, "rdx"},
-  {0, "rsi"},
-  {0, "rdi"},
-  {0, "r8"},
-  {0, "r9"},
-  {0, "r10"},
-  {0, "r11"},
-  {0, "r12"},
-  {0, "r13"},
-  {0, "r14"},
-  {0, "r15"},
-  {0, 0}       // Means the value is on the stack
+  {0},       // Null value 
+  {"rax", "eax", "ax", "al"},
+  {"rbx", "ebx", "bx", "bl"},
+  {"rcx", "ecx", "cx", "cl"},
+  {"rdx", "edx", "dx", "dl"},
+  {"rsi", "esi", "si", "sil"},
+  {"rdi", "edi", "di", "dil"},
+  {"r8", "r8d", "r8w", "r8b"},
+  {"r9", "r9d", "r9w", "r9b"},
+  {"r10", "r10d", "r10w", "r10b"},
+  {"r11", "r11d", "r11w", "r11b"},
+  {"r12", "r12d", "r12w", "r12b"},
+  {"r13", "r13d", "r13w", "r13b"},
+  {"r14", "r14d", "r14w", "r14b"},
+  {"r15", "r15d", "r15w", "r15b"},
+  {0}       // Means the value is on the stack
 };
 
 void print_regs() {
   for (int i = 1; i < REG_COUNT+1; i++) {
-    printf("%s: %d\n", registers[i].name, registers[i].used);
+    printf("%s: %d\n", registers[i].name64, registers[i].used);
   }
   printf("\n");
 }
@@ -97,7 +99,7 @@ Register** r_realloc(int request, Block* correction) {
     int new_loc = get_unused_reg();
     append_format(&out.str, 
       "\tmov %s, %s\n",
-      registers[new_loc].name, registers[request].name
+      registers[new_loc].name64, registers[request].name64
     );
     registers[new_loc].owner = registers[request].owner;
     registers[new_loc].used = 1;
@@ -133,7 +135,7 @@ Block g_unary_op(Ast* ast, char* op) {
     "%s"
     "\t%s %s\n",
     s.str.str,
-    op, (*s.result)->name
+    op, (*s.result)->name64
   );
 
   out.result = s.result;
@@ -153,7 +155,32 @@ Block g_binary_op(Ast* ast, char* op) {
     "\t%s %s, %s\n",
     l.str.str,
     r.str.str,
-    op, (*l.result)->name, (*r.result)->name
+    op, (*l.result)->name64, (*r.result)->name64
+  );
+
+  r_free(r.result);
+  out.result = l.result;
+  return out;
+}
+
+Block g_binary_logic_op(Ast* ast, char* op) {
+  Block out = {0, 0};
+  Block l = g_ast(ast->a1.ptr);
+  CHECK(l.str);
+  Block r = g_ast(ast->a2.ptr);
+  CHECK(r.str);
+
+  append_format(&out.str,
+    "%s"
+    "%s"
+    "\tcmp %s, %s\n"
+    "\t%s %s\n"
+    "\tand %s, 1\n",
+    l.str.str,
+    r.str.str,
+    (*l.result)->name64, (*r.result)->name64,
+    op, (*l.result)->name8,
+    (*l.result)->name64
   );
 
   r_free(r.result);
@@ -174,7 +201,7 @@ Block g_ast(Ast* ast) {
         Register** reg = r_alloc();
         append_format(&out.str, 
           "\tmov %s, %lld\n"
-          , (*reg)->name, ast->a1.num
+          , (*reg)->name64, ast->a1.num
         );
         out.result = reg;
       }
@@ -236,7 +263,7 @@ Block g_ast(Ast* ast) {
       append_format(&out.str,
         "\tor %s, %s\n"
         "\tsete %s\n",
-        (*out.result)->name, (*out.result)->name, (*out.result)->name
+        (*out.result)->name64, (*out.result)->name64, (*out.result)->name64
       );
       break;
     case A_MULTIPLICATION:
@@ -262,7 +289,7 @@ Block g_ast(Ast* ast) {
           "\txor rdx, rdx\n"
           "\tmov rax, %s\n"
           "\tidiv %s\n",
-          (*l.result)->name, (*r.result)->name
+          (*l.result)->name64, (*r.result)->name64
         );
 
         r_free(rdx);
@@ -270,14 +297,35 @@ Block g_ast(Ast* ast) {
         r_free(r.result);
         out.result = rax;
       }
-      printf("DIVISION\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
       break;
     case A_MODULO:
-      printf("MODULO\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      {
+        Block l = g_ast(ast->a1.ptr);
+        Block r = g_ast(ast->a2.ptr);
+        append_format(&out.str,
+          "%s%s",
+          l.str.str, r.str.str
+        );
+
+        Block realloc;
+        Register** rax = r_realloc(1, &realloc);
+        append_string(&out.str, realloc.str.str);
+
+        Register** rdx = r_realloc(4, &realloc);
+        append_string(&out.str, realloc.str.str);
+
+        append_format(&out.str,
+          "\txor rdx, rdx\n"
+          "\tmov rax, %s\n"
+          "\tidiv %s\n",
+          (*l.result)->name64, (*r.result)->name64
+        );
+
+        r_free(rax);
+        r_free(l.result);
+        r_free(r.result);
+        out.result = rdx;
+      }
       break;
     case A_ADDITION:
       out = g_binary_op(ast, "add");
@@ -291,60 +339,99 @@ Block g_ast(Ast* ast) {
     case A_RIGHT_SHIFT:
       out = g_binary_op(ast, "shr");
       break;
-    case A_GRATER:
-      printf("GRATER\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+    case A_GREATER:
+      out = g_binary_logic_op(ast, "setg");
       break;
     case A_LESS:
-      printf("LESS\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_binary_logic_op(ast, "setl");
       break;
-    case A_GRATER_EQUAL:
-      printf("GRATER EQUAL\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+    case A_GREATER_EQUAL:
+      out = g_binary_logic_op(ast, "setge");
       break;
     case A_LESS_EQUAL:
-      printf("LESS EQUAL\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_binary_logic_op(ast, "setle");
       break;
     case A_EQUAL:
-      printf("EQUAL\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_binary_logic_op(ast, "sete");
       break;
     case A_NOT_EQUAL:
-      printf("NOT EQUAL\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_binary_logic_op(ast, "setne");
       break;
     case A_BITWISE_AND:
-      printf("BITWISE AND\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_binary_op(ast, "and");
       break;
     case A_BITWISE_XOR:
-      printf("BITWISE XOR\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_binary_op(ast, "xor");
       break;
     case A_BITWISE_OR:
-      printf("BITWISE OR\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_binary_op(ast, "or");
       break;
     case A_LOGIC_AND:
-      printf("LOGIC AND\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      {
+        Block l = g_ast(ast->a1.ptr);
+        CHECK(l.str);
+        Block r = g_ast(ast->a2.ptr);
+        CHECK(r.str);
+
+        append_format(&out.str,
+          "%s"
+          "\tcmp %s, 0\n"
+          "\tjne logic_and_%d\n"
+          "\tjmp logic_and_%d\n"
+          "logic_and_%d:\n"
+          "%s"
+          "\tcmp %s, 0\n"
+          "\tsetne %s\n"
+          "logic_and_%d:\n"
+          "\tand %s, 1\n",
+          l.str.str,
+          (*l.result)->name64,
+          label_count, label_count + 1, label_count,
+          r.str.str,
+          (*r.result)->name64, (*l.result)->name8, 
+          label_count + 1,
+          (*l.result)->name64
+        );
+
+        label_count += 2;
+
+        r_free(r.result);
+        out.result = l.result;
+      }
       break;
     case A_LOGIC_OR:
-      printf("LOGIC OR\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      {
+        Block l = g_ast(ast->a1.ptr);
+        CHECK(l.str);
+        Block r = g_ast(ast->a2.ptr);
+        CHECK(r.str);
+
+        append_format(&out.str,
+          "%s"
+          "\tcmp %s, 0\n"
+          "\tje logic_or_%d\n"
+          "\tmov %s, 1\n"
+          "\tjmp logic_or_%d\n"
+          "logic_or_%d:\n"
+          "%s"
+          "\tcmp %s, 0\n"
+          "\tsetne %s\n"
+          "\tand %s, 1\n"
+          "logic_or_%d:\n",
+          l.str.str,
+          (*l.result)->name64,
+          label_count,  
+          (*l.result)->name64, label_count + 1, label_count,
+          r.str.str,
+          (*r.result)->name64, (*l.result)->name8, 
+          (*l.result)->name64, label_count + 1
+        );
+
+        label_count += 2;
+
+        r_free(r.result);
+        out.result = l.result;
+      }
       break;
     case A_CONDITIONAL_EXP:
       printf("CONDITIONAL EXPRESSION\n");
@@ -541,7 +628,7 @@ Block g_ast(Ast* ast) {
           "%s"
           "\tmov rax, %s\n"
           "\tret\n",
-          realloc.str.str, (*out.result)->name
+          realloc.str.str, (*out.result)->name64
         );
       }
       break;
@@ -579,6 +666,7 @@ Block g_ast(Ast* ast) {
 }
 
 void init_generator() {
+  label_count = 0;
   r_reset();
   return;
 }

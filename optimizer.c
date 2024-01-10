@@ -67,13 +67,13 @@ int solve_constant_binary(Ast* ast) {
     case A_RIGHT_SHIFT:
       ast->a1.num = ptr1->a1.num >> ptr2->a1.num;
       break;
-    case A_GRATER:
+    case A_GREATER:
       ast->a1.num = ptr1->a1.num > ptr2->a1.num;
       break;
     case A_LESS:
       ast->a1.num = ptr1->a1.num < ptr2->a1.num;
       break;
-    case A_GRATER_EQUAL:
+    case A_GREATER_EQUAL:
       ast->a1.num = ptr1->a1.num >= ptr2->a1.num;
       break;
     case A_LESS_EQUAL:
@@ -164,9 +164,9 @@ int solve_constant_exp(Ast* ast) {
     case A_SUBTRACTION:
     case A_LEFT_SHIFT:
     case A_RIGHT_SHIFT:
-    case A_GRATER:
+    case A_GREATER:
     case A_LESS:
-    case A_GRATER_EQUAL:
+    case A_GREATER_EQUAL:
     case A_LESS_EQUAL:
     case A_EQUAL:
     case A_NOT_EQUAL:

@@ -204,7 +204,7 @@ Ast m_shift_expression(int* i) {
 }
 
 char* rel_strs[] = {">", "<", ">=", "<=", 0};
-int rel_types[] = {A_GRATER, A_LESS, A_GRATER_EQUAL, A_LESS_EQUAL};
+int rel_types[] = {A_GREATER, A_LESS, A_GREATER_EQUAL, A_LESS_EQUAL};
 Ast m_relational_expression(int* i) {
   Ast out = m_binary_expression(i, m_shift_expression, rel_strs, rel_types);
   return out;
