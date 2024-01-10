@@ -39,30 +39,13 @@ char* load(int argc, char* argv[]) {
 void save(int argc, char* argv[], char* src) {
   FILE *file;
 
-  // Extract filename
-  char filename[100];
-  int j = 0;
-  int captuting = 0;
-  for (int i = strlen(argv[1]) - 1; i >= 0; i--) {
-    if (argv[1][i] == '.') {
-      captuting = 1;
-    } else if (argv[1][i] == '/') {
-      filename[j] = 0;
-      break;
-    } else if (captuting){
-      filename[j++] = argv[1][i];
-    }
+  char* filename;
+  if (argc >= 3) {
+    filename = argv[2];
+  } else {
+    filename = "out.s";
   }
-  int len = strlen(filename);
-  for (int i = 0; i < len/2; i++) {
-    char tmp = filename[i];
-    filename[i] = filename[len-i-1];
-    filename[len-i-1] = tmp;
-  }
-  filename[len++] = '.';
-  filename[len++] = 's';
-  filename[len] = 0;
-  
+
   // Open the file in write mode
   file = fopen(filename, "w");
   

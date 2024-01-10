@@ -43,7 +43,10 @@ int main(int argc, char* argv[]) {
   printf("CODE GENERATION FINISHED\n\n");
   printf("%s\n", assembly_code);
 
+  save(argc, argv, assembly_code);
+
   free(source_code);
   free_tokens(tokens);
   // TODO: free_ast(ast);
+  free(assembly_code);
 }

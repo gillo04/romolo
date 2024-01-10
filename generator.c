@@ -27,25 +27,46 @@ Register registers[REG_COUNT+2] = {
   {0, 0}       // Means the value is on the stack
 };
 
+void print_regs() {
+  for (int i = 1; i < REG_COUNT+1; i++) {
+    printf("%s: %d\n", registers[i].name, registers[i].used);
+  }
+  printf("\n");
+}
+
 Register* used_regs[USED_REGS_COUNT];
 
-Register** r_alloc() {
+Register** insert_reg(int reg) {
+  Register** out = 0;
+  for (int j = 0; j < USED_REGS_COUNT; j++) {
+    if (!used_regs[j]) {
+      used_regs[j] = &registers[reg];
+      out = &used_regs[j];
+      registers[reg].owner = out;
+      break;
+    }
+  }
+  if (registers[reg].owner == 0) {
+    printf("Error: exceeded maximum number of allocated values\n");
+    return out;
+  }
+  registers[reg].used = 1;
+  return out;
+}
+
+int get_unused_reg() {
   for (int i = 1; i < REG_COUNT+1; i++) {
     if (!registers[i].used) {
-      registers[i].used = 1;
-      for (int j = 0; j < USED_REGS_COUNT; j++) {
-        if (!used_regs[j]) {
-          used_regs[j] = &registers[i];
-          registers[i].owner = &used_regs[j];
-          break;
-        }
-      }
-      if (registers[i].owner == 0) {
-        printf("Error: exceeded maximum number of allocated values\n");
-        return 0;
-      }
-      return registers[i].owner;
+      return i;
     }
+  }
+  return 0;
+}
+
+Register** r_alloc() {
+  int reg = get_unused_reg();
+  if (reg != 0) {
+    return insert_reg(reg);
   }
 
   printf("Error: stack is not yet handled\n");
@@ -69,13 +90,22 @@ void r_reset() {
 }
 
 // Relocates the value at register req
-Block r_realloc(int req) {
+Register** r_realloc(int request, Block* correction) {
   Block out = {0, 0};
   set_string(&out.str, "");
-  if (!registers[req].used) {
-    return out;
+  if (registers[request].used) {
+    int new_loc = get_unused_reg();
+    append_format(&out.str, 
+      "\tmov %s, %s\n",
+      registers[new_loc].name, registers[request].name
+    );
+    registers[new_loc].owner = registers[request].owner;
+    registers[new_loc].used = 1;
+    *registers[request].owner = &registers[new_loc];
   }
-  return out;
+  
+  *correction = out;
+  return insert_reg(request);
 }
 
 Block g_ast(Ast* ast);
@@ -149,7 +179,7 @@ Block g_ast(Ast* ast) {
         out.result = reg;
       }
       break;
-    case A_STRING_LITERAL:
+    /*case A_STRING_LITERAL:
       printf("STRING LITERAL \"%s\"\n", ast->a1.str);
       break;
     case A_MEMBER:
@@ -190,7 +220,7 @@ Block g_ast(Ast* ast) {
     case A_DEREFERENCE:
       printf("DEREFERENCE\n");
       print_ast(ast->a1.ptr, indent+1);
-      break;
+      break;*/
 
     case A_UNARY_PLUS:
       out = g_ast(ast->a1.ptr);
@@ -213,6 +243,33 @@ Block g_ast(Ast* ast) {
       out = g_binary_op(ast, "imul");
       break;
     case A_DIVISION:
+      {
+        Block l = g_ast(ast->a1.ptr);
+        Block r = g_ast(ast->a2.ptr);
+        append_format(&out.str,
+          "%s%s",
+          l.str.str, r.str.str
+        );
+
+        Block realloc;
+        Register** rax = r_realloc(1, &realloc);
+        append_string(&out.str, realloc.str.str);
+
+        Register** rdx = r_realloc(4, &realloc);
+        append_string(&out.str, realloc.str.str);
+
+        append_format(&out.str,
+          "\txor rdx, rdx\n"
+          "\tmov rax, %s\n"
+          "\tidiv %s\n",
+          (*l.result)->name, (*r.result)->name
+        );
+
+        r_free(rdx);
+        r_free(l.result);
+        r_free(r.result);
+        out.result = rax;
+      }
       printf("DIVISION\n");
       print_ast(ast->a1.ptr, indent+1);
       print_ast(ast->a2.ptr, indent+1);
@@ -494,7 +551,16 @@ Block g_ast(Ast* ast) {
       }
       break;
     case A_TRANSLATION_UNIT:
-      out = g_ast_stack(ast->a1.ptr);
+      {
+        Block stack = g_ast_stack(ast->a1.ptr);
+        append_format(&out.str,
+          ".intel_syntax noprefix\n"
+          ".global main\n"
+          ".text\n\n"
+          "%s",
+          stack.str.str
+        );
+      }
       break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);
