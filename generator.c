@@ -532,9 +532,18 @@ Block g_ast(Ast* ast) {
       printf("BREAK\n");
       break;
     case A_RETURN:
-      out = g_ast(ast->a1.ptr);
-      CHECK(out.str);
-      append_string(&out.str, "\tret\n");
+      {
+        out = g_ast(ast->a1.ptr);
+        CHECK(out.str);
+        Block realloc;
+        Register** rax = r_realloc(1, &realloc);
+        append_format(&out.str, 
+          "%s"
+          "\tmov rax, %s\n"
+          "\tret\n",
+          realloc.str.str, (*out.result)->name
+        );
+      }
       break;
     case A_FUNCTION:
       {
