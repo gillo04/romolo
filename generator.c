@@ -110,21 +110,29 @@ Register** r_realloc(int request, Block* correction) {
   return insert_reg(request);
 }
 
-Block r_merge(Register** src, Register** dest) {
+Block r_move_to(Register** src, Register* dest) {
   Block out = {0, 0};
 
-  if (!(*dest)->used) {
-    printf("Error: trying to merge to an unused register\n");
+  if (*src == dest) {
+    set_string(&out.str, "");
+    out.result = src;
+    return out;
+  }
+
+  if (dest->used) {
+    printf("Error: trying to move to an already used register\n");
     return out;
   }
 
   append_format(&out.str, 
     "\tmov %s, %s\n",
-    (*dest)->name64, (*src)->name64
+    dest->name64, (*src)->name64
   );
+  *src = dest;
+  dest->used = 1;
+  dest->owner = src;
 
-  r_free(src);
-  out.result = dest;
+  out.result = src;
   return out;
 }
 
@@ -465,13 +473,20 @@ Block g_ast(Ast* ast) {
         );
         r_free(cond.result);
 
+        // Generate true branch
         Block t = g_ast(ast->a2.ptr);
         CHECK(t.str);
 
+        // Free up result register but remember it
+        Register* result = *t.result;
+        r_free(t.result);
+
+        // Generate false branch
         Block f = g_ast(ast->a3.ptr);
         CHECK(f.str);
 
-        Block f_merge = r_merge(f.result, t.result);
+        // Make sure false result is in the right register
+        Block f_move_to = r_move_to(f.result, result);
 
         append_format(&out.str,
           "%s"
@@ -481,11 +496,11 @@ Block g_ast(Ast* ast) {
           "%s"
           "cond_exp_end_%d:\n",
           t.str.str, label_count,
-          label_count, f.str.str, f_merge.str.str, label_count 
+          label_count, f.str.str, f_move_to.str.str, label_count 
         );
 
         label_count ++;
-        out.result = t.result;
+        out.result = f.result;
       }
       break;
     case A_ASSIGN:
