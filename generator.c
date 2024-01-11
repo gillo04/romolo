@@ -142,6 +142,9 @@ Block g_ast_stack(Ast* ast) {
   int i = 0;
   Block out = {0, 0};
   while (ast[i].node_type != A_NONE) {
+    if (i != 0) {
+      r_free(out.result);
+    }
     Block tmp = g_ast(&ast[i]);
     CHECK(tmp.str);
 
@@ -629,17 +632,76 @@ Block g_ast(Ast* ast) {
       printf("NULL STATEMENT\n");
       break;
     case A_IF:
-      printf("IF\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      {
+        Block cond = g_ast(ast->a1.ptr);
+        CHECK(cond.str);
+        append_format(&out.str,
+          "%s"
+          "\tcmp %s, 0\n"
+          "\tje if_end_%d\n",
+          cond.str.str,
+          (*cond.result)->name64,
+          label_count
+        );
+        r_free(cond.result);
+
+        // Generate true branch
+        Block t = g_ast(ast->a2.ptr);
+        CHECK(t.str);
+        
+        append_format(&out.str,
+          "%s"
+          "if_end_%d:\n",
+          t.str.str, label_count
+        );
+
+        label_count ++;
+        out.result = t.result;
+      }
       break;
     case A_IF_ELSE:
-      printf("IF\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
-      for (int i = 0; i < indent; i++) printf("  ");
-      printf("ELSE\n");
-      print_ast(ast->a3.ptr, indent+1);
+      {
+        Block cond = g_ast(ast->a1.ptr);
+        CHECK(cond.str);
+        append_format(&out.str,
+          "%s"
+          "\tcmp %s, 0\n"
+          "\tje if_else_%d\n",
+          cond.str.str,
+          (*cond.result)->name64,
+          label_count
+        );
+        r_free(cond.result);
+
+        // Generate true branch
+        Block t = g_ast(ast->a2.ptr);
+        CHECK(t.str);
+
+        // Free up result register but remember it
+        Register* result = *t.result;
+        r_free(t.result);
+
+        // Generate false branch
+        Block f = g_ast(ast->a3.ptr);
+        CHECK(f.str);
+
+        // Make sure false result is in the right register
+        Block f_move_to = r_move_to(f.result, result);
+
+        append_format(&out.str,
+          "%s"
+          "\tjmp if_end_%d\n"
+          "if_else_%d:\n"
+          "%s"
+          "%s"
+          "if_end_%d:\n",
+          t.str.str, label_count,
+          label_count, f.str.str, f_move_to.str.str, label_count 
+        );
+
+        label_count ++;
+        out.result = f.result;
+      }
       break;
     case A_SWITCH:
       printf("SWITCH\n");
