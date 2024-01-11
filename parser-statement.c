@@ -85,6 +85,7 @@ Ast m_expression_statement(int* i) {
     if (out.node_type == A_NONE) {
       out.node_type = A_NULL_STATEMENT;
     }
+    out.node_type = A_EXPRESSION_STATEMENT;
     *i += 1;
     return out;
   }

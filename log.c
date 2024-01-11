@@ -397,6 +397,10 @@ void print_ast(Ast* ast, int indent) {
       printf("RETURN\n");
       print_ast(ast->a1.ptr, indent+1);
       break;
+    case A_EXPRESSION_STATEMENT:
+      printf("EXPRESSION STATEMENT\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
+      break;
     case A_FUNCTION:
       printf("FUNCTION %s\n", ast->a1.str);
       print_ast(ast->a2.ptr, indent+1);

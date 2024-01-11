@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 
   // optimizer(&ast);
   // printf("OPTIMIZER FINISHED\n");
-  // print_ast(&ast, 0);
+  print_ast(&ast, 0);
 
   char* assembly_code = generator(&ast);
   if (assembly_code == 0) {

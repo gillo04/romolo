@@ -76,6 +76,14 @@ Register** r_alloc() {
 }
 
 void r_free(Register** r) {
+  if (r == 0) {
+    return;
+  }
+
+  if (*r == 0) {
+    printf("Passed pointer to ghost register\n");
+    return;
+  }
   (*r)->used = 0;
   *r = 0;
 }
@@ -613,8 +621,15 @@ Block g_ast(Ast* ast) {
       print_ast_stack(ast->a1.ptr, indent+1);
       break;*/
     case A_LABEL:
-      printf("LABEL %s\n", ast->a1.str);
-      print_ast(ast->a2.ptr, indent+1);
+      {
+        append_format(&out.str,
+          "%s:\n",
+          ast->a1.str
+        );
+        Block stat = g_ast(ast->a2.ptr);
+        append_string(&out.str, stat.str.str);
+        out.result = stat.result;
+      }
       break;
     case A_CASE:
       printf("CASE\n");
@@ -732,7 +747,10 @@ Block g_ast(Ast* ast) {
       print_ast(ast->a3.ptr, indent+1);
       break; 
     case A_GOTO:
-      printf("GOTO %s\n", ast->a1.str);
+      append_format(&out.str,
+        "\tjmp %s\n",
+        ast->a1.str
+      );
       break;    
     case A_CONTINUE:
       printf("CONTINUE\n");
@@ -758,6 +776,9 @@ Block g_ast(Ast* ast) {
           "\tret\n"
         );
       }
+      break;
+    case A_EXPRESSION_STATEMENT:
+      out = g_ast_stack(ast->a1.ptr);
       break;
     case A_FUNCTION:
       {
