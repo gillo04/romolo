@@ -13,6 +13,7 @@
 extern Token* toks;
 extern char* src;
 
+/*
 Type m_type_qualifier_list(int* i) {
   int j = *i;
   Type out = {E_NONE};
@@ -140,9 +141,12 @@ Ast m_direct_declarator_list(int* i) {
   out.a1.ptr = list.vec;
   *i = j;
   return out;
-}
+}*/
 
 Ast m_declarator(int* i) {
+  (*i)++;
+  return (Ast) {A_DECLARATOR};
+  /*
   Ast out = {A_DECLARATOR};
   astcpy(&out.a1.ptr, m_pointer(i));
   astcpy(&out.a2.ptr, m_direct_declarator(i));
@@ -153,5 +157,5 @@ Ast m_declarator(int* i) {
     return (Ast) {A_NONE};
   }
 
-  return out;
+  return out;*/
 }

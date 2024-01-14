@@ -13,6 +13,7 @@ enum {
   A_POST_DECREMENT,
   A_ARRAY_SUBSCRIPT,
 
+  // Unary operators 
   A_PRE_INCREMENT,
   A_PRE_DECREMENT,
   A_ADDRESS,
@@ -22,6 +23,7 @@ enum {
   A_BITWISE_NOT,
   A_LOGIC_NOT,
 
+  // Binary operators 
   A_MULTIPLICATION,
   A_DIVISION,
   A_MODULO,
@@ -41,6 +43,7 @@ enum {
   A_LOGIC_AND,
   A_LOGIC_OR,
 
+  // Assignment operators and other 
   A_CONDITIONAL_EXP,
   A_ASSIGN,
   A_MULT_ASSIGN,
@@ -55,19 +58,7 @@ enum {
   A_OR_ASSIGN,
   A_COMMA_EXP,
 
-  A_DECLARATION,
-  A_INIT_DECLARATOR,
-  A_DECLARATOR,
-  A_INITIALIZER,
-  A_POINTER,
-  A_DIRECT_DECLARATOR,
-  A_PARAMETER_TYPE_LIST, 
-  A_PARAMETER_LIST,
-  A_THREE_DOTS,
-  A_IDENTIFIER_LIST,
-  A_PARAMETER_DECLARATION,
-  A_DIRECT_DECLARATOR_LIST,
-
+  // Statements
   A_LABEL,
   A_CASE,
   A_DEFAULT,
@@ -87,47 +78,44 @@ enum {
   A_EXPRESSION_STATEMENT,
 
   A_FUNCTION,
-  A_TRANSLATION_UNIT
-};
+  A_TRANSLATION_UNIT,
 
-enum {
-  E_NONE = 0,
+  // Declaration specifiers 
+  A_TYPEDEF,
+  A_EXTERN,
+  A_STATIC,
+  A_AUTO,
+  A_REGISTER,
+  A_VOID,
+  A_CHAR,
+  A_SHORT,
+  A_INT,
+  A_LONG,
+  A_FLOAT,
+  A_DOUBLE,
+  A_SIGNED,
+  A_UNSIGNED,
+  A_BOOL,
+  A_CONST,
+  A_RESTRIC,
+  A_VIOLATE,
+  A_INLINE,
+  A_NORETURN,
 
-  // Storage class
-  E_TYPEDEF,
-  E_EXTERN,
-  E_STATIC,
-  E_AUTO,
-  E_REGISTER,
-
-  // Type specifier
-  E_VOID,
-  E_CHAR,
-  E_SHORT,
-  E_INT,
-  E_LONG,
-  E_FLOAT,
-  E_DOUBLE,
-  E_SIGNED,
-  E_UNSIGNED,
-  E_BOOL,
-
-  // Typer qualifiers
-  E_CONST,
-  E_RESTRIC,
-  E_VIOLATE,
-  
-  // Function specifiers
-  E_INLINE,
-  E_NORETURN,
-
-  // Node category 
-  E_RAW,
-  E_POINTER,
-  E_ARRAY,
-  E_STRUCT,
-  E_UNION,
-  E_DECLARATION_SPECIFIERS
+  // Declaration and declarator
+  A_DECLARATION_SPECIFIERS,
+  A_DECLARATION,
+  A_INIT_DECLARATOR,
+  A_DECLARATOR,
+  A_INITIALIZER,
+  A_POINTER,
+  A_DIRECT_DECLARATOR,
+  A_PARAMETER_TYPE_LIST, 
+  A_PARAMETER_LIST,
+  A_THREE_DOTS,
+  A_IDENTIFIER_LIST,
+  A_PARAMETER_DECLARATION,
+  A_DIRECT_DECLARATOR_LIST
 };
 
 
@@ -140,15 +128,15 @@ typedef union {
   long long num;
 } Arg;
 
-struct s_type{
+/*struct s_type{
   int node_type;
   int type;
   Type* next;
-};
+}; */
 
 struct s_ast {
   int node_type;
-  Type type; // Expression  type
+  // Type type; // Expression  type
  
   Arg a1;
   Arg a2;

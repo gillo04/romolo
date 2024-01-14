@@ -46,7 +46,9 @@ void print_ast_stack(Ast* ast, int indent) {
 }
 
 void print_ast(Ast* ast, int indent) {
-  for (int i = 0; i < indent; i++) printf("  ");
+  if (ast->node_type < A_TYPEDEF || ast->node_type > A_NORETURN) {
+    for (int i = 0; i < indent; i++) printf("  ");
+  }
 
   switch (ast->node_type) {
     case A_NONE:
@@ -69,6 +71,11 @@ void print_ast(Ast* ast, int indent) {
       printf("MEMBER DEREFERENCE %s\n", ast->a2.str);
       print_ast(ast->a1.ptr, indent+1);
       break;
+
+    /*
+     * Unary operators
+     */
+
     case A_POST_INCREMENT:
       printf("POST INCREMENT\n");
       print_ast(ast->a1.ptr, indent+1);
@@ -116,6 +123,11 @@ void print_ast(Ast* ast, int indent) {
       printf("LOGIC NOT\n");
       print_ast(ast->a1.ptr, indent+1);
       break;
+
+    /*
+     * Binary operators
+     */
+
     case A_MULTIPLICATION:
       printf("MULTIPLICATION\n");
       print_ast(ast->a1.ptr, indent+1);
@@ -206,6 +218,11 @@ void print_ast(Ast* ast, int indent) {
       print_ast(ast->a1.ptr, indent+1);
       print_ast(ast->a2.ptr, indent+1);
       break;
+
+    /*
+     * Assignment operators and other 
+     */
+
     case A_CONDITIONAL_EXP:
       printf("CONDITIONAL EXPRESSION\n");
       print_ast(ast->a1.ptr, indent+1);
@@ -275,11 +292,83 @@ void print_ast(Ast* ast, int indent) {
       printf("COMMA EXPRESSION\n");
       print_ast_stack(ast->a1.ptr, indent+1);
       break;
+
+    /*
+     * Declarator and declaration 
+     */
+    case A_TYPEDEF:
+      printf("TYPEDEF ");
+      break;
+    case A_EXTERN:
+      printf("EXTERN ");
+      break;
+    case A_STATIC:
+      printf("STATIC ");
+      break;
+    case A_AUTO:
+      printf("AUTO ");
+      break;
+    case A_REGISTER:
+      printf("REGISTER ");
+      break;
+    case A_VOID:
+      printf("VOID ");
+      break;
+    case A_CHAR:
+      printf("CHAR ");
+      break;
+    case A_SHORT:
+      printf("SHORT ");
+      break;
+    case A_INT:
+      printf("INT ");
+      break;
+    case A_LONG:
+      printf("LONG ");
+      break;
+    case A_FLOAT:
+      printf("FLOAT ");
+      break;
+    case A_DOUBLE:
+      printf("DOUBLE ");
+      break;
+    case A_SIGNED:
+      printf("SIGNED ");
+      break;
+    case A_UNSIGNED:
+      printf("UNSIGNED ");
+      break;
+    case A_BOOL:
+      printf("BOOL ");
+      break;
+    case A_CONST:
+      printf("CONST ");
+      break;
+    case A_RESTRIC:
+      printf("RESTRICT ");
+      break;
+    case A_VIOLATE:
+      printf("VIOLATE ");
+      break;
+    case A_INLINE:
+      printf("INLINE ");
+      break;
+    case A_NORETURN:
+      printf("NORETURN ");
+      break;
+
+    case A_DECLARATION_SPECIFIERS:
+      printf("DECLARATION SPECIFIERS\n");
+      for (int i = 0; i < indent+1; i++) printf("  ");
+      print_ast_stack(ast->a1.ptr, 0);
+      printf("\n");
+      break;
     case A_DECLARATION:
-      printf("DECLARATION < ");
-      print_type(&ast->type);
-      printf(">\n");
-      print_ast_stack(ast->a1.ptr, indent+1);
+      printf("DECLARATION\n");
+      print_ast_stack(ast->a1.ptr, indent + 1);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        print_ast_stack(ast->a2.ptr, indent + 1);
+      }
       break;
     case A_INIT_DECLARATOR:
       printf("INIT DECLARATOR\n");
@@ -296,7 +385,7 @@ void print_ast(Ast* ast, int indent) {
       break;
     case A_POINTER:
       printf("POINTER < \n");
-      print_type(&ast->type);
+      // print_type(&ast->type);
       printf(">\n");
       if (ast->a1.ptr->node_type != A_NONE) {
         print_ast(ast->a1.ptr, indent + 1);
@@ -323,6 +412,10 @@ void print_ast(Ast* ast, int indent) {
       printf("IDENTIFIER LIST\n");
       print_ast_stack(ast->a1.ptr, indent+1);
       break;
+
+    /*
+     * Statements
+     */
     case A_LABEL:
       printf("LABEL %s\n", ast->a1.str);
       print_ast(ast->a2.ptr, indent+1);
@@ -411,97 +504,6 @@ void print_ast(Ast* ast, int indent) {
       break;
     default:
       printf("Couldn't recognize type %d\n", ast->node_type);
-  }
-}
-
-void print_type(Type* t) {
-  if (t == 0 || t->node_type == E_NONE) {
-    return;
-  }
-
-  switch (t->node_type) {
-    case E_TYPEDEF:
-      printf("TYPEDEF ");
-      print_type(t->next);
-      break;
-    case E_EXTERN:
-      printf("EXTERN ");
-      print_type(t->next);
-      break;
-    case E_STATIC:
-      printf("STATIC ");
-      print_type(t->next);
-      break;
-    case E_AUTO:
-      printf("AUTO ");
-      print_type(t->next);
-      break;
-    case E_REGISTER:
-      printf("REGISTER ");
-      print_type(t->next);
-      break;
-    case E_VOID:
-      printf("VOID ");
-      print_type(t->next);
-      break;
-    case E_CHAR:
-      printf("CHAR ");
-      print_type(t->next);
-      break;
-    case E_SHORT:
-      printf("SHORT ");
-      print_type(t->next);
-      break;
-    case E_INT:
-      printf("INT ");
-      print_type(t->next);
-      break;
-    case E_LONG:
-      printf("LONG ");
-      print_type(t->next);
-      break;
-    case E_FLOAT:
-      printf("FLOAT ");
-      print_type(t->next);
-      break;
-    case E_DOUBLE:
-      printf("DOUBLE ");
-      print_type(t->next);
-      break;
-    case E_SIGNED:
-      printf("SIGNED ");
-      print_type(t->next);
-      break;
-    case E_UNSIGNED:
-      printf("UNSIGNED ");
-      print_type(t->next);
-      break;
-    case E_BOOL:
-      printf("BOOL ");
-      print_type(t->next);
-      break;
-    case E_CONST:
-      printf("CONST ");
-      print_type(t->next);
-      break;
-    case E_RESTRIC:
-      printf("RESTRICT ");
-      print_type(t->next);
-      break;
-    case E_VIOLATE:
-      printf("VIOLATE ");
-      print_type(t->next);
-      break;
-    case E_INLINE:
-      printf("INLINE ");
-      print_type(t->next);
-      break;
-    case E_NORETURN:
-      printf("NORETURN ");
-      print_type(t->next);
-      break;
-    default:
-      printf("Couldn't recognize type %d\n", t->node_type);
   }
 }
 

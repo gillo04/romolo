@@ -627,6 +627,8 @@ Block g_ast(Ast* ast) {
           ast->a1.str
         );
         Block stat = g_ast(ast->a2.ptr);
+        CHECK(stat.str);
+
         append_string(&out.str, stat.str.str);
         out.result = stat.result;
       }
@@ -724,9 +726,31 @@ Block g_ast(Ast* ast) {
       print_ast(ast->a2.ptr, indent+1);
       break;
     case A_WHILE:
-      printf("WHILE\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      {
+        Block cond = g_ast(ast->a1.ptr);
+        CHECK(cond.str);
+        printf("ok\n");
+        append_format(&out.str,
+          "while_%d:\n"
+          "%s"
+          "\tcmp %s, 0\n"
+          "\tje while_end_%d\n",
+          label_count, cond.str.str,
+          (*cond.result)->name64, label_count
+        );
+        r_free(cond.result);
+
+        Block stat = g_ast(ast->a2.ptr);
+        CHECK(stat.str);
+        append_format(&out.str,
+          "%s"
+          "\tjmp while_%d\n"
+          "while_end_%d:\n",
+          stat.str.str, label_count,
+          label_count
+        );
+        out.result = stat.result;
+      }
       break;
     case A_DO_WHILE:
       printf("DO\n");

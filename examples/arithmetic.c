@@ -1,6 +1,1 @@
-int main() {
-  goto label;
-  return 42;
-  label:
-  return 69;
-}
+long long int declarator = init, decl;

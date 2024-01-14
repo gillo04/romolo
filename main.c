@@ -35,6 +35,8 @@ int main(int argc, char* argv[]) {
   // printf("OPTIMIZER FINISHED\n");
   print_ast(&ast, 0);
 
+  return 0;
+
   char* assembly_code = generator(&ast);
   if (assembly_code == 0) {
     printf("Error generating code\n");

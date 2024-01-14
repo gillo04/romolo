@@ -9,17 +9,16 @@
 extern Token* toks;
 extern char* src;
 
-Type m_type_token(int* i, const char* tt_strs[], const int tt_types[]) {
-  Type out = {E_NONE};
+Ast m_type_token(int* i, const char* tt_strs[], const int tt_types[]) {
+  Ast out = {A_NONE};
   if (toks[*i].type == T_NONE) {
     return out;
   }
 
   for (int j = 0; tt_strs[j] != 0; j++) {
-    if (strcmp(toks[*i].val.str, tt_strs[j]) == 0) {
+    if (tokcmp(toks[*i], (Token) {T_KEYWORD, tt_strs[j]})) {
       (*i)++;
       out.node_type = tt_types[j];
-      out.next = 0;
       break;
     }
   }
@@ -27,53 +26,51 @@ Type m_type_token(int* i, const char* tt_strs[], const int tt_types[]) {
 }
 
 const char* sc_strs[] = {"typedef", "extern", "static", "auto", "register", 0};
-const int sc_types[] = {E_TYPEDEF, E_EXTERN, E_STATIC, E_AUTO, E_REGISTER, 0};
-Type m_storage_class_spec(int* i) {
+const int sc_types[] = {A_TYPEDEF, A_EXTERN, A_STATIC, A_AUTO, A_REGISTER, 0};
+Ast m_storage_class_spec(int* i) {
   return m_type_token(i, sc_strs, sc_types);
 }
 
 const char* ts_strs[] = {"void", "char", "short", "int", "long", "float", "double", "signed", "unsigned", "_Bool", 0};
-const int ts_types[] = {E_VOID, E_CHAR, E_SHORT, E_INT, E_LONG, E_FLOAT, E_DOUBLE, E_SIGNED, E_UNSIGNED, E_BOOL, 0};
-Type m_type_spec(int* i) {
+const int ts_types[] = {A_VOID, A_CHAR, A_SHORT, A_INT, A_LONG, A_FLOAT, A_DOUBLE, A_SIGNED, A_UNSIGNED, A_BOOL, 0};
+Ast m_type_spec(int* i) {
   return m_type_token(i, ts_strs, ts_types);
 }
 
 const char* tq_strs[] = {"const", "restrict", "volatile", 0};
-const int tq_types[] = {E_CONST, E_RESTRIC, E_VIOLATE, 0};
-Type m_type_qualifier(int* i) {
+const int tq_types[] = {A_CONST, A_RESTRIC, A_VIOLATE, 0};
+Ast m_type_qualifier(int* i) {
   return m_type_token(i, tq_strs, tq_types);
 }
 
 const char* fs_strs[] = {"inline", "_Noreturn", 0};
-const int fs_types[] = {E_INLINE, E_NORETURN, 0};
-Type m_function_spec(int* i) {
+const int fs_types[] = {A_INLINE, A_NORETURN, 0};
+Ast m_function_spec(int* i) {
   return m_type_token(i, fs_strs, fs_types);
 }
 
 // TODO: Implement alignment specifiers
-Type m_alignment_specifier(int* i) {
-  return (Type) {E_NONE};
+Ast m_alignment_specifier(int* i) {
+  return (Ast) {A_NONE};
 }
 
-Type(*declaration_specifiers[])(int*) = {m_storage_class_spec, m_type_spec, m_type_qualifier, m_function_spec, m_alignment_specifier};
-Type m_declaration_specifier_list(int* i) {
+Ast(*declaration_specifiers[])(int*) = {m_storage_class_spec, m_type_spec, m_type_qualifier, m_function_spec, m_alignment_specifier};
+Ast m_declaration_specifier_list(int* i) {
   int j = *i;
-  Type out = {E_NONE};
-  Type tmp;
+  Ast out = {A_DECLARATION_SPECIFIERS};
+  out.a1.ptr = (Ast*) malloc(sizeof(Ast));
+  int l = 0;
   do {
+    out.a1.ptr = (Ast*) realloc(out.a1.ptr, sizeof(Ast) * (l+1));
     for (int k = 0; k < sizeof(declaration_specifiers)/sizeof(void*); k++) {
-      tmp = declaration_specifiers[k](&j);
-      if (tmp.node_type != E_NONE) {
+      out.a1.ptr[l] = declaration_specifiers[k](&j);
+      if (out.a1.ptr[l].node_type != A_NONE) {
         break;
       }
     }
 
-    if (tmp.node_type != E_NONE) {
-      tmp.next = (Type*) malloc(sizeof(Type));
-      *tmp.next = out;
-      out = tmp;
-    }
-  } while (tmp.node_type != E_NONE);
+    l++;
+  } while (out.a1.ptr[l-1].node_type != A_NONE);
   // TODO: Check that type follows the rules
 
   *i = j;
@@ -83,7 +80,8 @@ Type m_declaration_specifier_list(int* i) {
 Ast m_declarator(int* i);
 
 Ast m_initializer(int* i) {
-  return (Ast) {A_NONE};
+  (*i)++;
+  return (Ast) {A_INITIALIZER};
 }
 
 Ast m_init_declarator(int* i) {
@@ -96,15 +94,17 @@ Ast m_init_declarator(int* i) {
   astcpy(&out.a1.ptr, declarator);
   astcpy(&out.a2.ptr, (Ast) {A_NONE});
   if (tokcmp(toks[*i], (Token) {T_PUNCTUATOR, "="})) {
-    *i++;
+    (*i)++;
     Ast initializer = m_initializer(i);
+    if (initializer.node_type == A_NONE) {
+      return (Ast) {A_NONE};
+    }
     *out.a2.ptr = initializer;
   }
 
   return out;
 }
 
-// TODO: Optimize stack resizing
 Ast* m_init_declarator_list(int* i) {
   Ast out = m_comma_list(i, m_init_declarator, A_INIT_DECLARATOR);
   return out.a1.ptr;
@@ -112,20 +112,22 @@ Ast* m_init_declarator_list(int* i) {
 
 Ast m_declaration(int* i) {
   Ast out = {A_DECLARATION};
-  out.type = m_declaration_specifier_list(i);
-  if (out.type.node_type == E_NONE) {
+  astcpy(&out.a1.ptr, m_declaration_specifier_list(i));
+  if (out.a1.ptr->node_type == A_NONE) {
     return (Ast) {A_NONE};
   }
 
-  out.a1.ptr = m_init_declarator_list(i);
-  if (out.a1.ptr->node_type == E_NONE) {
+  out.a2.ptr = m_init_declarator_list(i);
+  if (out.a2.ptr->node_type == A_NONE) {
     printf("Declaration without init-declarator list at:\n\t");
     print_source_line(src, toks[*i].line);
     printf("\n");
     return (Ast) {A_NONE};
   }
   
-  // TODO: match ending ';'
-  
-  return out;
+  if (tokcmp(toks[*i], (Token) {T_PUNCTUATOR, ";"})) {
+    (*i)++;
+    return out;
+  }
+  return (Ast) {A_NONE};
 }
