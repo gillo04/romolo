@@ -379,27 +379,24 @@ void print_ast(Ast* ast, int indent) {
       break;
     case A_DECLARATOR:
       printf("DECLARATOR\n");
+      if (ast->a1.ptr->node_type != A_NONE) {
+        print_ast(ast->a1.ptr, indent+1);
+      }
+      print_ast(ast->a2.ptr, indent+1);
       break;
     case A_INITIALIZER:
       printf("INITIALIZER\n");
       break;
     case A_POINTER:
-      printf("POINTER < \n");
-      // print_type(&ast->type);
-      printf(">\n");
+      printf("POINTER\n");
+      print_ast(ast->a1.ptr, indent + 1);
       if (ast->a1.ptr->node_type != A_NONE) {
-        print_ast(ast->a1.ptr, indent + 1);
+        print_ast(ast->a2.ptr, indent + 1);
       }
       break;
     case A_DIRECT_DECLARATOR:
       printf("DIRECT DECLARATOR\n");
-      break;
-    case A_PARAMETER_TYPE_LIST:
-      printf("PARAMETER TYPE LIST\n");
-      print_ast(ast->a1.ptr, indent+1);
-      if (ast->a2.ptr->node_type != A_NONE) {
-        print_ast(ast->a2.ptr, indent+1);
-      }
+      print_ast_stack(ast->a1.ptr, indent+1);
       break;
     case A_PARAMETER_LIST:
       printf("PARAMETER LIST\n");
@@ -411,6 +408,38 @@ void print_ast(Ast* ast, int indent) {
     case A_IDENTIFIER_LIST:
       printf("IDENTIFIER LIST\n");
       print_ast_stack(ast->a1.ptr, indent+1);
+      break;
+    case A_PARAMETER_DECLARATION:
+      printf("PARAMETER DECLARATION\n");
+      print_ast(ast->a1.ptr, indent+1);
+      if (ast->a2.ptr != A_NONE) {
+        print_ast(ast->a2.ptr, indent+1);
+      }
+      break;
+    case A_PARAMETER_TYPE_LIST:
+      printf("PARAMETER TYPE LIST\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
+      if (ast->a2.ptr != A_NONE) {
+        print_ast(ast->a2.ptr, indent+1);
+      }
+      break;
+    case A_TYPE_QUALIFIER_LIST:
+      printf("TYPE QUALIFIER LIST\n");
+      for (int i = 0; i < indent+1; i++) printf("  ");
+      print_ast_stack(ast->a1.ptr, 0);
+      printf("\n");
+      break;
+    case A_ARRAY_DIRECT_DECLARATOR:
+      printf("ARRAY DIRECT DECLARATOR\n");
+      if (ast->a3.num) {
+        printf("STATIC\n");
+      }
+      if (ast->a1.ptr != A_NONE) {
+        print_ast(ast->a1.ptr, indent+1);
+      }
+      if (ast->a2.ptr != A_NONE) {
+        print_ast(ast->a2.ptr, indent+1);
+      }
       break;
 
     /*

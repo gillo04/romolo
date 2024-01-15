@@ -1,1 +1,1 @@
-long long int declarator = init, decl;
+long int *const *  ciao;

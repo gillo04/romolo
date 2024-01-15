@@ -1,7 +1,7 @@
 #pragma once
 #include "parser.h"
 
-Type m_type_qualifier_list(int* i);
+Ast m_type_qualifier_list(int* i);
 
 Ast m_pointer(int* i);
 
