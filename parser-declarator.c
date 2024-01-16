@@ -35,7 +35,7 @@ Ast m_abstract_declarator(int* i) {
 Ast m_parameter_declaration(int* i) {
   Ast out = {A_PARAMETER_DECLARATION};
   astcpy(&out.a1.ptr, m_declaration_specifier_list(i));
-  if (out.a1.ptr->node_type == A_NONE) {
+  if (out.a1.ptr->a1.ptr[0].node_type == A_NONE) {
     return (Ast) {A_NONE};
   }
 
