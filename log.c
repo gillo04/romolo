@@ -451,6 +451,56 @@ void print_ast(Ast* ast, int indent) {
       break;
 
     /*
+     * Struct and union declaration
+     */
+    case A_STRUCT_DECLARATOR:
+      printf("STRUCT DECLARATOR\n");
+      print_ast(ast->a1.ptr, indent+1);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        print_ast(ast->a2.ptr, indent+1);
+      }
+      break;
+    case A_STRUCT_DECLARATOR_LIST:
+      printf("STRUCT DECLARATOR LIST\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
+      break;
+    case A_SPECIFIER_QUALIFIER_LIST:
+      if (ast->a1.ptr->node_type != A_NONE) {
+        printf("SPECIFIER QUALIFIER LIST\n");
+        for (int i = 0; i < indent+1; i++) printf("  ");
+        print_ast_stack(ast->a1.ptr, 0);
+        printf("\n");
+      } else {
+        printf("(empty) SPECIFIER QUALIFIER LIST\n");
+      }
+      break;
+    case A_STRUCT_DECLARATION:
+      printf("STRUCT DECLARATION\n");
+      print_ast(ast->a1.ptr, indent+1);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        print_ast(ast->a2.ptr, indent+1);
+      }
+      break;
+    case A_STRUCT_DECLARATION_LIST:
+      printf("STRUCT DECLARATION LIST\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
+      break;
+    case A_STRUCT_SPECIFIER:
+      printf("STRUCT SPECIFIER\n");
+      if (ast->a1.ptr->node_type != A_NONE) {
+        print_ast(ast->a1.ptr, indent+1);
+      }
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_UNION_SPECIFIER:
+      printf("UNION SPECIFIER\n");
+      if (ast->a1.ptr->node_type != A_NONE) {
+        print_ast(ast->a1.ptr, indent+1);
+      }
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+
+    /*
      * Statements
      */
     case A_LABEL:
