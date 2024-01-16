@@ -390,7 +390,7 @@ void print_ast(Ast* ast, int indent) {
     case A_POINTER:
       printf("POINTER\n");
       print_ast(ast->a1.ptr, indent + 1);
-      if (ast->a1.ptr->node_type != A_NONE) {
+      if (ast->a2.ptr->node_type != A_NONE) {
         print_ast(ast->a2.ptr, indent + 1);
       }
       break;
@@ -412,34 +412,42 @@ void print_ast(Ast* ast, int indent) {
     case A_PARAMETER_DECLARATION:
       printf("PARAMETER DECLARATION\n");
       print_ast(ast->a1.ptr, indent+1);
-      if (ast->a2.ptr != A_NONE) {
+      if (ast->a2.ptr->node_type != A_NONE) {
         print_ast(ast->a2.ptr, indent+1);
       }
       break;
     case A_PARAMETER_TYPE_LIST:
       printf("PARAMETER TYPE LIST\n");
       print_ast_stack(ast->a1.ptr, indent+1);
-      if (ast->a2.ptr != A_NONE) {
+      if (ast->a2.ptr->node_type != A_NONE) {
         print_ast(ast->a2.ptr, indent+1);
       }
       break;
     case A_TYPE_QUALIFIER_LIST:
-      printf("TYPE QUALIFIER LIST\n");
-      for (int i = 0; i < indent+1; i++) printf("  ");
-      print_ast_stack(ast->a1.ptr, 0);
-      printf("\n");
+      if (ast->a1.ptr->node_type != A_NONE) {
+        printf("TYPE QUALIFIER LIST\n");
+        for (int i = 0; i < indent+1; i++) printf("  ");
+        print_ast_stack(ast->a1.ptr, 0);
+        printf("\n");
+      } else {
+        printf("(empty) TYPE QUALIFIER LIST\n");
+      }
       break;
     case A_ARRAY_DIRECT_DECLARATOR:
       printf("ARRAY DIRECT DECLARATOR\n");
       if (ast->a3.num) {
         printf("STATIC\n");
       }
-      if (ast->a1.ptr != A_NONE) {
+      if (ast->a1.ptr->node_type != A_NONE) {
         print_ast(ast->a1.ptr, indent+1);
       }
-      if (ast->a2.ptr != A_NONE) {
+      if (ast->a2.ptr->node_type != A_NONE) {
         print_ast(ast->a2.ptr, indent+1);
       }
+      break;
+    case A_FUNCTION_DIRECT_DECLARATOR:
+      printf("FUNCTION DIRECT DECLARATOR\n");
+      print_ast(ast->a1.ptr, indent+1);
       break;
 
     /*
