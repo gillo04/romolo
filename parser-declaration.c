@@ -136,6 +136,75 @@ Ast m_struct_or_union_specifier(int* i) {
   return out;
 }
 
+Ast m_enumerator(int* i) {
+  int j = *i;
+  if (toks[j].type != T_IDENTIFIER) {
+    return (Ast) {A_NONE};
+  }
+  j++;
+  Ast out = {A_ENUMERATOR};
+
+  ast_strcpy(&out.a1.str, toks[j-1].val.str);
+  if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, "="})) {
+    astcpy(&out.a2.ptr, (Ast) {A_NONE});
+    *i = j;
+    return out;
+  }
+  j++;
+  Ast exp = m_conditional_expression(&j);
+  if (exp.node_type == A_NONE) {
+    return (Ast) {A_NONE};
+  }
+
+  astcpy(&out.a2.ptr, exp);
+  *i = j;
+  return out;
+}
+
+Ast m_enumerator_list(int* i) {
+  return m_comma_list(i, m_enumerator, A_ENUMERATOR_LIST);
+}
+
+Ast m_enum_specifier(int* i) {
+  int j = *i;
+  if (!tokcmp(toks[j], (Token) {T_KEYWORD, "enum"})) {
+    return (Ast) {A_NONE};
+  }
+  j++;
+
+  Ast out = {A_ENUM_SPECIFIER};
+  if (toks[j].type == T_IDENTIFIER) {
+    ast_strcpy(&out.a1.str, toks[j].val.str);
+    j++;
+  } else {
+    out.a1.str = 0;
+  }
+
+  if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, "{"})) {
+    if (out.a1.str == 0) {
+      return (Ast) {A_NONE};
+    }
+    astcpy(&out.a2.ptr, (Ast) {A_NONE});
+    *i = j;
+    return out;
+  }
+  j++;
+
+  Ast elist = m_enumerator_list(&j);
+
+  if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, ","})) {
+    j++;
+  }
+  if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, "}"})) {
+    return (Ast) {A_NONE};
+  }
+  j++;
+  astcpy(&out.a2.ptr, elist);
+
+  *i = j;
+  return out;
+}
+
 Ast m_type_token(int* i, const char* tt_strs[], const int tt_types[]) {
   Ast out = {A_NONE};
   if (toks[*i].type == T_NONE) {
@@ -167,10 +236,12 @@ Ast m_type_spec(int* i) {
   }
 
   tmp = m_struct_or_union_specifier(i);
-  // if (tmp.node_type != A_NONE) {
+  if (tmp.node_type != A_NONE) {
     return tmp;
-  // }
+  }
 
+  tmp = m_enum_specifier(i);
+  return tmp;
 }
 
 const char* tq_strs[] = {"const", "restrict", "volatile", 0};
@@ -241,9 +312,8 @@ Ast m_init_declarator(int* i) {
   return out;
 }
 
-Ast* m_init_declarator_list(int* i) {
-  Ast out = m_comma_list(i, m_init_declarator, A_INIT_DECLARATOR);
-  return out.a1.ptr;
+Ast m_init_declarator_list(int* i) {
+  return m_comma_list(i, m_init_declarator, A_INIT_DECLARATOR_LIST);
 }
 
 Ast m_declaration(int* i) {
@@ -253,14 +323,7 @@ Ast m_declaration(int* i) {
     return (Ast) {A_NONE};
   }
 
-  out.a2.ptr = m_init_declarator_list(i);
-  if (out.a2.ptr->node_type == A_NONE) {
-    printf("Declaration without init-declarator list at:\n\t");
-    print_source_line(src, toks[*i].line);
-    printf("\n");
-    return (Ast) {A_NONE};
-  }
-  
+  astcpy(&out.a2.ptr, m_init_declarator_list(i));
   if (tokcmp(toks[*i], (Token) {T_PUNCTUATOR, ";"})) {
     (*i)++;
     return out;

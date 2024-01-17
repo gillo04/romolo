@@ -106,6 +106,7 @@ enum {
   A_DECLARATION_SPECIFIERS,
   A_DECLARATION,
   A_INIT_DECLARATOR,
+  A_INIT_DECLARATOR_LIST,
   A_DECLARATOR,
   A_INITIALIZER,
   A_POINTER,
@@ -119,7 +120,6 @@ enum {
   A_TYPE_QUALIFIER_LIST,
   A_ARRAY_DIRECT_DECLARATOR,
   A_FUNCTION_DIRECT_DECLARATOR,
-
   A_STRUCT_DECLARATOR,
   A_STRUCT_DECLARATOR_LIST,
   A_SPECIFIER_QUALIFIER_LIST,
@@ -127,6 +127,9 @@ enum {
   A_STRUCT_DECLARATION_LIST,
   A_STRUCT_SPECIFIER,
   A_UNION_SPECIFIER,
+  A_ENUMERATOR,
+  A_ENUMERATOR_LIST,
+  A_ENUM_SPECIFIER,
 };
 
 
@@ -139,15 +142,8 @@ typedef union {
   long long num;
 } Arg;
 
-/*struct s_type{
-  int node_type;
-  int type;
-  Type* next;
-}; */
-
 struct s_ast {
   int node_type;
-  // Type type; // Expression  type
  
   Arg a1;
   Arg a2;

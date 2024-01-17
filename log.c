@@ -377,6 +377,10 @@ void print_ast(Ast* ast, int indent) {
         print_ast(ast->a2.ptr, indent+1);
       }
       break;
+    case A_INIT_DECLARATOR_LIST:
+      printf("INIT DECLARATOR LIST\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
+      break;
     case A_DECLARATOR:
       printf("DECLARATOR\n");
       if (ast->a1.ptr->node_type != A_NONE) {
@@ -498,6 +502,32 @@ void print_ast(Ast* ast, int indent) {
         print_ast(ast->a1.ptr, indent+1);
       }
       print_ast(ast->a2.ptr, indent+1);
+      break;
+
+    /*
+     * Enum and typedef specifiers
+     */
+
+    case A_ENUMERATOR:
+      printf("ENUMERATOR %s\n", ast->a1.str);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        print_ast(ast->a2.ptr, indent+1);
+      }
+      break;
+    case A_ENUMERATOR_LIST:
+      printf("ENUMERATOR LIST\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
+      break;
+    case A_ENUM_SPECIFIER:
+      printf("ENUM SPECIFIER ");
+      if (ast->a1.str != 0) {
+        printf("%s", ast->a1.str);
+      }
+      printf("\n");
+
+      if (ast->a2.ptr->node_type != A_NONE) {
+        print_ast(ast->a2.ptr, indent+1);
+      }
       break;
 
     /*

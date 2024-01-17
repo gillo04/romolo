@@ -21,6 +21,6 @@ Ast m_initializer(int* i);
 
 Ast m_init_declarator(int* i);
 
-Ast* m_init_declarator_list(int* i);
+Ast m_init_declarator_list(int* i);
 
 Ast m_declaration(int* i);

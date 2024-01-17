@@ -1,3 +1,6 @@
-struct vector3 {
-  int x, y, z;
-} v1;
+enum mesi_e {
+  GENNAIO, 
+  FEBBRAIO =2,
+  MARZO,
+  APRILE,
+} mesi;

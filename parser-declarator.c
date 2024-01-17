@@ -172,7 +172,7 @@ Ast m_direct_declarator(int* i) {
       }
       l++;
     } else {
-      break;
+      tmp = (Ast) {A_NONE};
     }
 
     out.a1.ptr[k] = tmp;
