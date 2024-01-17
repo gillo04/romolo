@@ -1,6 +1,12 @@
 #pragma once
 #include "parser.h"
 
+Ast m_abstract_declarator(int* i);
+
+Ast m_direct_abstract_declarator(int* i);
+
+Ast m_type_name(int* i);
+
 Ast m_type_qualifier_list(int* i);
 
 Ast m_pointer(int* i);

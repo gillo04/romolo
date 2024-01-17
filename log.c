@@ -453,6 +453,26 @@ void print_ast(Ast* ast, int indent) {
       printf("FUNCTION DIRECT DECLARATOR\n");
       print_ast(ast->a1.ptr, indent+1);
       break;
+    case A_ABSTRACT_DECLARATOR:
+      printf("ABSTRACT DECLARATOR\n");
+      if (ast->a1.ptr->node_type != A_NONE) {
+        print_ast(ast->a1.ptr, indent+1);
+      }
+      if (ast->a2.ptr->node_type != A_NONE) {
+        print_ast(ast->a2.ptr, indent+1);
+      }
+      break;
+    case A_DIRECT_ABSTRACT_DECLARATOR:
+      printf("DIRECT ABSTRACT DECLARATOR\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
+      break;
+    case A_TYPE_NAME:
+      printf("TYPE NAME\n");
+      print_ast(ast->a1.ptr, indent+1);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        print_ast(ast->a2.ptr, indent+1);
+      }
+      break;
 
     /*
      * Struct and union declaration

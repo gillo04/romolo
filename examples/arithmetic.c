@@ -1,6 +1,1 @@
-enum mesi_e {
-  GENNAIO, 
-  FEBBRAIO =2,
-  MARZO,
-  APRILE,
-} mesi;
+const long long int * [100](int, long lol, char);

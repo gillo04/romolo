@@ -28,8 +28,118 @@ Ast m_identifier_list(int* i) {
   return m_comma_list(i, m_identifier, A_IDENTIFIER_LIST);
 }
 
+Ast m_direct_abstract_declarator(int* i);
+
 Ast m_abstract_declarator(int* i) {
-  return (Ast) {A_NONE};
+  int j = *i;
+  Ast out = {A_ABSTRACT_DECLARATOR};
+  Ast ptr = m_pointer(&j);
+  Ast dad = m_direct_abstract_declarator(&j);
+  if (dad.node_type == A_NONE && ptr.node_type == A_NONE) {
+    return (Ast) {A_NONE};
+  }
+  astcpy(&out.a1.ptr, ptr);
+  astcpy(&out.a2.ptr, dad);
+  *i = j;
+  return out;
+}
+
+Ast m_direct_abstract_declarator(int* i) {
+  int j = *i;
+  Ast out = {A_DIRECT_ABSTRACT_DECLARATOR};
+  out.a1.ptr = (Ast*) malloc(sizeof(Ast) * 2);
+  int k = 1;
+
+  // Parse first element
+  Ast tmp;
+  if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "("})) {
+    int l = j+1;
+    tmp = m_abstract_declarator(&l);
+    if (tmp.node_type !=  A_NONE && tokcmp(toks[l], (Token) {T_PUNCTUATOR, ")"})) {
+      j = l+1;
+      out.a1.ptr[0] = tmp;
+    } else {
+      k--;
+    }
+  } else {
+    k--;
+  }
+
+  // Parse additional elements
+  do {
+    int l = j;
+    out.a1.ptr = (Ast*) realloc(out.a1.ptr, sizeof(Ast) * (k+1));
+    Ast tmp = {A_NONE};
+    if (tokcmp(toks[l], (Token) {T_PUNCTUATOR, "["})) {
+      l++;
+      tmp.node_type = A_ARRAY_DIRECT_DECLARATOR;
+      tmp.a3.num = 0;
+
+      // TODO: check direct declarator constraints
+      if (tokcmp(toks[l], (Token) {T_KEYWORD, "static"})) {
+        l++;
+        tmp.a3.num = 1;
+      }
+      Ast tql = m_type_qualifier_list(&l);
+      astcpy(&tmp.a1.ptr, tql);
+
+      if (tmp.a3.num == 0 && tokcmp(toks[l], (Token) {T_KEYWORD, "static"})) {
+        l++;
+        tmp.a3.num = 1;
+      }
+
+      Ast aexp = m_assignment_expression(&l);
+      astcpy(&tmp.a2.ptr, aexp);
+
+      if (!tokcmp(toks[l], (Token) {T_PUNCTUATOR, "]"})) {
+        break;
+      }
+      l++;
+    } else if (tokcmp(toks[l], (Token) {T_PUNCTUATOR, "("})) {
+      l++;
+      tmp.node_type = A_FUNCTION_DIRECT_DECLARATOR;
+      astcpy(&tmp.a1.ptr, m_parameter_type_list(&l));
+      if (tmp.a1.ptr->node_type == A_NONE) {
+        tmp = (Ast) {A_NONE};
+        out.a1.ptr[k] = tmp;
+        break;
+      }
+
+      if (!tokcmp(toks[l], (Token) {T_PUNCTUATOR, ")"})) {
+        tmp = (Ast) {A_NONE};
+        out.a1.ptr[k] = tmp;
+        break;
+      }
+      l++;
+    } else {
+      tmp = (Ast) {A_NONE};
+      out.a1.ptr[k] = tmp;
+      break;
+    }
+
+    out.a1.ptr[k] = tmp;
+    j = l;
+    k++;
+  } while (out.a1.ptr[k-1].node_type != A_NONE);
+
+  *i = j;
+  return out;
+}
+
+Ast m_type_name(int* i) {
+  int j = *i;
+  Ast out = {A_TYPE_NAME};
+  Ast sql = m_specifier_qualifier_list(&j);
+  if (sql.node_type == A_NONE) {
+    return (Ast) {A_NONE};
+  }
+
+  Ast adec = m_abstract_declarator(&j);
+  astcpy(&out.a1.ptr, sql);
+  astcpy(&out.a2.ptr, adec);
+
+  *i = j;
+  return out;
 }
 
 Ast m_parameter_declaration(int* i) {
