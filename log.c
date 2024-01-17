@@ -292,6 +292,20 @@ void print_ast(Ast* ast, int indent) {
       printf("COMMA EXPRESSION\n");
       print_ast_stack(ast->a1.ptr, indent+1);
       break;
+    case A_CAST_EXPRESSION:
+      printf("CAST EXPRESSION\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_FUNCTION_CALL:
+      printf("FUNCTION CALL\n");
+      print_ast(ast->a1.ptr, indent+1);
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_ARGUMENT_EXPRESSION_LIST:
+      printf("ARGUMENT EXPRESSION LIST\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
+      break;
 
     /*
      * Declarator and declaration 

@@ -1,1 +1,1 @@
-const long long int * [100](int, long lol, char);
+(long int) 50;

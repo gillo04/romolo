@@ -57,7 +57,7 @@ Ast parser(Token* tokens, char* source) {
   toks = tokens;
   src = source;
   int i = 0;
-  Ast out = m_type_name(&i);
+  Ast out = m_expression(&i);
 
   return out;
 }

@@ -1,6 +1,7 @@
 #include "log.h"
 #include "parser-utils.h"
 #include "parser-expression.h"
+#include "parser-declarator.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -40,6 +41,10 @@ Ast m_primary_expression(int* i) {
   return out;
 }
 
+Ast m_argument_expression_list(int* i) {
+  return m_comma_list(i, m_assignment_expression, A_ARGUMENT_EXPRESSION_LIST);
+}
+
 Ast m_postfix_expression(int* i) {
   // TODO: implement function calls, list initializer
   int j = *i;
@@ -72,6 +77,18 @@ Ast m_postfix_expression(int* i) {
         Ast exp = m_expression(&j);
         if (exp.node_type != A_NONE && tokcmp(toks[j], (Token) {T_PUNCTUATOR, "]"})) {
           tmp.node_type = A_ARRAY_SUBSCRIPT;
+          astcpy(&tmp.a1.ptr, out);
+          astcpy(&tmp.a2.ptr, exp);
+          j += 1;
+        } else {
+          j--;
+          found_postfix = 0;
+        }
+      } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "("})){
+        j++;
+        Ast exp = m_argument_expression_list(&j);
+        if (exp.node_type != A_NONE && tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"})) {
+          tmp.node_type = A_FUNCTION_CALL;
           astcpy(&tmp.a1.ptr, out);
           astcpy(&tmp.a2.ptr, exp);
           j += 1;
@@ -132,6 +149,10 @@ Ast m_unary_expression(int* i) {
         tmp.node_type = A_LOGIC_NOT;
         astcpy(&tmp.a1.ptr, out);
         *i = k;
+      } else if (tokcmp(toks[j], (Token) {T_KEYWORD, "sizeof"})) {
+        tmp.node_type = A_SIZEOF;
+        astcpy(&tmp.a1.ptr, out);
+        *i = k;
       }
       out = tmp;
     }
@@ -140,6 +161,36 @@ Ast m_unary_expression(int* i) {
   }
 
   return out;
+}
+
+Ast m_cast_expression(int* i) {
+  int j = *i;
+  Ast unary = m_unary_expression(&j);
+  if (unary.node_type == A_NONE) {
+    if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, "("})) {
+      return (Ast) {A_NONE};
+    }
+    j++;
+    Ast tn = m_type_name(&j);
+    if (tn.node_type == A_NONE || !tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"})) {
+      return (Ast) {A_NONE};
+    }
+    j++;
+
+    Ast ce = m_cast_expression(&j);
+    if (ce.node_type == A_NONE) {
+      return (Ast) {A_NONE};
+    }
+    
+    *i = j;
+    Ast out = {A_CAST_EXPRESSION};
+    astcpy(&out.a1.ptr, tn);
+    astcpy(&out.a2.ptr, ce);
+    return out;
+  } else {
+    *i = j;
+    return unary;
+  }
 }
 
 Ast m_binary_expression(int* i, Ast (*prev_exp)(), char* strings[], int types[]) {
@@ -185,7 +236,7 @@ Ast m_binary_expression(int* i, Ast (*prev_exp)(), char* strings[], int types[])
 char* mult_strs[] = {"*", "/", "%", 0};
 int mult_types[] = {A_MULTIPLICATION, A_DIVISION, A_MODULO};
 Ast m_multiplicative_expression(int* i) {
-  Ast out = m_binary_expression(i, m_unary_expression, mult_strs, mult_types);
+  Ast out = m_binary_expression(i, m_cast_expression, mult_strs, mult_types);
   return out;
 }
 
