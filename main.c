@@ -31,8 +31,8 @@ int main(int argc, char* argv[]) {
   }  
   printf("PARSER FINISHED\n");
 
-  // optimizer(&ast);
-  // printf("OPTIMIZER FINISHED\n");
+  optimizer(&ast);
+  printf("OPTIMIZER FINISHED\n");
   print_ast(&ast, 0);
 
   return 0;

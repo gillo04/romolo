@@ -114,9 +114,6 @@ int solve_constant_binary(Ast* ast) {
 }
 
 int solve_constant_exp(Ast* ast) {
-  if (!ast) {
-    printf("what\n");
-  }
   Ast *ptr1, *ptr2, *ptr3;
   switch (ast->node_type) {
     case A_CONSTANT:
@@ -176,6 +173,212 @@ int solve_constant_exp(Ast* ast) {
     case A_LOGIC_AND:
     case A_LOGIC_OR:
       return solve_constant_binary(ast);
+
+    case A_CAST_EXPRESSION:
+      // TODO: Handle cast expressions
+      solve_constant_exp(ast->a1.ptr);
+      solve_constant_exp(ast->a2.ptr);
+      return 0;
+    case A_FUNCTION_CALL:
+      solve_constant_exp(ast->a1.ptr);
+      solve_constant_exp(ast->a2.ptr);
+      return 0;
+    case A_ARGUMENT_EXPRESSION_LIST:
+      solve_constant_stack(ast->a1.ptr);
+      return 0;
+
+    case A_TYPEDEF:
+    case A_EXTERN:
+    case A_STATIC:
+    case A_AUTO:
+    case A_REGISTER:
+    case A_VOID:
+    case A_CHAR:
+    case A_SHORT:
+    case A_INT:
+    case A_LONG:
+    case A_FLOAT:
+    case A_DOUBLE:
+    case A_SIGNED:
+    case A_UNSIGNED:
+    case A_BOOL:
+    case A_CONST:
+    case A_RESTRIC:
+    case A_VIOLATE:
+    case A_INLINE:
+    case A_NORETURN:
+      return 0;
+
+    case A_DECLARATION_SPECIFIERS:
+      solve_constant_stack(ast->a1.ptr);
+      return 0;
+    case A_DECLARATION:
+      solve_constant_stack(ast->a1.ptr);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        solve_constant_stack(ast->a2.ptr);
+      }
+      return 0;
+    case A_INIT_DECLARATOR:
+      solve_constant_exp(ast->a1.ptr);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a2.ptr);
+      }
+      return 0;
+    case A_INIT_DECLARATOR_LIST:
+      solve_constant_stack(ast->a1.ptr);
+      return 0;
+    case A_DECLARATOR:
+      if (ast->a1.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a1.ptr);
+      }
+      solve_constant_exp(ast->a2.ptr);
+      return 0;
+    case A_POINTER:
+      solve_constant_exp(ast->a1.ptr);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a2.ptr);
+      }
+      return 0;
+    case A_DIRECT_DECLARATOR:
+      solve_constant_stack(ast->a1.ptr);
+      return 0;
+    case A_PARAMETER_LIST:
+      solve_constant_stack(ast->a1.ptr);
+      return 0;
+    case A_THREE_DOTS:
+      return 0;
+    case A_IDENTIFIER_LIST:
+      solve_constant_stack(ast->a1.ptr);
+      return 0;
+    case A_PARAMETER_DECLARATION:
+      solve_constant_exp(ast->a1.ptr);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a2.ptr);
+      }
+      return 0;
+    case A_PARAMETER_TYPE_LIST:
+      solve_constant_stack(ast->a1.ptr);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a2.ptr);
+      }
+      return 0;
+    case A_TYPE_QUALIFIER_LIST:
+      if (ast->a1.ptr->node_type != A_NONE) {
+        solve_constant_stack(ast->a1.ptr);
+      }
+      return 0;
+    case A_ARRAY_DIRECT_DECLARATOR:
+      if (ast->a1.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a1.ptr);
+      }
+      if (ast->a2.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a2.ptr);
+      }
+      return 0;
+    case A_FUNCTION_DIRECT_DECLARATOR:
+      solve_constant_exp(ast->a1.ptr);
+      return 0;
+    case A_ABSTRACT_DECLARATOR:
+      if (ast->a1.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a1.ptr);
+      }
+      if (ast->a2.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a2.ptr);
+      }
+      return 0;
+    case A_DIRECT_ABSTRACT_DECLARATOR:
+      solve_constant_stack(ast->a1.ptr);
+      return 0;
+    case A_TYPE_NAME:
+      solve_constant_exp(ast->a1.ptr);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a2.ptr);
+      }
+      return 0;
+
+    /*
+     * Struct and union declaration
+     */
+    case A_STRUCT_DECLARATOR:
+      solve_constant_exp(ast->a1.ptr);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a2.ptr);
+      }
+      return 0;
+    case A_STRUCT_DECLARATOR_LIST:
+      solve_constant_stack(ast->a1.ptr);
+      return 0;
+    case A_SPECIFIER_QUALIFIER_LIST:
+      if (ast->a1.ptr->node_type != A_NONE) {
+        solve_constant_stack(ast->a1.ptr);
+      }
+      return 0;
+    case A_STRUCT_DECLARATION:
+      solve_constant_exp(ast->a1.ptr);
+      if (ast->a2.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a2.ptr);
+      }
+      return 0;
+    case A_STRUCT_DECLARATION_LIST:
+      solve_constant_stack(ast->a1.ptr);
+      return 0;
+    case A_STRUCT_SPECIFIER:
+      if (ast->a1.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a1.ptr);
+      }
+      solve_constant_exp(ast->a2.ptr);
+      return 0;
+    case A_UNION_SPECIFIER:
+      if (ast->a1.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a1.ptr);
+      }
+      solve_constant_exp(ast->a2.ptr);
+      return 0;
+
+    /*
+     * Enum and typedef specifiers
+     */
+
+    case A_ENUMERATOR:
+      if (ast->a2.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a2.ptr);
+      }
+      return 0;
+    case A_ENUMERATOR_LIST:
+      solve_constant_stack(ast->a1.ptr);
+      return 0;
+    case A_ENUM_SPECIFIER:
+      if (ast->a2.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a2.ptr);
+      }
+      return 0;
+
+    /* 
+     * Initializers
+     */
+
+    case A_DESIGNATOR_LIST:
+      solve_constant_stack(ast->a1.ptr);
+      return 0;
+    case A_INITIALIZER_LIST_ELEMENT:
+      if (ast->a1.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a1.ptr);
+      }
+      solve_constant_exp(ast->a2.ptr);
+      return 0;
+    case A_INITIALIZER_LIST:
+      solve_constant_stack(ast->a1.ptr);
+      return 0;
+    case A_INITIALIZER:
+      solve_constant_exp(ast->a1.ptr);
+      return 0;
+
+    /*
+     * Statements
+     */
+    case A_LABEL:
+      solve_constant_exp(ast->a2.ptr);
+      return 0;
     case A_CASE:
       solve_constant_exp(ast->a1.ptr);
       solve_constant_exp(ast->a2.ptr);
@@ -183,11 +386,10 @@ int solve_constant_exp(Ast* ast) {
     case A_DEFAULT:
       solve_constant_exp(ast->a1.ptr);
       return 0;
-    case A_RETURN:
-      solve_constant_exp(ast->a1.ptr);
-      return 0;
     case A_COMPOUND_STATEMENT:
       solve_constant_stack(ast->a1.ptr);
+      return 0;
+    case A_NULL_STATEMENT:
       return 0;
     case A_IF:
       solve_constant_exp(ast->a1.ptr);
@@ -213,18 +415,43 @@ int solve_constant_exp(Ast* ast) {
     case A_FOR:
       solve_constant_exp(ast->a1.ptr);
       solve_constant_exp(ast->a2.ptr);
-      return 0;
+      return 0;    
     case A_FOR_CLAUSES:
       solve_constant_exp(ast->a1.ptr);
       solve_constant_exp(ast->a2.ptr);
       solve_constant_exp(ast->a3.ptr);
+      return 0; 
+    case A_GOTO:
+    case A_CONTINUE:
+    case A_BREAK:
       return 0;
-    /*case A_FUNCTION:
-      solve_constant_exp(ast->a2.ptr);
-      return 0;*/
-    case A_TRANSLATION_UNIT:
+    case A_RETURN:
+      solve_constant_exp(ast->a1.ptr);
+      return 0;
+    case A_EXPRESSION_STATEMENT:
       solve_constant_stack(ast->a1.ptr);
       return 0;
+
+    /*
+     * External definitions 
+     */
+    case A_DECLARATION_LIST:
+      solve_constant_stack(ast->a1.ptr);
+      break;
+    case A_FUNCTION_PROTOTYPE:
+      solve_constant_exp(ast->a1.ptr);
+      solve_constant_exp(ast->a2.ptr);
+      if (ast->a3.ptr->node_type != A_NONE) {
+        solve_constant_exp(ast->a3.ptr);
+      }
+      break;
+    case A_FUNCTION_DEFINITION:
+      solve_constant_exp(ast->a1.ptr);
+      solve_constant_exp(ast->a2.ptr);
+      break;
+    case A_TRANSLATION_UNIT:
+      solve_constant_stack(ast->a1.ptr);
+      break;
     default:
       return 0;
   }

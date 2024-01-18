@@ -2,6 +2,7 @@
 #include "parser.h"
 #include "parser-utils.h"
 #include "parser-expression.h"
+#include "parser-declaration.h"
 #include "parser-statement.h"
 #include <stdio.h>
 #include <string.h>
@@ -52,8 +53,11 @@ Ast m_labeled_statement(int* i) {
 }
 
 Ast m_block_item(int* i) {
-  // TODO: add declaration as option
-  return m_statement(i);
+  Ast stat =  m_statement(i);
+  if (stat.node_type != A_NONE) {
+    return stat;
+  }
+  return m_declaration(i);
 }
 
 Ast m_compound_statement(int* i) {
