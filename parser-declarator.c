@@ -97,11 +97,6 @@ Ast m_direct_abstract_declarator(int* i) {
       l++;
       tmp.node_type = A_FUNCTION_DIRECT_DECLARATOR;
       astcpy(&tmp.a1.ptr, m_parameter_type_list(&l));
-      if (tmp.a1.ptr->node_type == A_NONE) {
-        tmp = (Ast) {A_NONE};
-        out.a1.ptr[k] = tmp;
-        break;
-      }
 
       if (!tokcmp(toks[l], (Token) {T_PUNCTUATOR, ")"})) {
         tmp = (Ast) {A_NONE};
@@ -270,9 +265,6 @@ Ast m_direct_declarator(int* i) {
       astcpy(&tmp.a1.ptr, m_parameter_type_list(&l));
       if (tmp.a1.ptr->node_type == A_NONE) {
         astcpy(&tmp.a1.ptr, m_identifier_list(&l));
-        if (tmp.a1.ptr->node_type == A_NONE) {
-          break;
-        }
       }
 
       if (!tokcmp(toks[l], (Token) {T_PUNCTUATOR, ")"})) {

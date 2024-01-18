@@ -174,6 +174,21 @@ int solve_constant_exp(Ast* ast) {
     case A_LOGIC_OR:
       return solve_constant_binary(ast);
 
+    case A_ASSIGN:
+    case A_MULT_ASSIGN:
+    case A_DIV_ASSIGN:
+    case A_MOD_ASSIGN:
+    case A_ADD_ASSIGN:
+    case A_SUB_ASSIGN:
+    case A_L_SHIFT_ASSIGN:
+    case A_R_SHIFT_ASSIGN:
+    case A_AND_ASSIGN:
+    case A_XOR_ASSIGN:
+    case A_OR_ASSIGN:
+      solve_constant_exp(ast->a1.ptr);
+      solve_constant_exp(ast->a2.ptr);
+      return 0;
+
     case A_CAST_EXPRESSION:
       // TODO: Handle cast expressions
       solve_constant_exp(ast->a1.ptr);
