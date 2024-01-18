@@ -1,1 +1,3 @@
-{[0][1][5] = 5, 6, .hello = 7}
+int main(int argc, char* argv[]) {
+  return 0;
+}

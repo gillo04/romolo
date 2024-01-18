@@ -14,41 +14,85 @@
 Token* toks;
 char* src;
 
-Ast m_function_def(int* i) {
+Ast m_declaration_list(int* i) {
   int j = *i;
-  if (!tokcmp(toks[j], (Token) {T_KEYWORD, "int"})) {
-    return (Ast) {A_NONE};
-  }
-
-  j++;
-  Ast out = {A_FUNCTION};
-  ast_strcpy(&out.a1.str, toks[j].val.str);
-  j++;
-
-  if (!(tokcmp(toks[j], (Token) {T_PUNCTUATOR, "("}) &&
-    tokcmp(toks[j+1], (Token) {T_PUNCTUATOR, ")"}) )) {
-    return (Ast) {A_NONE};
-  }
-  j += 2;
-
-  Ast comp_stat = m_compound_statement(&j);
-  astcpy(&out.a2.ptr, comp_stat);
+  Ast out = {A_DECLARATION_LIST};
+  out.a1.ptr = (Ast*) malloc(sizeof(Ast));
+  int l = 0;
+  do {
+    out.a1.ptr = (Ast*) realloc(out.a1.ptr, sizeof(Ast) * (l+1));
+    out.a1.ptr[l] = m_declaration(&j);
+    l++;
+  } while (out.a1.ptr[l-1].node_type != A_NONE);
 
   *i = j;
   return out;
 }
 
+Ast m_function_prototype(int* i) {
+  int j = *i;
+  Ast dec_spec = m_declaration_specifier_list(&j);
+  if (dec_spec.node_type == A_NONE) {
+    return (Ast) {A_NONE};
+  }
+
+  Ast dec = m_declarator(&j);
+  if (dec.node_type == A_NONE) {
+    return (Ast) {A_NONE};
+  }
+
+  Ast dec_list = m_declaration_list(&j);
+  Ast out = {A_FUNCTION_PROTOTYPE};
+  astcpy(&out.a1.ptr, dec_spec);
+  astcpy(&out.a2.ptr, dec);
+  astcpy(&out.a3.ptr, dec_list);
+  *i = j;
+  return out;
+}
+
+Ast m_function_definition(int* i) {
+  int j = *i;
+  Ast prot = m_function_prototype(&j);
+  if (prot.node_type == A_NONE) {
+    return (Ast) {A_NONE};
+  }
+
+  Ast stat = m_compound_statement(&j);
+  if (stat.node_type == A_NONE) {
+    return (Ast) {A_NONE};
+  }
+
+  Ast out = {A_FUNCTION_DEFINITION};
+  astcpy(&out.a1.ptr, prot);
+  astcpy(&out.a2.ptr, stat);
+
+  *i = j;
+  return out;
+}
+
+Ast m_external_declaration(int* i) {
+  int j = *i;
+  Ast fun = m_function_definition(&j);
+  if (fun.node_type != A_NONE) {
+    *i = j;
+    return fun;
+  }
+
+  Ast dec = m_declaration(&j);
+  *i = j;
+  return dec;
+}
+
 Ast m_translation_unit(int* i) {
   int j = *i;
-
   Ast out = {A_TRANSLATION_UNIT};
   out.a1.ptr = (Ast*) malloc(sizeof(Ast));
-  int k = 0;
-
+  int l = 0;
   do {
-    out.a1.ptr = (Ast*) realloc(out.a1.ptr, sizeof(Ast) * (k+1));
-    out.a1.ptr[k++] = m_function_def(&j);
-  } while (out.a1.ptr[k-1].node_type != A_NONE);
+    out.a1.ptr = (Ast*) realloc(out.a1.ptr, sizeof(Ast) * (l+1));
+    out.a1.ptr[l] = m_external_declaration(&j);
+    l++;
+  } while (out.a1.ptr[l-1].node_type != A_NONE);
 
   *i = j;
   return out;
@@ -58,7 +102,7 @@ Ast parser(Token* tokens, char* source) {
   toks = tokens;
   src = source;
   int i = 0;
-  Ast out = m_initializer(&i);
+  Ast out = m_translation_unit(&i);
 
   return out;
 }

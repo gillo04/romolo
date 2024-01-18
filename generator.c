@@ -804,7 +804,7 @@ Block g_ast(Ast* ast) {
     case A_EXPRESSION_STATEMENT:
       out = g_ast_stack(ast->a1.ptr);
       break;
-    case A_FUNCTION:
+    /*case A_FUNCTION:
       {
         Block body = g_ast(ast->a2.ptr);
         CHECK(body.str);
@@ -817,7 +817,7 @@ Block g_ast(Ast* ast) {
 
         r_reset();
       }
-      break;
+      break;*/
     case A_TRANSLATION_UNIT:
       {
         Block stack = g_ast_stack(ast->a1.ptr);

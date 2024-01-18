@@ -219,9 +219,9 @@ int solve_constant_exp(Ast* ast) {
       solve_constant_exp(ast->a2.ptr);
       solve_constant_exp(ast->a3.ptr);
       return 0;
-    case A_FUNCTION:
+    /*case A_FUNCTION:
       solve_constant_exp(ast->a2.ptr);
-      return 0;
+      return 0;*/
     case A_TRANSLATION_UNIT:
       solve_constant_stack(ast->a1.ptr);
       return 0;
