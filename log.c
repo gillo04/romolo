@@ -402,9 +402,6 @@ void print_ast(Ast* ast, int indent) {
       }
       print_ast(ast->a2.ptr, indent+1);
       break;
-    case A_INITIALIZER:
-      printf("INITIALIZER\n");
-      break;
     case A_POINTER:
       printf("POINTER\n");
       print_ast(ast->a1.ptr, indent + 1);
@@ -562,6 +559,30 @@ void print_ast(Ast* ast, int indent) {
       if (ast->a2.ptr->node_type != A_NONE) {
         print_ast(ast->a2.ptr, indent+1);
       }
+      break;
+
+    /* 
+     * Initializers
+     */
+
+    case A_DESIGNATOR_LIST:
+      printf("DESIGNATOR LIST\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
+      break;
+    case A_INITIALIZER_LIST_ELEMENT:
+      printf("INITIALIZER LIST ELEMENT\n");
+      if (ast->a1.ptr->node_type != A_NONE) {
+        print_ast(ast->a1.ptr, indent+1);
+      }
+      print_ast(ast->a2.ptr, indent+1);
+      break;
+    case A_INITIALIZER_LIST:
+      printf("INITIALIZER LIST\n");
+      print_ast_stack(ast->a1.ptr, indent+1);
+      break;
+    case A_INITIALIZER:
+      printf("INITIALIZER\n");
+      print_ast(ast->a1.ptr, indent+1);
       break;
 
     /*

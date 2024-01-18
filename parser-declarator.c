@@ -28,8 +28,6 @@ Ast m_identifier_list(int* i) {
   return m_comma_list(i, m_identifier, A_IDENTIFIER_LIST);
 }
 
-Ast m_direct_abstract_declarator(int* i);
-
 Ast m_abstract_declarator(int* i) {
   int j = *i;
   Ast out = {A_ABSTRACT_DECLARATOR};

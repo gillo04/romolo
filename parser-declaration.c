@@ -40,10 +40,6 @@ Ast m_struct_declarator_list(int* i) {
   return m_comma_list(i, m_struct_declarator, A_STRUCT_DECLARATOR_LIST);
 }
 
-Ast m_type_spec(int* i);
-
-Ast m_type_qualifier(int* i);
-
 Ast(*spec_qual[])(int*) = {m_type_spec, m_type_qualifier};
 Ast m_specifier_qualifier_list(int* i) {
   int j = *i;
@@ -282,13 +278,6 @@ Ast m_declaration_specifier_list(int* i) {
 
   *i = j;
   return out;
-}
-
-Ast m_declarator(int* i);
-
-Ast m_initializer(int* i) {
-  (*i)++;
-  return (Ast) {A_INITIALIZER};
 }
 
 Ast m_init_declarator(int* i) {

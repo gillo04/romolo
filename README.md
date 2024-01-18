@@ -5,7 +5,7 @@ Romolo is a simple C compiler I'm building to better understand the C language. 
 This compiler was written referencing directly the C11 standard. I have very little prior compiler theory knowledge, so don't take what I have written as an example of how things should be done.
  
 # State of the project
-At the moment I'm working on the parser. Before implementing declarator parsing I'm going to start work on the code generator, to at least have some basic programs compiling.
+After finishing the parser, I'm going to focus on getting code generation to a decent point, then I will start to think about validating the output of the parser and fixing the infinite memory leaks.
 
 # Building and running
 To build the compiler execute the command
