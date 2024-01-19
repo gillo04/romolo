@@ -1,148 +1,17 @@
 #include "data-structures.h"
 #include "generator.h"
+#include "memory-manager.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 #define CHECK(x) if (x.str == 0) { return (Block) {0, 0}; }
-#define REG_COUNT 14
-#define USED_REGS_COUNT 256
 
 int label_count = 0;
 
-Register registers[REG_COUNT+2] = {
-  {0},       // Null value 
-  {"rax", "eax", "ax", "al"},
-  {"rbx", "ebx", "bx", "bl"},
-  {"rcx", "ecx", "cx", "cl"},
-  {"rdx", "edx", "dx", "dl"},
-  {"rsi", "esi", "si", "sil"},
-  {"rdi", "edi", "di", "dil"},
-  {"r8", "r8d", "r8w", "r8b"},
-  {"r9", "r9d", "r9w", "r9b"},
-  {"r10", "r10d", "r10w", "r10b"},
-  {"r11", "r11d", "r11w", "r11b"},
-  {"r12", "r12d", "r12w", "r12b"},
-  {"r13", "r13d", "r13w", "r13b"},
-  {"r14", "r14d", "r14w", "r14b"},
-  {"r15", "r15d", "r15w", "r15b"},
-  {0}       // Means the value is on the stack
-};
-
-void print_regs() {
-  for (int i = 1; i < REG_COUNT+1; i++) {
-    printf("%s: %d\n", registers[i].name64, registers[i].used);
-  }
-  printf("\n");
-}
-
-Register* used_regs[USED_REGS_COUNT];
-
-Register** insert_reg(int reg) {
-  Register** out = 0;
-  for (int j = 0; j < USED_REGS_COUNT; j++) {
-    if (!used_regs[j]) {
-      used_regs[j] = &registers[reg];
-      out = &used_regs[j];
-      registers[reg].owner = out;
-      break;
-    }
-  }
-  if (registers[reg].owner == 0) {
-    printf("Error: exceeded maximum number of allocated values\n");
-    return out;
-  }
-  registers[reg].used = 1;
-  return out;
-}
-
-int get_unused_reg() {
-  for (int i = 1; i < REG_COUNT+1; i++) {
-    if (!registers[i].used) {
-      return i;
-    }
-  }
-  return 0;
-}
-
-Register** r_alloc() {
-  int reg = get_unused_reg();
-  if (reg != 0) {
-    return insert_reg(reg);
-  }
-
-  printf("Error: stack is not yet handled\n");
-  return 0;
-}
-
-void r_free(Register** r) {
-  if (r == 0) {
-    return;
-  }
-
-  if (*r == 0) {
-    printf("Passed pointer to ghost register\n");
-    return;
-  }
-  (*r)->used = 0;
-  *r = 0;
-}
-
-void r_reset() {
-  for (int i = 1; i < REG_COUNT+1; i++) {
-    registers[i].used = 0;
-    registers[i].owner = 0;
-  }
-
-  for (int i = 1; i < USED_REGS_COUNT; i++) {
-    used_regs[i] = 0;
-  }
-}
-
-// Relocates the value at register
-Register** r_realloc(int request, Block* correction) {
-  Block out = {0, 0};
-  set_string(&out.str, "");
-  if (registers[request].used) {
-    int new_loc = get_unused_reg();
-    append_format(&out.str, 
-      "\tmov %s, %s\n",
-      registers[new_loc].name64, registers[request].name64
-    );
-    registers[new_loc].owner = registers[request].owner;
-    registers[new_loc].used = 1;
-    *registers[request].owner = &registers[new_loc];
-  }
-  
-  *correction = out;
-  return insert_reg(request);
-}
-
-Block r_move_to(Register** src, Register* dest) {
-  Block out = {0, 0};
-
-  if (*src == dest) {
-    set_string(&out.str, "");
-    out.result = src;
-    return out;
-  }
-
-  if (dest->used) {
-    printf("Error: trying to move to an already used register\n");
-    return out;
-  }
-
-  append_format(&out.str, 
-    "\tmov %s, %s\n",
-    dest->name64, (*src)->name64
-  );
-  *src = dest;
-  dest->used = 1;
-  dest->owner = src;
-
-  out.result = src;
-  return out;
-}
+extern Register registers[REGISTERS_DIM+2];
+extern Mem_obj objects[OBJECTS_DIM];
+extern Variable variables[VARIABLES_DIM];
 
 Block g_ast(Ast* ast);
 
@@ -572,54 +441,10 @@ Block g_ast(Ast* ast) {
     case A_COMMA_EXP:
       out = g_ast_stack(ast->a1.ptr);
       break;
-    /*case A_DECLARATION:
-      printf("DECLARATION < ");
-      print_type(&ast->type);
-      printf(">\n");
-      print_ast_stack(ast->a1.ptr, indent+1);
-      break;
-    case A_INIT_DECLARATOR:
-      printf("INIT DECLARATOR\n");
-      print_ast(ast->a1.ptr, indent+1);
-      if (ast->a2.ptr->node_type != A_NONE) {
-        print_ast(ast->a2.ptr, indent+1);
-      }
-      break;
-    case A_DECLARATOR:
-      printf("DECLARATOR\n");
-      break;
-    case A_INITIALIZER:
-      printf("INITIALIZER\n");
-      break;
-    case A_POINTER:
-      printf("POINTER < \n");
-      print_type(&ast->type);
-      printf(">\n");
-      if (ast->a1.ptr->node_type != A_NONE) {
-        print_ast(ast->a1.ptr, indent + 1);
-      }
-      break;
-    case A_DIRECT_DECLARATOR:
-      printf("DIRECT DECLARATOR\n");
-      break;
-    case A_PARAMETER_TYPE_LIST:
-      printf("PARAMETER TYPE LIST\n");
-      print_ast(ast->a1.ptr, indent+1);
-      if (ast->a2.ptr->node_type != A_NONE) {
-        print_ast(ast->a2.ptr, indent+1);
-      }
-      break;
-    case A_PARAMETER_LIST:
-      printf("PARAMETER LIST\n");
-      print_ast_stack(ast->a1.ptr, indent+1);
-      break;
-    case A_THREE_DOTS:
-      printf("THREE DOTS\n");
-      break;
-    case A_IDENTIFIER_LIST:
-      printf("IDENTIFIER LIST\n");
-      print_ast_stack(ast->a1.ptr, indent+1);
-      break;*/
+    
+    /*
+     * Statements
+     */
     case A_LABEL:
       {
         append_format(&out.str,

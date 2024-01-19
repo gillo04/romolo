@@ -34,6 +34,14 @@ int main(int argc, char* argv[]) {
   optimizer(&ast);
   printf("OPTIMIZER FINISHED\n");
   print_ast(&ast, 0);
+  
+  /* TODO:
+   * int verified = verify(&ast);
+   * if (!verified) {
+   *   return 1;
+   * }
+   * printf("VERIFICATION FINISHED\n");
+   */
 
   return 0;
 
