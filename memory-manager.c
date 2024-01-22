@@ -249,6 +249,11 @@ Block r_move(Mem_obj* obj, int reg) {
     printf("Error: trying to move to a locked register\n");
     return out;
   }
+
+  if (reg == obj->loc.reg - registers) {
+    set_string(&out.str, "");
+    return out; 
+  }
   if (registers[reg].used) {
     int new = 0;
     for (int i = 1; i < REGISTERS_DIM + 1; i++) {

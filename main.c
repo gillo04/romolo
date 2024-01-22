@@ -32,8 +32,8 @@ int main(int argc, char* argv[]) {
   }  
   printf("PARSER FINISHED\n");
 
-  optimizer(&ast);
-  printf("OPTIMIZER FINISHED\n");
+  // optimizer(&ast);
+  // printf("OPTIMIZER FINISHED\n");
   print_ast(&ast, 0);
   
   /* TODO:
@@ -43,23 +43,6 @@ int main(int argc, char* argv[]) {
    * }
    * printf("VERIFICATION FINISHED\n");
    */
-
-  init_memory();
-  print_mem_structs();
-
-  var_push((Variable) {"foo", 0, 0, 4, -1});
-  Mem_obj* bar = var_push((Variable) {"bar", 0, 0, 8, -1});
-  Block eax = r_alloc(4);
-  Block ebx = r_alloc(4);
-  var_push((Variable) {"foobar", 0, 0, 4, -1});
-
-  Block move = r_load(bar);
-  Block move2 = r_store(bar);
-  
-  print_mem_structs();
-  printf("%s\n", move.str.str);
-  printf("%s\n", move2.str.str);
-  return 0;
 
   char* assembly_code = generator(&ast);
   if (assembly_code == 0) {

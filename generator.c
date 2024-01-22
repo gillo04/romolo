@@ -13,11 +13,9 @@ extern Register registers[REGISTERS_DIM+2];
 extern Mem_obj objects[OBJECTS_DIM];
 extern Variable variables[VARIABLES_DIM];
 
-Block g_ast(Ast* ast) {
-  return (Block){0};
-}
+Block g_ast(Ast* ast);
 
-/*Block g_ast_stack(Ast* ast) {
+Block g_ast_stack(Ast* ast) {
   int i = 0;
   Block out = {0, 0};
   while (ast[i].node_type != A_NONE) {
@@ -43,7 +41,7 @@ Block g_unary_op(Ast* ast, char* op) {
     "%s"
     "\t%s %s\n",
     s.str.str,
-    op, (*s.result)->name64
+    op, s.result->loc.reg->name64
   );
 
   out.result = s.result;
@@ -54,6 +52,8 @@ Block g_binary_op(Ast* ast, char* op) {
   Block out = {0, 0};
   Block l = g_ast(ast->a1.ptr);
   CHECK(l.str);
+  r_lock(l.result);
+
   Block r = g_ast(ast->a2.ptr);
   CHECK(r.str);
 
@@ -63,10 +63,11 @@ Block g_binary_op(Ast* ast, char* op) {
     "\t%s %s, %s\n",
     l.str.str,
     r.str.str,
-    op, (*l.result)->name64, (*r.result)->name64
+    op, l.result->loc.reg->name64, r.result->loc.reg->name64
   );
 
   r_free(r.result);
+  r_unlock(l.result);
   out.result = l.result;
   return out;
 }
@@ -75,6 +76,8 @@ Block g_binary_logic_op(Ast* ast, char* op) {
   Block out = {0, 0};
   Block l = g_ast(ast->a1.ptr);
   CHECK(l.str);
+  r_lock(l.result);
+
   Block r = g_ast(ast->a2.ptr);
   CHECK(r.str);
 
@@ -86,12 +89,13 @@ Block g_binary_logic_op(Ast* ast, char* op) {
     "\tand %s, 1\n",
     l.str.str,
     r.str.str,
-    (*l.result)->name64, (*r.result)->name64,
-    op, (*l.result)->name8,
-    (*l.result)->name64
+    l.result->loc.reg->name64, r.result->loc.reg->name64,
+    op, l.result->loc.reg->name8,
+    l.result->loc.reg->name64
   );
 
   r_free(r.result);
+  r_unlock(l.result);
   out.result = l.result;
   return out;
 }
@@ -106,15 +110,15 @@ Block g_ast(Ast* ast) {
       break;
     case A_CONSTANT:
       {
-        Register** reg = r_alloc();
+        out = r_alloc(8);
+        append_string(&out.str, r_load(out.result).str.str);
         append_format(&out.str, 
           "\tmov %s, %lld\n"
-          , (*reg)->name64, ast->a1.num
+          , out.result->loc.reg->name64, ast->a1.num
         );
-        out.result = reg;
       }
       break;
-     *case A_STRING_LITERAL:
+    case A_STRING_LITERAL:
       printf("STRING LITERAL \"%s\"\n", ast->a1.str);
       break;
     case A_MEMBER:
@@ -155,7 +159,7 @@ Block g_ast(Ast* ast) {
     case A_DEREFERENCE:
       printf("DEREFERENCE\n");
       print_ast(ast->a1.ptr, indent+1);
-      break;*
+      break;
 
     case A_UNARY_PLUS:
       out = g_ast(ast->a1.ptr);
@@ -168,16 +172,18 @@ Block g_ast(Ast* ast) {
       break;
     case A_LOGIC_NOT:
       out = g_ast(ast->a1.ptr);
+      CHECK(out.str);
       append_format(&out.str,
         "\tor %s, %s\n"
         "\tsete %s\n",
-        (*out.result)->name64, (*out.result)->name64, (*out.result)->name64
+        out.result->loc.reg->name64, out.result->loc.reg->name64,
+        out.result->loc.reg->name64
       );
       break;
     case A_MULTIPLICATION:
       out = g_binary_op(ast, "imul");
       break;
-    case A_DIVISION:
+    /*case A_DIVISION:
       {
         Block l = g_ast(ast->a1.ptr);
         Block r = g_ast(ast->a2.ptr);
@@ -234,7 +240,7 @@ Block g_ast(Ast* ast) {
         r_free(r.result);
         out.result = rdx;
       }
-      break;
+      break;*/
     case A_ADDITION:
       out = g_binary_op(ast, "add");
       break;
@@ -278,6 +284,8 @@ Block g_ast(Ast* ast) {
       {
         Block l = g_ast(ast->a1.ptr);
         CHECK(l.str);
+        r_lock(l.result);
+
         Block r = g_ast(ast->a2.ptr);
         CHECK(r.str);
 
@@ -293,17 +301,18 @@ Block g_ast(Ast* ast) {
           "logic_and_%d:\n"
           "\tand %s, 1\n",
           l.str.str,
-          (*l.result)->name64,
+          l.result->loc.reg->name64,
           label_count, label_count + 1, label_count,
           r.str.str,
-          (*r.result)->name64, (*l.result)->name8, 
+          r.result->loc.reg->name64, l.result->loc.reg->name8, 
           label_count + 1,
-          (*l.result)->name64
+          l.result->loc.reg->name64
         );
 
         label_count += 2;
 
         r_free(r.result);
+        r_unlock(l.result);
         out.result = l.result;
       }
       break;
@@ -311,6 +320,8 @@ Block g_ast(Ast* ast) {
       {
         Block l = g_ast(ast->a1.ptr);
         CHECK(l.str);
+        r_lock(l.result);
+
         Block r = g_ast(ast->a2.ptr);
         CHECK(r.str);
 
@@ -327,17 +338,18 @@ Block g_ast(Ast* ast) {
           "\tand %s, 1\n"
           "logic_or_%d:\n",
           l.str.str,
-          (*l.result)->name64,
+          l.result->loc.reg->name64,
           label_count,  
-          (*l.result)->name64, label_count + 1, label_count,
+          l.result->loc.reg->name64, label_count + 1, label_count,
           r.str.str,
-          (*r.result)->name64, (*l.result)->name8, 
-          (*l.result)->name64, label_count + 1
+          r.result->loc.reg->name64, l.result->loc.reg->name8, 
+          l.result->loc.reg->name64, label_count + 1
         );
 
         label_count += 2;
 
         r_free(r.result);
+        r_unlock(l.result);
         out.result = l.result;
       }
       break;
@@ -350,7 +362,7 @@ Block g_ast(Ast* ast) {
           "\tcmp %s, 0\n"
           "\tje cond_exp_else_%d\n",
           cond.str.str,
-          (*cond.result)->name64,
+          cond.result->loc.reg->name64,
           label_count
         );
         r_free(cond.result);
@@ -360,7 +372,7 @@ Block g_ast(Ast* ast) {
         CHECK(t.str);
 
         // Free up result register but remember it
-        Register* result = *t.result;
+        Register* result = t.result->loc.reg;
         r_free(t.result);
 
         // Generate false branch
@@ -368,7 +380,7 @@ Block g_ast(Ast* ast) {
         CHECK(f.str);
 
         // Make sure false result is in the right register
-        Block f_move_to = r_move_to(f.result, result);
+        Block f_move_to = r_move(f.result, result - registers);
 
         append_format(&out.str,
           "%s"
@@ -444,9 +456,9 @@ Block g_ast(Ast* ast) {
       out = g_ast_stack(ast->a1.ptr);
       break;
     
-     *
+    /*
      * Statements
-     *
+     */
     case A_LABEL:
       {
         append_format(&out.str,
@@ -484,7 +496,7 @@ Block g_ast(Ast* ast) {
           "\tcmp %s, 0\n"
           "\tje if_end_%d\n",
           cond.str.str,
-          (*cond.result)->name64,
+          cond.result->loc.reg->name64,
           label_count
         );
         r_free(cond.result);
@@ -492,6 +504,7 @@ Block g_ast(Ast* ast) {
         // Generate true branch
         Block t = g_ast(ast->a2.ptr);
         CHECK(t.str);
+        r_free(t.result);
         
         append_format(&out.str,
           "%s"
@@ -500,7 +513,6 @@ Block g_ast(Ast* ast) {
         );
 
         label_count ++;
-        out.result = t.result;
       }
       break;
     case A_IF_ELSE:
@@ -512,7 +524,7 @@ Block g_ast(Ast* ast) {
           "\tcmp %s, 0\n"
           "\tje if_else_%d\n",
           cond.str.str,
-          (*cond.result)->name64,
+          cond.result->loc.reg->name64,
           label_count
         );
         r_free(cond.result);
@@ -520,31 +532,24 @@ Block g_ast(Ast* ast) {
         // Generate true branch
         Block t = g_ast(ast->a2.ptr);
         CHECK(t.str);
-
-        // Free up result register but remember it
-        Register* result = *t.result;
         r_free(t.result);
 
         // Generate false branch
         Block f = g_ast(ast->a3.ptr);
         CHECK(f.str);
-
-        // Make sure false result is in the right register
-        Block f_move_to = r_move_to(f.result, result);
+        r_free(f.result);
 
         append_format(&out.str,
           "%s"
           "\tjmp if_end_%d\n"
           "if_else_%d:\n"
           "%s"
-          "%s"
           "if_end_%d:\n",
           t.str.str, label_count,
-          label_count, f.str.str, f_move_to.str.str, label_count 
+          label_count, f.str.str, label_count 
         );
 
         label_count ++;
-        out.result = f.result;
       }
       break;
     case A_SWITCH:
@@ -556,14 +561,14 @@ Block g_ast(Ast* ast) {
       {
         Block cond = g_ast(ast->a1.ptr);
         CHECK(cond.str);
-        printf("ok\n");
+
         append_format(&out.str,
           "while_%d:\n"
           "%s"
           "\tcmp %s, 0\n"
           "\tje while_end_%d\n",
           label_count, cond.str.str,
-          (*cond.result)->name64, label_count
+          cond.result->loc.reg->name64, label_count
         );
         r_free(cond.result);
 
@@ -576,7 +581,7 @@ Block g_ast(Ast* ast) {
           stat.str.str, label_count,
           label_count
         );
-        out.result = stat.result;
+        r_free(stat.result);
       }
       break;
     case A_DO_WHILE:
@@ -613,36 +618,30 @@ Block g_ast(Ast* ast) {
       {
         out = g_ast(ast->a1.ptr);
         CHECK(out.str);
-        Block realloc = {0, 0};
-        if (*(out.result) - registers != 1) {
-          Register** rax = r_realloc(1, &realloc);
-          append_format(&out.str, 
-            "%s"
-            "\tmov rax, %s\n",
-            realloc.str.str, (*out.result)->name64
-          );
-        }
 
         append_format(&out.str, 
-          "\tret\n"
+          "%s"
+          "\tret\n",
+          r_move(out.result, 1).str.str
         );
       }
       break;
     case A_EXPRESSION_STATEMENT:
       out = g_ast_stack(ast->a1.ptr);
       break;
-    case A_FUNCTION:
+    case A_FUNCTION_DEFINITION:
       {
-        Block body = g_ast(ast->a2.ptr);
-        CHECK(body.str);
+        if (ast->a2.ptr->node_type != A_NONE) {
+          Block body = g_ast(ast->a2.ptr);
+          CHECK(body.str);
 
-        append_format(&out.str,
-          "%s:\n"
-          "%s\n",
-          ast->a1.str, body.str.str
-        );
-
-        r_reset();
+          append_format(&out.str,
+            "%s:\n"
+            "%s\n",
+            ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr->a1.str, body.str.str
+          );
+          // TODO: pop stack frame
+        }
       }
       break;
     case A_TRANSLATION_UNIT:
@@ -662,15 +661,12 @@ Block g_ast(Ast* ast) {
   }
   CHECK(out.str);
   return out;
-}*/
+}
 
 char* generator(Ast* ast) {
   label_count = 0;
   init_memory();
 
-  
-
   Block out = g_ast(ast);
-
   return out.str.str;
 }
