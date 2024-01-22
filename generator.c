@@ -13,9 +13,11 @@ extern Register registers[REGISTERS_DIM+2];
 extern Mem_obj objects[OBJECTS_DIM];
 extern Variable variables[VARIABLES_DIM];
 
-Block g_ast(Ast* ast);
+Block g_ast(Ast* ast) {
+  return (Block){0};
+}
 
-Block g_ast_stack(Ast* ast) {
+/*Block g_ast_stack(Ast* ast) {
   int i = 0;
   Block out = {0, 0};
   while (ast[i].node_type != A_NONE) {
@@ -112,7 +114,7 @@ Block g_ast(Ast* ast) {
         out.result = reg;
       }
       break;
-    /*case A_STRING_LITERAL:
+     *case A_STRING_LITERAL:
       printf("STRING LITERAL \"%s\"\n", ast->a1.str);
       break;
     case A_MEMBER:
@@ -153,7 +155,7 @@ Block g_ast(Ast* ast) {
     case A_DEREFERENCE:
       printf("DEREFERENCE\n");
       print_ast(ast->a1.ptr, indent+1);
-      break;*/
+      break;*
 
     case A_UNARY_PLUS:
       out = g_ast(ast->a1.ptr);
@@ -442,9 +444,9 @@ Block g_ast(Ast* ast) {
       out = g_ast_stack(ast->a1.ptr);
       break;
     
-    /*
+     *
      * Statements
-     */
+     *
     case A_LABEL:
       {
         append_format(&out.str,
@@ -629,7 +631,7 @@ Block g_ast(Ast* ast) {
     case A_EXPRESSION_STATEMENT:
       out = g_ast_stack(ast->a1.ptr);
       break;
-    /*case A_FUNCTION:
+    case A_FUNCTION:
       {
         Block body = g_ast(ast->a2.ptr);
         CHECK(body.str);
@@ -642,7 +644,7 @@ Block g_ast(Ast* ast) {
 
         r_reset();
       }
-      break;*/
+      break;
     case A_TRANSLATION_UNIT:
       {
         Block stack = g_ast_stack(ast->a1.ptr);
@@ -660,16 +662,14 @@ Block g_ast(Ast* ast) {
   }
   CHECK(out.str);
   return out;
-}
-
-void init_generator() {
-  label_count = 0;
-  r_reset();
-  return;
-}
+}*/
 
 char* generator(Ast* ast) {
-  init_generator();
+  label_count = 0;
+  init_memory();
+
+  
+
   Block out = g_ast(ast);
 
   return out.str.str;

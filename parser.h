@@ -2,7 +2,7 @@
 #include "lexer.h"
 
 enum {
-  A_NONE,
+  A_NONE = 0,
   A_IDENTIFIER,
   A_CONSTANT,
   A_STRING_LITERAL,
