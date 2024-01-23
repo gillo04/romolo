@@ -52,22 +52,24 @@ Block g_binary_op(Ast* ast, char* op) {
   Block out = {0, 0};
   Block l = g_ast(ast->a1.ptr);
   CHECK(l.str);
-  r_lock(l.result);
 
   Block r = g_ast(ast->a2.ptr);
   CHECK(r.str);
+  r_lock(r.result);
 
+  Block ld = r_load(l.result);
   append_format(&out.str,
+    "%s"
     "%s"
     "%s"
     "\t%s %s, %s\n",
     l.str.str,
     r.str.str,
+    ld.str.str,
     op, l.result->loc.reg->name64, r.result->loc.reg->name64
   );
 
   r_free(r.result);
-  r_unlock(l.result);
   out.result = l.result;
   return out;
 }
@@ -76,12 +78,14 @@ Block g_binary_logic_op(Ast* ast, char* op) {
   Block out = {0, 0};
   Block l = g_ast(ast->a1.ptr);
   CHECK(l.str);
-  r_lock(l.result);
 
   Block r = g_ast(ast->a2.ptr);
   CHECK(r.str);
+  r_lock(r.result);
 
+  Block ld = r_load(l.result);
   append_format(&out.str,
+    "%s"
     "%s"
     "%s"
     "\tcmp %s, %s\n"
@@ -89,13 +93,13 @@ Block g_binary_logic_op(Ast* ast, char* op) {
     "\tand %s, 1\n",
     l.str.str,
     r.str.str,
+    ld.str.str,
     l.result->loc.reg->name64, r.result->loc.reg->name64,
     op, l.result->loc.reg->name8,
     l.result->loc.reg->name64
   );
 
   r_free(r.result);
-  r_unlock(l.result);
   out.result = l.result;
   return out;
 }
@@ -111,7 +115,9 @@ Block g_ast(Ast* ast) {
     case A_CONSTANT:
       {
         out = r_alloc(8);
-        append_string(&out.str, r_load(out.result).str.str);
+
+        Block ld = r_load(out.result);
+        append_string(&out.str, ld.str.str);
         append_format(&out.str, 
           "\tmov %s, %lld\n"
           , out.result->loc.reg->name64, ast->a1.num
@@ -621,6 +627,8 @@ Block g_ast(Ast* ast) {
 
         append_format(&out.str, 
           "%s"
+          "\tmov rsp, rbp\n"
+          "\tpop rbp\n"
           "\tret\n",
           r_move(out.result, 1).str.str
         );
@@ -637,6 +645,8 @@ Block g_ast(Ast* ast) {
 
           append_format(&out.str,
             "%s:\n"
+            "\tpush rbp\n"
+            "\tmov rbp, rsp\n"
             "%s\n",
             ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr->a1.str, body.str.str
           );

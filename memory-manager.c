@@ -32,6 +32,8 @@ int hw_stack[HW_STACK_DIM];   // Keeps track of hardware base pointers
 int hw_bp = 0;    // Base pointer
 int hw_sp = 0;    // Stack pointer
 
+int tmp_bytes_to_clear = 0;
+
 void print_mem_structs() {
   printf("\nRegisters:\n");
   for (int i = 1; i < REGISTERS_DIM + 1; i++) {
@@ -68,6 +70,7 @@ void init_memory() {
   var_sp = 0;
   hw_bp = 0;
   hw_sp = 0;
+  tmp_bytes_to_clear = 0;
 }
 
 Mem_obj* obj_alloc(Mem_obj obj) {
@@ -145,7 +148,7 @@ Block r_alloc(int size) {
 
   Block out = {0, 0};
   append_format(&out.str,
-    "\tadd rsp, %d\n",
+    "\tsub rsp, %d\n",
     size);
   out.result = obj_alloc(obj);
   return out;
@@ -154,15 +157,14 @@ Block r_alloc(int size) {
 Block r_free(Mem_obj* obj) {
   Block out = {0, 0};
   if (obj->type == M_STACK) {
-    if (hw_sp == obj->loc.stack_off) {
-      hw_sp -= obj->size;
+    tmp_bytes_to_clear += obj->size;
+    if (hw_sp == tmp_bytes_to_clear) {
+      hw_sp -= obj->loc.stack_off;
       obj->type = M_NONE;
       append_format(&out.str,
-        "\tsub rsp, %d\n",
-        obj->size);
-    } else {
-      printf("Error: trying to free a stack memory object that isn't on top of the stack\n");
-      set_string(&out.str, "");
+        "\tadd rsp, %d\n",
+        obj->loc.stack_off);
+      tmp_bytes_to_clear = 0;
     }
   } else if (obj->type == M_REG) {
     obj->loc.reg->used = 0;
@@ -264,17 +266,23 @@ Block r_move(Mem_obj* obj, int reg) {
     }
 
     if (new == 0) {
-      printf("Error: all registers are currently locked");
-      return out;
-    } 
-
-    // Move register at reg to new
-    Mem_obj tmp = *registers[reg].owner;
-    registers[new].used = 1;
-    registers[new].owner = registers[reg].owner;
-    registers[new].owner->type = M_REG;
-    registers[new].owner->loc.reg = &registers[new];
-    out = g_mov(registers[new].owner, tmp);
+      // Move register at reg to the stack
+      Mem_obj tmp = *registers[reg].owner;
+      hw_sp += registers[reg].owner->size;
+      registers[reg].owner->type = M_STACK;
+      registers[reg].owner->loc.stack_off = hw_sp;
+      append_format(&out.str, 
+        "\tsub rsp, %d\n", registers[reg].owner->size);
+      append_string(&out.str, g_mov(registers[reg].owner, tmp).str.str);
+    } else {
+      // Move register at reg to new
+      Mem_obj tmp = *registers[reg].owner;
+      registers[new].used = 1;
+      registers[new].owner = registers[reg].owner;
+      registers[new].owner->type = M_REG;
+      registers[new].owner->loc.reg = &registers[new];
+      out = g_mov(registers[new].owner, tmp);
+    }
   }
 
   // Move obj to reg
@@ -289,7 +297,6 @@ Block r_move(Mem_obj* obj, int reg) {
     tmp.loc.reg->used = 0;
     tmp.loc.reg->locked = 0;
   }
-  printf("ok\n");
   append_string(&out.str, mov.str.str);
   out.result = obj;
   return out;
@@ -299,17 +306,36 @@ Block r_load(Mem_obj* obj) {
   Block out = {0, 0};
   if (obj->type == M_STACK) {
     int reg = 0;
+    int reg_backup = 0;
     for (int i = 1; i < REGISTERS_DIM + 1; i++) {
       if (!registers[i].used && !registers[i].locked) {
         reg = i;
         break;
       }
+
+      if (!registers[i].locked) {
+        reg_backup = i;
+      }
     }
 
-    if (reg != 0) {
-      out = r_move(obj, reg);
-    } else {
-      printf("Error: all registers are currently locked");
+    if (reg == 0) {
+      if (reg_backup == 0) {
+        printf("Error: all registers are currently locked\n");
+      }
+      reg = reg_backup;
+    }
+
+    out = r_move(obj, reg);
+
+    // Free up stack
+    if (obj->var == 0) {
+      tmp_bytes_to_clear += obj->size;
+      if (tmp_bytes_to_clear == hw_sp) {
+        hw_sp -= tmp_bytes_to_clear;
+        append_format(&out.str, 
+          "\tadd rsp, %d\n", tmp_bytes_to_clear);
+        tmp_bytes_to_clear = 0;
+      }
     }
   } else {
     set_string(&out.str, "");

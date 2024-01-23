@@ -3,6 +3,8 @@
 .text
 
 main:
+	push rbp
+	mov rbp, rsp
 	mov rax, 1
 	mov rbx, 2
 	mov rcx, 3
@@ -17,8 +19,19 @@ main:
 	mov r13, 12
 	mov r14, 13
 	mov r15, 14
+	sub rsp, 8
+	sub rsp, 8
+	mov [rbp - 16], r15
+	mov r15, [rbp - 8]
+	mov r15, 15
+	sub rsp, 8
+	mov [rbp - 24], r14
+	mov r14, [rbp - 16]
 	add r14, r15
-	add r13, r14
+	mov r15, [rbp - 24]
+	add rsp, 24
+	add r15, r14
+	add r13, r15
 	add r12, r13
 	add r11, r12
 	add r10, r11
@@ -30,6 +43,8 @@ main:
 	add rcx, rdx
 	add rbx, rcx
 	add rax, rbx
+	mov rsp, rbp
+	pop rbp
 	ret
 
 
