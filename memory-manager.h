@@ -11,7 +11,7 @@ void print_mem_structs();
 void init_memory();
 
 // Pushes variable on the stack
-Mem_obj* var_push(Variable var);
+Block var_push(Variable var);
 
 // Pops the top variable from variables
 void var_pop();

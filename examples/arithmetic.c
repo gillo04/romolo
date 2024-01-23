@@ -1,3 +1,4 @@
 int main() {
-  return 200 / (50 / 10) / 10 % 3;
+  int foo = 5;
+  return 0;
 }

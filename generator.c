@@ -203,17 +203,17 @@ Block g_ast(Ast* ast) {
         );
 
         // Move l to rax
-        append_string(&out.str.str, r_move(l.result, 1).str.str);
+        append_string(&out.str, r_move(l.result, 1).str.str);
         r_lock(l.result);
 
         // Allocate rdx
         Block rdx = r_alloc(8);
-        append_string(&out.str.str, rdx.str.str);
-        append_string(&out.str.str, r_move(rdx.result, 4).str.str);
+        append_string(&out.str, rdx.str.str);
+        append_string(&out.str, r_move(rdx.result, 4).str.str);
         r_lock(rdx.result);
 
         // Load r
-        append_string(&out.str.str, r_load(r.result).str.str);
+        append_string(&out.str, r_load(r.result).str.str);
         append_format(&out.str,
           "\txor rdx, rdx\n"
           "\tidiv %s\n",
@@ -240,17 +240,17 @@ Block g_ast(Ast* ast) {
         );
 
         // Move l to rax
-        append_string(&out.str.str, r_move(l.result, 1).str.str);
+        append_string(&out.str, r_move(l.result, 1).str.str);
         r_lock(l.result);
 
         // Allocate rdx
         Block rdx = r_alloc(8);
-        append_string(&out.str.str, rdx.str.str);
-        append_string(&out.str.str, r_move(rdx.result, 4).str.str);
+        append_string(&out.str, rdx.str.str);
+        append_string(&out.str, r_move(rdx.result, 4).str.str);
         r_lock(rdx.result);
 
         // Load r
-        append_string(&out.str.str, r_load(r.result).str.str);
+        append_string(&out.str, r_load(r.result).str.str);
         append_format(&out.str,
           "\txor rdx, rdx\n"
           "\tidiv %s\n",
@@ -306,11 +306,12 @@ Block g_ast(Ast* ast) {
       {
         Block l = g_ast(ast->a1.ptr);
         CHECK(l.str);
-        r_lock(l.result);
 
         Block r = g_ast(ast->a2.ptr);
         CHECK(r.str);
+        r_lock(r.result);
 
+        append_string(&out.str, r_load(l.result).str.str);
         append_format(&out.str,
           "%s"
           "\tcmp %s, 0\n"
@@ -334,7 +335,6 @@ Block g_ast(Ast* ast) {
         label_count += 2;
 
         r_free(r.result);
-        r_unlock(l.result);
         out.result = l.result;
       }
       break;
@@ -342,11 +342,12 @@ Block g_ast(Ast* ast) {
       {
         Block l = g_ast(ast->a1.ptr);
         CHECK(l.str);
-        r_lock(l.result);
 
         Block r = g_ast(ast->a2.ptr);
         CHECK(r.str);
+        r_lock(r.result);
 
+        append_string(&out.str, r_load(l.result).str.str);
         append_format(&out.str,
           "%s"
           "\tcmp %s, 0\n"
@@ -371,7 +372,6 @@ Block g_ast(Ast* ast) {
         label_count += 2;
 
         r_free(r.result);
-        r_unlock(l.result);
         out.result = l.result;
       }
       break;
@@ -476,6 +476,38 @@ Block g_ast(Ast* ast) {
       break;
     case A_COMMA_EXP:
       out = g_ast_stack(ast->a1.ptr);
+      break;
+
+    /*
+     * Declarations
+     */
+    case A_DECLARATION:
+      {
+        Variable var = {
+          ast->a2.ptr->a1.ptr[0].a1.ptr->a2.ptr->a1.ptr->a1.str,
+          ast->a1.ptr,
+          ast->a2.ptr->a1.ptr[0].a1.ptr,
+          // TODO: ast_sizeof(ast),
+          4,
+          -1,
+          0
+        };
+
+        Block dec = var_push(var);
+        CHECK(dec.str);
+
+        append_string(&out.str, dec.str.str);
+        if (ast->a2.ptr->a1.ptr[0].a2.ptr->node_type != A_NONE) {
+          Block init = g_ast(ast->a2.ptr->a1.ptr[0].a2.ptr->a1.ptr);
+          CHECK(init.str);
+
+          append_string(&out.str, init.str.str);
+          append_string(&out.str, g_mov(dec.result, *init.result).str.str);
+          r_free(init.result);
+        }
+        out.result = dec.result;
+        print_mem_structs();
+      }
       break;
     
     /*

@@ -84,11 +84,12 @@ Mem_obj* obj_alloc(Mem_obj obj) {
   return 0;
 }
 
-Mem_obj* var_push(Variable var) {
+Block var_push(Variable var) {
+  Block out = {0, 0};
   // TODO: Turn into a dynamic stack 
   if (var_sp >= VARIABLES_DIM) {
     printf("Error: variables stack overflow\n");
-    return 0;
+    return out;
   }
   hw_sp += var.size;
   var.stack_off = hw_sp;
@@ -100,7 +101,11 @@ Mem_obj* var_push(Variable var) {
   variables[var_sp].obj = obj_alloc(obj);
 
   var_sp++;
-  return variables[var_sp-1].obj;
+  out.result = variables[var_sp-1].obj;
+  append_format(&out.str,
+    "\tsub rsp, %d\n",
+    obj.size);
+  return out;
 }
 
 void var_pop() {

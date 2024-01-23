@@ -5,29 +5,10 @@
 main:
 	push rbp
 	mov rbp, rsp
-	mov rax, 200
-	mov rbx, 50
-	mov rcx, 10
-	mov rdx, rax
-	mov rax, rbx
-	mov rsi, rdx
-	mov rdx, rbx
-	xor rdx, rdx
-	idiv rcx
-	mov rbx, rax
-	mov rax, rsi
-	mov rdx, rcx
-	xor rdx, rdx
-	idiv rbx
-	mov rbx, 10
-	mov rdx, rcx
-	xor rdx, rdx
-	idiv rbx
-	mov rbx, 3
-	mov rdx, rcx
-	xor rdx, rdx
-	idiv rbx
-	mov rax, rdx
+	sub rsp, 4
+	mov rax, 5
+	mov [rbp - 4], rax
+	mov rax, 0
 	mov rsp, rbp
 	pop rbp
 	ret
