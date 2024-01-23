@@ -189,64 +189,80 @@ Block g_ast(Ast* ast) {
     case A_MULTIPLICATION:
       out = g_binary_op(ast, "imul");
       break;
-    /*case A_DIVISION:
+    case A_DIVISION:
       {
         Block l = g_ast(ast->a1.ptr);
+        CHECK(l.str);
+
         Block r = g_ast(ast->a2.ptr);
+        CHECK(r.str);
+
         append_format(&out.str,
           "%s%s",
           l.str.str, r.str.str
         );
 
-        Block realloc;
-        Register** rax = r_realloc(1, &realloc);
-        append_string(&out.str, realloc.str.str);
+        // Move l to rax
+        append_string(&out.str.str, r_move(l.result, 1).str.str);
+        r_lock(l.result);
 
-        Register** rdx = r_realloc(4, &realloc);
-        append_string(&out.str, realloc.str.str);
+        // Allocate rdx
+        Block rdx = r_alloc(8);
+        append_string(&out.str.str, rdx.str.str);
+        append_string(&out.str.str, r_move(rdx.result, 4).str.str);
+        r_lock(rdx.result);
 
+        // Load r
+        append_string(&out.str.str, r_load(r.result).str.str);
         append_format(&out.str,
           "\txor rdx, rdx\n"
-          "\tmov rax, %s\n"
           "\tidiv %s\n",
-          (*l.result)->name64, (*r.result)->name64
+          r.result->loc.reg->name64
         );
 
-        r_free(rdx);
-        r_free(l.result);
+        r_free(rdx.result);
         r_free(r.result);
-        out.result = rax;
+        r_unlock(l.result);
+        out.result = l.result;
       }
       break;
     case A_MODULO:
       {
         Block l = g_ast(ast->a1.ptr);
+        CHECK(l.str);
+
         Block r = g_ast(ast->a2.ptr);
+        CHECK(r.str);
+
         append_format(&out.str,
           "%s%s",
           l.str.str, r.str.str
         );
 
-        Block realloc;
-        Register** rax = r_realloc(1, &realloc);
-        append_string(&out.str, realloc.str.str);
+        // Move l to rax
+        append_string(&out.str.str, r_move(l.result, 1).str.str);
+        r_lock(l.result);
 
-        Register** rdx = r_realloc(4, &realloc);
-        append_string(&out.str, realloc.str.str);
+        // Allocate rdx
+        Block rdx = r_alloc(8);
+        append_string(&out.str.str, rdx.str.str);
+        append_string(&out.str.str, r_move(rdx.result, 4).str.str);
+        r_lock(rdx.result);
 
+        // Load r
+        append_string(&out.str.str, r_load(r.result).str.str);
         append_format(&out.str,
           "\txor rdx, rdx\n"
-          "\tmov rax, %s\n"
           "\tidiv %s\n",
-          (*l.result)->name64, (*r.result)->name64
+          r.result->loc.reg->name64
         );
 
-        r_free(rax);
         r_free(l.result);
         r_free(r.result);
-        out.result = rdx;
+        r_unlock(rdx.result);
+        out.result = rdx.result;
       }
-      break;*/
+      break;
     case A_ADDITION:
       out = g_binary_op(ast, "add");
       break;

@@ -156,6 +156,9 @@ Block r_alloc(int size) {
 
 Block r_free(Mem_obj* obj) {
   Block out = {0, 0};
+  if (obj == 0) {
+    return out;
+  }
   if (obj->type == M_STACK) {
     tmp_bytes_to_clear += obj->size;
     if (hw_sp == tmp_bytes_to_clear) {
