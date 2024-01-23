@@ -1,3 +1,4 @@
+#include <string.h>
 #include "memory-manager.h"
 #include "parser.h"
 
@@ -55,6 +56,8 @@ void print_mem_structs() {
       printf("%s\t%d\n", variables[i].name, variables[i].stack_off);
     }
   }
+
+  printf("Stack var: %d %d %d\n", hw_bp, hw_sp, tmp_bytes_to_clear);
 }
 
 void init_memory() {
@@ -104,7 +107,7 @@ Block var_push(Variable var) {
   out.result = variables[var_sp-1].obj;
   append_format(&out.str,
     "\tsub rsp, %d\n",
-    obj.size);
+    hw_sp);
   return out;
 }
 
@@ -114,6 +117,15 @@ void var_pop() {
   }
   var_sp --;
   r_free(variables[var_sp].obj);
+}
+
+Variable* var_find(char* name) {
+  for (int i = var_sp - 1; i >= 0; i--) {
+    if (strcmp(name, variables[i].name) == 0) {
+      return &variables[i];
+    }
+  }
+  return 0;
 }
 
 void r_lock(Mem_obj* obj) {

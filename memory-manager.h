@@ -16,6 +16,9 @@ Block var_push(Variable var);
 // Pops the top variable from variables
 void var_pop();
 
+// Finds variable by name
+Variable* var_find(char* name);
+
 // Locks register
 void r_lock(Mem_obj* obj);
 

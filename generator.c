@@ -112,6 +112,16 @@ Block g_ast(Ast* ast) {
     case A_NONE:
       set_string(&out.str, "");
       break;
+    case A_IDENTIFIER:
+      {
+        Variable* var = var_find(ast->a1.str);
+        if (var != 0) {
+          out = r_alloc(var->size);
+          append_string(&out.str, r_load(out.result).str.str);
+          append_string(&out.str, g_mov(out.result, (Mem_obj) {M_STACK, var->size, .loc.stack_off = var->stack_off, var}).str.str);
+        }
+      }
+      break;
     case A_CONSTANT:
       {
         out = r_alloc(8);
@@ -488,7 +498,7 @@ Block g_ast(Ast* ast) {
           ast->a1.ptr,
           ast->a2.ptr->a1.ptr[0].a1.ptr,
           // TODO: ast_sizeof(ast),
-          4,
+          8,
           -1,
           0
         };
@@ -505,8 +515,6 @@ Block g_ast(Ast* ast) {
           append_string(&out.str, g_mov(dec.result, *init.result).str.str);
           r_free(init.result);
         }
-        out.result = dec.result;
-        print_mem_structs();
       }
       break;
     
