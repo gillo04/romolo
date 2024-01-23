@@ -1,5 +1,9 @@
 int main() {
-  int foo = 5;
-  int bar = 10;
-  return foo + bar;
+  int i = 0;
+  int j = 0;
+  while (i < 5) {
+    ++ i;
+    j = j + 5;
+  }
+  return j;
 }

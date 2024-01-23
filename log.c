@@ -379,9 +379,9 @@ void print_ast(Ast* ast, int indent) {
       break;
     case A_DECLARATION:
       printf("DECLARATION\n");
-      print_ast_stack(ast->a1.ptr, indent + 1);
+      print_ast(ast->a1.ptr, indent + 1);
       if (ast->a2.ptr->node_type != A_NONE) {
-        print_ast_stack(ast->a2.ptr, indent + 1);
+        print_ast(ast->a2.ptr, indent + 1);
       }
       break;
     case A_INIT_DECLARATOR:

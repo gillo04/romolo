@@ -104,6 +104,36 @@ Block g_binary_logic_op(Ast* ast, char* op) {
   return out;
 }
 
+Block g_lvalue(Ast* ast) {
+  Block out = {0, 0};
+
+  int indent = 0;
+  switch (ast->node_type) {
+    case A_NONE:
+      set_string(&out.str, "");
+      break;
+    case A_IDENTIFIER:
+      {
+        Variable* var = var_find(ast->a1.str);
+        if (var != 0) {
+          set_string(&out.str, "");
+          out.result = obj_alloc((Mem_obj) {
+            M_STACK,
+            var->size,
+            .loc.stack_off = var->stack_off,
+            var
+          });
+        }
+      }
+      break;
+    default:
+      printf("Couldn't recognize type %d (in g_lvalue)\n", ast->node_type);
+  }
+
+  CHECK(out.str);
+  return out;
+}
+
 Block g_ast(Ast* ast) {
   Block out = {0, 0};
 
@@ -119,6 +149,7 @@ Block g_ast(Ast* ast) {
           out = r_alloc(var->size);
           append_string(&out.str, r_load(out.result).str.str);
           append_string(&out.str, g_mov(out.result, (Mem_obj) {M_STACK, var->size, .loc.stack_off = var->stack_off, var}).str.str);
+          out.result->var = var;
         }
       }
       break;
@@ -145,14 +176,12 @@ Block g_ast(Ast* ast) {
       printf("MEMBER DEREFERENCE %s\n", ast->a2.str);
       print_ast(ast->a1.ptr, indent+1);
       break;
-    case A_POST_INCREMENT:
-      printf("POST INCREMENT\n");
-      print_ast(ast->a1.ptr, indent+1);
+    /*case A_POST_INCREMENT:
+      out = g_unary_op(ast, "inc");
       break;
     case A_POST_DECREMENT:
-      printf("POST DECREMENT\n");
-      print_ast(ast->a1.ptr, indent+1);
-      break;
+      out = g_unary_op(ast, "dec");
+      break;*/
     case A_ARRAY_SUBSCRIPT:
       printf("ARRAY SUBSCRIPT\n");
       print_ast(ast->a1.ptr, indent+1);
@@ -161,12 +190,14 @@ Block g_ast(Ast* ast) {
       print_ast(ast->a2.ptr, indent+1);
       break;
     case A_PRE_INCREMENT:
-      printf("PRE INCREMENT\n");
-      print_ast(ast->a1.ptr, indent+1);
+      out = g_unary_op(ast, "inc");
+      append_string(&out.str, r_store(out.result).str.str);
+      r_store(out.result);
       break;
     case A_PRE_DECREMENT:
-      printf("PRE DECREMENT\n");
-      print_ast(ast->a1.ptr, indent+1);
+      out = g_unary_op(ast, "dec");
+      append_string(&out.str, r_store(out.result).str.str);
+      r_store(out.result);
       break;
     case A_ADDRESS:
       printf("ADDRESS\n");
@@ -430,9 +461,20 @@ Block g_ast(Ast* ast) {
       }
       break;
     case A_ASSIGN:
-      printf("ASSIGN\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      {
+        Block lvalue = g_lvalue(ast->a1.ptr);
+        CHECK(lvalue.str);
+
+        Block exp = g_ast(ast->a2.ptr);
+        CHECK(exp.str);
+
+        append_format(&out.str,
+          "%s%s", lvalue.str.str, exp.str);
+        append_string(&out.str, g_mov(lvalue.result, *exp.result).str.str);
+
+        r_free(exp.result);
+        out.result = lvalue.result;
+      }
       break;
     case A_MULT_ASSIGN:
       printf("MULTIPLY ASSIGN\n");
@@ -514,6 +556,9 @@ Block g_ast(Ast* ast) {
           append_string(&out.str, init.str.str);
           append_string(&out.str, g_mov(dec.result, *init.result).str.str);
           r_free(init.result);
+
+          append_string(&out.str, r_store(dec.result).str.str);
+          r_free(dec.result);
         }
       }
       break;
@@ -692,6 +737,7 @@ Block g_ast(Ast* ast) {
       break;
     case A_EXPRESSION_STATEMENT:
       out = g_ast_stack(ast->a1.ptr);
+      r_free(out.result);
       break;
     case A_FUNCTION_DEFINITION:
       {

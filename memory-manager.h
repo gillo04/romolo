@@ -10,6 +10,8 @@ void print_mem_structs();
 
 void init_memory();
 
+Mem_obj* obj_alloc(Mem_obj obj);
+
 // Pushes variable on the stack
 Block var_push(Variable var);
 

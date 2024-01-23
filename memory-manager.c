@@ -44,9 +44,11 @@ void print_mem_structs() {
   printf("\nMemory objects:\n");
   for (int i = 0; i < OBJECTS_DIM; i++) {
     if (objects[i].type == M_REG) {
-      printf("REG\t%s\n", objects[i].loc.reg->name64);
+      printf("REG\t%s", objects[i].loc.reg->name64);
+      printf("\t%p\n", objects[i].var);
     } else if (objects[i].type == M_STACK) {
-      printf("STACK\t%d\n", objects[i].loc.stack_off);
+      printf("STACK\t%d", objects[i].loc.stack_off);
+      printf("\t%p\n", objects[i].var);
     }
   }
 
@@ -177,15 +179,17 @@ Block r_free(Mem_obj* obj) {
     return out;
   }
   if (obj->type == M_STACK) {
-    tmp_bytes_to_clear += obj->size;
-    if (hw_sp == tmp_bytes_to_clear) {
-      hw_sp -= obj->loc.stack_off;
-      obj->type = M_NONE;
-      append_format(&out.str,
-        "\tadd rsp, %d\n",
-        obj->loc.stack_off);
-      tmp_bytes_to_clear = 0;
+    if (obj->var == 0) {
+      tmp_bytes_to_clear += obj->size;
+      if (hw_sp == tmp_bytes_to_clear) {
+        hw_sp -= obj->loc.stack_off;
+        append_format(&out.str,
+          "\tadd rsp, %d\n",
+          obj->loc.stack_off);
+        tmp_bytes_to_clear = 0;
+      }
     }
+    obj->type = M_NONE;
   } else if (obj->type == M_REG) {
     obj->loc.reg->used = 0;
     obj->loc.reg->locked = 0;

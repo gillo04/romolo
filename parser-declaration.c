@@ -274,7 +274,6 @@ Ast m_declaration_specifier_list(int* i) {
 
     l++;
   } while (out.a1.ptr[l-1].node_type != A_NONE);
-  // TODO: Check that type follows the rules
 
   *i = j;
   return out;
