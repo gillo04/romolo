@@ -600,7 +600,7 @@ Block g_ast(Ast* ast) {
     case A_LABEL:
       {
         append_format(&out.str,
-          "%s:\n",
+          "label_%s:\n",
           ast->a1.str
         );
         Block stat = g_ast(ast->a2.ptr);
@@ -629,6 +629,8 @@ Block g_ast(Ast* ast) {
       break;
     case A_IF:
       {
+        int lab = label_count;
+        label_count ++;
         Block cond = g_ast(ast->a1.ptr);
         CHECK(cond.str);
         append_format(&out.str,
@@ -637,7 +639,7 @@ Block g_ast(Ast* ast) {
           "\tje if_end_%d\n",
           cond.str.str,
           cond.result->loc.reg->name64,
-          label_count
+          lab 
         );
         r_free(cond.result);
 
@@ -649,14 +651,14 @@ Block g_ast(Ast* ast) {
         append_format(&out.str,
           "%s"
           "if_end_%d:\n",
-          t.str.str, label_count
+          t.str.str, lab 
         );
-
-        label_count ++;
       }
       break;
     case A_IF_ELSE:
       {
+        int lab = label_count;
+        label_count ++;
         Block cond = g_ast(ast->a1.ptr);
         CHECK(cond.str);
         append_format(&out.str,
@@ -665,7 +667,7 @@ Block g_ast(Ast* ast) {
           "\tje if_else_%d\n",
           cond.str.str,
           cond.result->loc.reg->name64,
-          label_count
+          lab 
         );
         r_free(cond.result);
 
@@ -685,11 +687,9 @@ Block g_ast(Ast* ast) {
           "if_else_%d:\n"
           "%s"
           "if_end_%d:\n",
-          t.str.str, label_count,
-          label_count, f.str.str, label_count 
+          t.str.str, lab,
+          lab, f.str.str, lab 
         );
-
-        label_count ++;
       }
       break;
     case A_SWITCH:
@@ -706,10 +706,11 @@ Block g_ast(Ast* ast) {
 
         append_format(&out.str,
           "loop_%d:\n"
+          "loop_cond_%d:\n"
           "%s\n"
           "\tcmp %s, 0\n"
           "\tje loop_end_%d\n",
-          label_stack[lab_sp-1], cond.str.str,
+          label_stack[lab_sp-1], label_stack[lab_sp-1], cond.str.str,
           cond.result->loc.reg->name64, label_stack[lab_sp-1] 
         );
         r_free(cond.result);
@@ -744,9 +745,11 @@ Block g_ast(Ast* ast) {
         Block cond = g_ast(ast->a1.ptr);
         CHECK(cond.str);
         append_format(&out.str,
+          "loop_cond_%d:\n"
           "%s\n"
           "\tcmp %s, 0\n"
           "\tjne loop_%d\n\n",
+          label_stack[lab_sp-1],
           cond.str.str,
           cond.result->loc.reg->name64,
           label_stack[lab_sp-1], label_stack[lab_sp-1]
@@ -771,11 +774,12 @@ Block g_ast(Ast* ast) {
         append_format(&out.str,
           "%s\n"
           "loop_%d:\n"
+          "loop_cond_%d:\n"
           "%s\n"
           "\tcmp %s, 0\n"
           "\tje loop_end_%d\n",
           clause1.str.str,
-          label_stack[lab_sp-1], clause2.str.str,
+          label_stack[lab_sp-1], label_stack[lab_sp-1], clause2.str.str,
           clause2.result->loc.reg->name64, label_stack[lab_sp-1]
         );
 
@@ -802,15 +806,21 @@ Block g_ast(Ast* ast) {
       break;    
     case A_GOTO:
       append_format(&out.str,
-        "\tjmp %s\n",
+        "\tjmp label_%s\n",
         ast->a1.str
       );
       break;    
     case A_CONTINUE:
-      printf("CONTINUE\n");
+      append_format(&out.str,
+        "\tjmp loop_cond_%d\n",
+        label_stack[lab_sp-1]
+      );
       break;
     case A_BREAK:
-      printf("BREAK\n");
+      append_format(&out.str,
+        "\tjmp loop_end_%d\n",
+        label_stack[lab_sp-1]
+      );
       break;
     case A_RETURN:
       {

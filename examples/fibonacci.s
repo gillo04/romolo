@@ -12,29 +12,18 @@ main:
 	sub rsp, 8
 	mov rax, 1
 	mov [rbp - 16], rax
-loop_0:
-	mov rax, [rbp - 8]
-	mov rbx, 0
-	cmp rax, rbx
-	sete al
-	and rax, 1
-
-	cmp rax, 0
-	je loop_end_0
-loop_1:
 	sub rsp, 8
 	mov rax, 2
 	mov [rbp - 24], rax
-
-loop_2:
-	mov rax, [rbp - 24]
-	mov rbx, 10
-	cmp rax, rbx
-	setle al
-	and rax, 1
+	mov rax, 1
+	cmp rax, 0
+	je if_end_0
+loop_1:
+loop_cond_1:
+	mov rax, 1
 
 	cmp rax, 0
-	je loop_end_2
+	je loop_end_1
 	sub rsp, 8
 	mov rax, [rbp - 8]
 	mov rbx, [rbp - 16]
@@ -46,26 +35,27 @@ loop_2:
 	mov rax, [rbp - 32]
 	mov [rbp - 16], rax
 
-	add rsp, 8
 	mov rax, [rbp - 24]
 	inc rax
 	mov [rbp - 24], rax
-	jmp loop_2
-loop_end_2:
 
-	add rsp, 8
-	mov rax, [rbp - 16]
-	mov rbx, 1
+	mov rax, [rbp - 24]
+	mov rbx, 10
 	cmp rax, rbx
-	sete al
+	setg al
 	and rax, 1
-
 	cmp rax, 0
-	jne loop_1
+	je if_else_2
+	jmp loop_end_1
+	jmp if_end_2
+if_else_2:
+	jmp loop_cond_1
+if_end_2:
+	add rsp, 8
+	jmp loop_1
+loop_end_1:
 
-	jmp loop_0
-loop_end_0:
-
+if_end_0:
 	mov rax, [rbp - 16]
 	mov rsp, rbp
 	pop rbp
