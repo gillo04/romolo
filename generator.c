@@ -104,6 +104,35 @@ Block g_binary_logic_op(Ast* ast, char* op) {
   return out;
 }
 
+Block g_assign(Ast* ast, char* op) {
+  Block out = {0, 0};
+  Block unary = g_ast(ast->a1.ptr);
+  CHECK(unary.str);
+
+  Block exp = g_ast(ast->a2.ptr);
+  CHECK(exp.str);
+  r_lock(exp.result);
+
+  Block ld = r_load(unary.result);
+  Register* reg = unary.result->loc.reg;
+  append_format(&out.str,
+    "%s"
+    "%s"
+    "%s"
+    "\t%s %s, %s\n",
+    unary.str.str, exp.str.str, ld.str.str,
+    op, g_name(unary.result).str.str, g_name(exp.result).str.str
+  );
+
+  append_string(&out.str, r_store(unary.result).str.str);
+  // Make sure the result register is still reserved
+  r_move(unary.result, reg - registers);
+
+  r_free(exp.result);
+  out.result = unary.result;
+  return out;
+}
+
 Block g_lvalue(Ast* ast) {
   Block out = {0, 0};
 
@@ -190,14 +219,20 @@ Block g_ast(Ast* ast) {
       print_ast(ast->a2.ptr, indent+1);
       break;
     case A_PRE_INCREMENT:
-      out = g_unary_op(ast, "inc");
-      append_string(&out.str, r_store(out.result).str.str);
-      r_store(out.result);
+      {
+        out = g_unary_op(ast, "inc");
+        Register* reg = out.result->loc.reg;
+        append_string(&out.str, r_store(out.result).str.str);
+        r_move(out.result, reg - registers);
+      }
       break;
     case A_PRE_DECREMENT:
-      out = g_unary_op(ast, "dec");
-      append_string(&out.str, r_store(out.result).str.str);
-      r_store(out.result);
+      {
+        out = g_unary_op(ast, "dec");
+        Register* reg = out.result->loc.reg;
+        append_string(&out.str, r_store(out.result).str.str);
+        r_move(out.result, reg - registers);
+      }
       break;
     case A_ADDRESS:
       printf("ADDRESS\n");
@@ -469,7 +504,7 @@ Block g_ast(Ast* ast) {
         CHECK(exp.str);
 
         append_format(&out.str,
-          "%s%s", lvalue.str.str, exp.str);
+          "%s%s", lvalue.str.str, exp.str.str);
         append_string(&out.str, g_mov(lvalue.result, *exp.result).str.str);
 
         r_free(exp.result);
@@ -477,9 +512,7 @@ Block g_ast(Ast* ast) {
       }
       break;
     case A_MULT_ASSIGN:
-      printf("MULTIPLY ASSIGN\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_assign(ast, "imul");
       break;
     case A_DIV_ASSIGN:
       printf("DIVISION ASSIGN\n");
@@ -492,39 +525,25 @@ Block g_ast(Ast* ast) {
       print_ast(ast->a2.ptr, indent+1);
       break;
     case A_ADD_ASSIGN:
-      printf("ADD ASSIGN\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_assign(ast, "add");
       break;
     case A_SUB_ASSIGN:
-      printf("SUB ASSIGN\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_assign(ast, "sub");
       break;
     case A_L_SHIFT_ASSIGN:
-      printf("LEFT SHIFT ASSIGN\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_assign(ast, "shl");
       break;
     case A_R_SHIFT_ASSIGN:
-      printf("RIGHT SHIFT ASSIGN\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_assign(ast, "shr");
       break;
     case A_AND_ASSIGN:
-      printf("AND ASSIGN\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_assign(ast, "and");
       break;
     case A_XOR_ASSIGN:
-      printf("XOR ASSIGN\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_assign(ast, "xor");
       break;
     case A_OR_ASSIGN:
-      printf("OR ASSIGN\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      out = g_assign(ast, "or");
       break;
     case A_COMMA_EXP:
       out = g_ast_stack(ast->a1.ptr);
@@ -589,7 +608,9 @@ Block g_ast(Ast* ast) {
       print_ast(ast->a1.ptr, indent+1);
       break;
     case A_COMPOUND_STATEMENT:
+      var_push_stack_frame();
       out = g_ast_stack(ast->a1.ptr);
+      append_string(&out.str, var_pop_stack_frame().str.str);
       break;
     case A_NULL_STATEMENT:
       printf("NULL STATEMENT\n");
@@ -671,7 +692,7 @@ Block g_ast(Ast* ast) {
 
         append_format(&out.str,
           "while_%d:\n"
-          "%s"
+          "%s\n"
           "\tcmp %s, 0\n"
           "\tje while_end_%d\n",
           label_count, cond.str.str,
@@ -737,7 +758,9 @@ Block g_ast(Ast* ast) {
       break;
     case A_EXPRESSION_STATEMENT:
       out = g_ast_stack(ast->a1.ptr);
+      append_string(&out.str, "\n");
       r_free(out.result);
+      out.result = 0;
       break;
     case A_FUNCTION_DEFINITION:
       {
@@ -748,11 +771,10 @@ Block g_ast(Ast* ast) {
           append_format(&out.str,
             "%s:\n"
             "\tpush rbp\n"
-            "\tmov rbp, rsp\n"
+            "\tmov rbp, rsp\n\n"
             "%s\n",
             ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr->a1.str, body.str.str
           );
-          // TODO: pop stack frame
         }
       }
       break;

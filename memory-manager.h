@@ -21,6 +21,12 @@ void var_pop();
 // Finds variable by name
 Variable* var_find(char* name);
 
+// Pushes variable stack frame
+void var_push_stack_frame();
+
+// Pops variable stack frame
+Block var_pop_stack_frame();
+
 // Locks register
 void r_lock(Mem_obj* obj);
 
@@ -44,3 +50,6 @@ Block r_move(Mem_obj* obj, int reg);
 
 // Generates assembly to move src to dest
 Block g_mov(Mem_obj* dest, Mem_obj src);
+
+// Generates assembly name of obj
+Block g_name(Mem_obj* obj);

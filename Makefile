@@ -1,4 +1,4 @@
-example_name = arithmetic
+example_name = fibonacci
 
 run: all
 	./romolo examples/$(example_name).c examples/$(example_name).s

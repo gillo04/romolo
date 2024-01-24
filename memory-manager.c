@@ -53,9 +53,11 @@ void print_mem_structs() {
   }
 
   printf("\nVariables:\n");
-  for (int i = 0; i < VARIABLES_DIM; i++) {
+  for (int i = 0; i < var_sp; i++) {
     if (variables[i].name != 0) {
       printf("%s\t%d\n", variables[i].name, variables[i].stack_off);
+    } else {
+      printf("var_bp\t%d\n", variables[i].stack_off);
     }
   }
 
@@ -109,7 +111,7 @@ Block var_push(Variable var) {
   out.result = variables[var_sp-1].obj;
   append_format(&out.str,
     "\tsub rsp, %d\n",
-    hw_sp);
+    var.size);
   return out;
 }
 
@@ -123,11 +125,33 @@ void var_pop() {
 
 Variable* var_find(char* name) {
   for (int i = var_sp - 1; i >= 0; i--) {
-    if (strcmp(name, variables[i].name) == 0) {
+    if (variables[i].name != 0 && strcmp(name, variables[i].name) == 0) {
       return &variables[i];
     }
   }
   return 0;
+}
+
+void var_push_stack_frame() {
+  variables[var_sp] = (Variable) {0, 0, 0, 0, var_bp, 0};
+  var_sp ++;
+  var_bp = var_sp;
+}
+
+Block var_pop_stack_frame() {
+  Block out = {0, 0};
+
+  int to_remove = 0;
+  for (int i = var_sp - 1; i <= var_bp; i++) {
+    to_remove += variables[i].size;
+  }
+  var_sp = var_bp;
+  var_bp = variables[var_bp-1].stack_off;
+  var_sp --;
+
+  hw_sp -= to_remove;
+  append_format(&out.str, "\tadd rsp, %d\n", to_remove);
+  return out;
 }
 
 void r_lock(Mem_obj* obj) {
@@ -202,68 +226,43 @@ Block r_free(Mem_obj* obj) {
   return out;
 }
 
+Block g_name(Mem_obj* obj) {
+  Block out = {0, 0};
+  if (obj->type == M_REG) {
+    switch (obj->size) {
+      case 1:
+        append_string(&out.str, obj->loc.reg->name8);
+        break;
+      case 2:
+        append_string(&out.str, obj->loc.reg->name16);
+        break;
+      case 4:
+        append_string(&out.str, obj->loc.reg->name32);
+        break;
+      case 8:
+        append_string(&out.str, obj->loc.reg->name64);
+        break;
+      default:
+        printf("Error: memory object of invalid size\n");
+        return out;
+    }
+  } else {
+    append_format(&out.str,
+      "[rbp - %d]", obj->loc.stack_off);
+  }
+  out.result = obj;
+  return out;
+}
+
 Block g_mov(Mem_obj* dest, Mem_obj src) {
   Block out = {0, 0};
   out.result = dest;
 
+  Block d_name = g_name(dest);
+  Block s_name = g_name(&src);
+
   append_format(&out.str,
-    "\tmov ");
-
-  // Generate destination
-  if (dest->type == M_REG) {
-    switch (dest->size) {
-      case 1:
-        append_format(&out.str,
-          "%s, ", dest->loc.reg->name8);
-        break;
-      case 2:
-        append_format(&out.str,
-          "%s, ", dest->loc.reg->name16);
-        break;
-      case 4:
-        append_format(&out.str,
-          "%s, ", dest->loc.reg->name32);
-        break;
-      case 8:
-        append_format(&out.str,
-          "%s, ", dest->loc.reg->name64);
-        break;
-      default:
-        printf("Error: memory object of invalid size\n");
-        return out;
-    }
-  } else {
-    append_format(&out.str,
-      "[rbp - %d], ", dest->loc.stack_off);
-  }
-
-  // Generate source 
-  if (src.type == M_REG) {
-    switch (src.size) {
-      case 1:
-        append_format(&out.str,
-          "%s\n", src.loc.reg->name8);
-        break;
-      case 2:
-        append_format(&out.str,
-          "%s\n", src.loc.reg->name16);
-        break;
-      case 4:
-        append_format(&out.str,
-          "%s\n", src.loc.reg->name32);
-        break;
-      case 8:
-        append_format(&out.str,
-          "%s\n", src.loc.reg->name64);
-        break;
-      default:
-        printf("Error: memory object of invalid size\n");
-        return out;
-    }
-  } else {
-    append_format(&out.str,
-      "[rbp - %d]\n", src.loc.stack_off);
-  }
+    "\tmov %s, %s\n", d_name.str.str, s_name.str.str);
 
   return out;
 }
