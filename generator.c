@@ -740,32 +740,46 @@ Block g_ast(Ast* ast) {
       }
       break;
     case A_FOR:
-      break;
       {
-        Block cond = g_ast(ast->a1.ptr);
-        CHECK(cond.str);
+        var_push_stack_frame();
+        Block clause1 = g_ast(ast->a1.ptr->a1.ptr);
+        CHECK(clause1.str);
+        r_free(clause1.result);
+
+        Block clause2 = g_ast(ast->a1.ptr->a2.ptr);
+        CHECK(clause2.str);
+        r_free(clause2.result);
 
         append_format(&out.str,
-          "while_%d:\n"
+          "%s\n"
+          "for_%d:\n"
           "%s\n"
           "\tcmp %s, 0\n"
-          "\tje while_end_%d\n",
-          label_count, cond.str.str,
-          cond.result->loc.reg->name64, label_count
+          "\tje for_end_%d\n",
+          clause1.str.str,
+          label_count, clause2.str.str,
+          clause2.result->loc.reg->name64, label_count
         );
-        r_free(cond.result);
 
         Block stat = g_ast(ast->a2.ptr);
         CHECK(stat.str);
+        r_free(stat.result);
+
+        Block clause3 = g_ast(ast->a1.ptr->a3.ptr);
+        CHECK(clause3.str);
+        r_free(clause3.result);
+
         append_format(&out.str,
           "%s"
-          "\tjmp while_%d\n"
-          "while_end_%d:\n\n",
-          stat.str.str, label_count,
+          "%s"
+          "\tjmp for_%d\n"
+          "for_end_%d:\n\n",
+          stat.str.str, clause3.str.str, label_count,
           label_count
         );
-        r_free(stat.result);
+
         label_count ++;
+        append_string(&out.str, var_pop_stack_frame().str.str);
       }
       break;    
     case A_FOR_CLAUSES:
