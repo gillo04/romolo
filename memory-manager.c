@@ -150,7 +150,11 @@ Block var_pop_stack_frame() {
   var_sp --;
 
   hw_sp -= to_remove;
-  append_format(&out.str, "\tadd rsp, %d\n", to_remove);
+  if (to_remove > 0) {
+    append_format(&out.str, "\tadd rsp, %d\n", to_remove);
+  } else {
+    set_string(&out.str, "");
+  }
   return out;
 }
 

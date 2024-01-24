@@ -7,11 +7,23 @@
 
 #define CHECK(x) if (x.str == 0) { return (Block) {0, 0}; }
 
-int label_count = 0;
-
 extern Register registers[REGISTERS_DIM+2];
 extern Mem_obj objects[OBJECTS_DIM];
 extern Variable variables[VARIABLES_DIM];
+
+int label_stack[LABELS_DIM];
+int lab_sp = 0;
+int label_count = 0;
+
+void label_push() {
+  label_stack[lab_sp] = label_count;
+  lab_sp++;
+  label_count++;
+}
+
+void label_pop() {
+  lab_sp--;
+}
 
 Block g_ast(Ast* ast);
 
@@ -687,16 +699,18 @@ Block g_ast(Ast* ast) {
       break;
     case A_WHILE:
       {
+        label_push();
+        
         Block cond = g_ast(ast->a1.ptr);
         CHECK(cond.str);
 
         append_format(&out.str,
-          "while_%d:\n"
+          "loop_%d:\n"
           "%s\n"
           "\tcmp %s, 0\n"
-          "\tje while_end_%d\n",
-          label_count, cond.str.str,
-          cond.result->loc.reg->name64, label_count
+          "\tje loop_end_%d\n",
+          label_stack[lab_sp-1], cond.str.str,
+          cond.result->loc.reg->name64, label_stack[lab_sp-1] 
         );
         r_free(cond.result);
 
@@ -704,23 +718,25 @@ Block g_ast(Ast* ast) {
         CHECK(stat.str);
         append_format(&out.str,
           "%s"
-          "\tjmp while_%d\n"
-          "while_end_%d:\n\n",
-          stat.str.str, label_count,
-          label_count
+          "\tjmp loop_%d\n"
+          "loop_end_%d:\n\n",
+          stat.str.str, label_stack[lab_sp-1],
+          label_stack[lab_sp-1] 
         );
         r_free(stat.result);
-        label_count ++;
+        label_pop();
       }
       break;
     case A_DO_WHILE:
       {
+        label_push();
+
         Block stat = g_ast(ast->a2.ptr);
         CHECK(stat.str);
         append_format(&out.str,
-          "do_while_%d:\n"
+          "loop_%d:\n"
           "%s",
-          label_count,
+          label_stack[lab_sp-1],
           stat.str.str
         );
         r_free(stat.result);
@@ -730,18 +746,20 @@ Block g_ast(Ast* ast) {
         append_format(&out.str,
           "%s\n"
           "\tcmp %s, 0\n"
-          "\tjne do_while_%d\n\n",
+          "\tjne loop_%d\n\n",
           cond.str.str,
           cond.result->loc.reg->name64,
-          label_count, label_count
+          label_stack[lab_sp-1], label_stack[lab_sp-1]
         );
         r_free(cond.result);
-        label_count ++;
+        label_pop();
       }
       break;
     case A_FOR:
       {
+        label_push();
         var_push_stack_frame();
+
         Block clause1 = g_ast(ast->a1.ptr->a1.ptr);
         CHECK(clause1.str);
         r_free(clause1.result);
@@ -752,13 +770,13 @@ Block g_ast(Ast* ast) {
 
         append_format(&out.str,
           "%s\n"
-          "for_%d:\n"
+          "loop_%d:\n"
           "%s\n"
           "\tcmp %s, 0\n"
-          "\tje for_end_%d\n",
+          "\tje loop_end_%d\n",
           clause1.str.str,
-          label_count, clause2.str.str,
-          clause2.result->loc.reg->name64, label_count
+          label_stack[lab_sp-1], clause2.str.str,
+          clause2.result->loc.reg->name64, label_stack[lab_sp-1]
         );
 
         Block stat = g_ast(ast->a2.ptr);
@@ -772,22 +790,16 @@ Block g_ast(Ast* ast) {
         append_format(&out.str,
           "%s"
           "%s"
-          "\tjmp for_%d\n"
-          "for_end_%d:\n\n",
-          stat.str.str, clause3.str.str, label_count,
-          label_count
+          "\tjmp loop_%d\n"
+          "loop_end_%d:\n\n",
+          stat.str.str, clause3.str.str, label_stack[lab_sp-1],
+          label_stack[lab_sp-1]
         );
 
-        label_count ++;
         append_string(&out.str, var_pop_stack_frame().str.str);
+        label_pop();
       }
       break;    
-    case A_FOR_CLAUSES:
-      printf("FOR CLAUSES\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
-      print_ast(ast->a3.ptr, indent+1);
-      break; 
     case A_GOTO:
       append_format(&out.str,
         "\tjmp %s\n",
@@ -856,6 +868,7 @@ Block g_ast(Ast* ast) {
 }
 
 char* generator(Ast* ast) {
+  lab_sp = 0;
   label_count = 0;
   init_memory();
 
