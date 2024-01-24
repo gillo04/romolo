@@ -705,24 +705,68 @@ Block g_ast(Ast* ast) {
         append_format(&out.str,
           "%s"
           "\tjmp while_%d\n"
-          "while_end_%d:\n",
+          "while_end_%d:\n\n",
           stat.str.str, label_count,
           label_count
         );
         r_free(stat.result);
+        label_count ++;
       }
       break;
     case A_DO_WHILE:
-      printf("DO\n");
-      print_ast(ast->a2.ptr, indent+1);
-      for (int i = 0; i < indent; i++) printf("  ");
-      printf("WHILE\n");
-      print_ast(ast->a2.ptr, indent+1);
+      {
+        Block stat = g_ast(ast->a2.ptr);
+        CHECK(stat.str);
+        append_format(&out.str,
+          "do_while_%d:\n"
+          "%s",
+          label_count,
+          stat.str.str
+        );
+        r_free(stat.result);
+
+        Block cond = g_ast(ast->a1.ptr);
+        CHECK(cond.str);
+        append_format(&out.str,
+          "%s\n"
+          "\tcmp %s, 0\n"
+          "\tjne do_while_%d\n\n",
+          cond.str.str,
+          cond.result->loc.reg->name64,
+          label_count, label_count
+        );
+        r_free(cond.result);
+        label_count ++;
+      }
       break;
     case A_FOR:
-      printf("FOR\n");
-      print_ast(ast->a1.ptr, indent+1);
-      print_ast(ast->a2.ptr, indent+1);
+      break;
+      {
+        Block cond = g_ast(ast->a1.ptr);
+        CHECK(cond.str);
+
+        append_format(&out.str,
+          "while_%d:\n"
+          "%s\n"
+          "\tcmp %s, 0\n"
+          "\tje while_end_%d\n",
+          label_count, cond.str.str,
+          cond.result->loc.reg->name64, label_count
+        );
+        r_free(cond.result);
+
+        Block stat = g_ast(ast->a2.ptr);
+        CHECK(stat.str);
+        append_format(&out.str,
+          "%s"
+          "\tjmp while_%d\n"
+          "while_end_%d:\n\n",
+          stat.str.str, label_count,
+          label_count
+        );
+        r_free(stat.result);
+        label_count ++;
+      }
       break;    
     case A_FOR_CLAUSES:
       printf("FOR CLAUSES\n");

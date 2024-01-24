@@ -246,13 +246,17 @@ Ast m_for_loop(int* i) {
   }
 
   j += 2;
-  Ast exp1 = m_expression(&j);
 
-  if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, ";"})) {
-    return (Ast) {A_NONE};
+  Ast exp1 = m_declaration(&j);
+  if (exp1.node_type == A_NONE) {
+    exp1 = m_expression(&j);
+
+    if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, ";"})) {
+      return (Ast) {A_NONE};
+    }
+    j++;
   }
 
-  j++;
   Ast exp2 = m_expression(&j);
 
   if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, ";"})) {
