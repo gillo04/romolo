@@ -1,6 +1,7 @@
 #include "data-structures.h"
 #include "generator.h"
 #include "memory-manager.h"
+#include "verify-utils.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -69,15 +70,15 @@ Block g_binary_op(Ast* ast, char* op) {
   CHECK(r.str);
   r_lock(r.result);
 
-  Block ld = r_load(l.result);
+  // Block ld = r_load(l.result);
   append_format(&out.str,
     "%s"
     "%s"
-    "%s"
+    // "%s"
     "\t%s %s, %s\n",
     l.str.str,
     r.str.str,
-    ld.str.str,
+    // ld.str.str,
     op, l.result->loc.reg->name64, r.result->loc.reg->name64
   );
 
@@ -95,17 +96,17 @@ Block g_binary_logic_op(Ast* ast, char* op) {
   CHECK(r.str);
   r_lock(r.result);
 
-  Block ld = r_load(l.result);
+  // Block ld = r_load(l.result);
   append_format(&out.str,
     "%s"
     "%s"
-    "%s"
+    // "%s"
     "\tcmp %s, %s\n"
     "\t%s %s\n"
     "\tand %s, 1\n",
     l.str.str,
     r.str.str,
-    ld.str.str,
+    // ld.str.str,
     l.result->loc.reg->name64, r.result->loc.reg->name64,
     op, l.result->loc.reg->name8,
     l.result->loc.reg->name64
@@ -566,30 +567,35 @@ Block g_ast(Ast* ast) {
      */
     case A_DECLARATION:
       {
-        Variable var = {
-          ast->a2.ptr->a1.ptr[0].a1.ptr->a2.ptr->a1.ptr->a1.str,
-          ast->a1.ptr,
-          ast->a2.ptr->a1.ptr[0].a1.ptr,
-          // TODO: ast_sizeof(ast),
-          8,
-          -1,
-          0
-        };
+        int i = 0;
+        while (ast->a2.ptr->a1.ptr[i].node_type != A_NONE) {
+          Variable var = {
+            ast->a2.ptr->a1.ptr[i].a1.ptr->a2.ptr->a1.ptr->a1.str,
+            ast->a1.ptr,
+            ast->a2.ptr->a1.ptr[i].a1.ptr,
+            0,
+            -1,
+            0
+          };
+          var.size = type_sizeof(var.dec_spec, var.dec);
 
-        Block dec = var_push(var);
-        CHECK(dec.str);
+          Block dec = var_push(var);
+          CHECK(dec.str);
 
-        append_string(&out.str, dec.str.str);
-        if (ast->a2.ptr->a1.ptr[0].a2.ptr->node_type != A_NONE) {
-          Block init = g_ast(ast->a2.ptr->a1.ptr[0].a2.ptr->a1.ptr);
-          CHECK(init.str);
+          append_string(&out.str, dec.str.str);
+          if (ast->a2.ptr->a1.ptr[i].a2.ptr->node_type != A_NONE) {
+            Block init = g_ast(ast->a2.ptr->a1.ptr[i].a2.ptr->a1.ptr);
+            CHECK(init.str);
 
-          append_string(&out.str, init.str.str);
-          append_string(&out.str, g_mov(dec.result, *init.result).str.str);
-          r_free(init.result);
+            append_string(&out.str, init.str.str);
+            append_string(&out.str, g_mov(dec.result, *init.result).str.str);
+            r_free(init.result);
 
-          append_string(&out.str, r_store(dec.result).str.str);
-          r_free(dec.result);
+            append_string(&out.str, r_store(dec.result).str.str);
+            r_free(dec.result);
+          }
+          append_string(&out.str, "\n");
+          i++;
         }
       }
       break;
@@ -625,7 +631,7 @@ Block g_ast(Ast* ast) {
       append_string(&out.str, var_pop_stack_frame().str.str);
       break;
     case A_NULL_STATEMENT:
-      printf("NULL STATEMENT\n");
+      set_string(&out.str, "");
       break;
     case A_IF:
       {
@@ -834,6 +840,7 @@ Block g_ast(Ast* ast) {
           "\tret\n",
           r_move(out.result, 1).str.str
         );
+        r_free(out.result);
       }
       break;
     case A_EXPRESSION_STATEMENT:
@@ -863,8 +870,8 @@ Block g_ast(Ast* ast) {
         Block stack = g_ast_stack(ast->a1.ptr);
         append_format(&out.str,
           ".intel_syntax noprefix\n"
-          ".global main\n"
-          ".text\n\n"
+          ".global main\n\n"
+          ".text\n"
           "%s",
           stack.str.str
         );

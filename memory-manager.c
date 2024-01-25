@@ -251,6 +251,24 @@ Block g_name(Mem_obj* obj) {
         return out;
     }
   } else {
+    switch (obj->size) {
+      case 1:
+        append_string(&out.str, "byte ");
+        break;
+      case 2:
+        append_string(&out.str, "word ");
+        break;
+      case 4:
+        append_string(&out.str, "dword ");
+        break;
+      case 8:
+        append_string(&out.str, "qword ");
+        break;
+      default:
+        printf("Error: memory object of invalid size\n");
+        return out;
+    }
+
     append_format(&out.str,
       "[rbp - %d]", obj->loc.stack_off);
   }

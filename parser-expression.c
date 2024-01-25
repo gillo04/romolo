@@ -87,7 +87,7 @@ Ast m_postfix_expression(int* i) {
       } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "("})){
         j++;
         Ast exp = m_argument_expression_list(&j);
-        if (exp.node_type != A_NONE && tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"})) {
+        if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"})) {
           tmp.node_type = A_FUNCTION_CALL;
           astcpy(&tmp.a1.ptr, out);
           astcpy(&tmp.a2.ptr, exp);
