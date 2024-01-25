@@ -54,7 +54,7 @@ Block g_unary_op(Ast* ast, char* op) {
     "%s"
     "\t%s %s\n",
     s.str.str,
-    op, s.result->loc.reg->name64
+    op, g_name(s.result).str.str
   );
 
   out.result = s.result;
@@ -70,16 +70,13 @@ Block g_binary_op(Ast* ast, char* op) {
   CHECK(r.str);
   r_lock(r.result);
 
-  // Block ld = r_load(l.result);
   append_format(&out.str,
     "%s"
     "%s"
-    // "%s"
     "\t%s %s, %s\n",
     l.str.str,
     r.str.str,
-    // ld.str.str,
-    op, l.result->loc.reg->name64, r.result->loc.reg->name64
+    op, g_name(l.result).str.str, g_name(r.result).str.str
   );
 
   r_free(r.result);
@@ -96,20 +93,17 @@ Block g_binary_logic_op(Ast* ast, char* op) {
   CHECK(r.str);
   r_lock(r.result);
 
-  // Block ld = r_load(l.result);
   append_format(&out.str,
     "%s"
     "%s"
-    // "%s"
     "\tcmp %s, %s\n"
     "\t%s %s\n"
     "\tand %s, 1\n",
     l.str.str,
     r.str.str,
-    // ld.str.str,
-    l.result->loc.reg->name64, r.result->loc.reg->name64,
+    g_name(l.result).str.str, g_name(r.result).str.str,
     op, l.result->loc.reg->name8,
-    l.result->loc.reg->name64
+    g_name(l.result).str.str
   );
 
   r_free(r.result);
@@ -197,13 +191,13 @@ Block g_ast(Ast* ast) {
       break;
     case A_CONSTANT:
       {
-        out = r_alloc(8);
+        out = r_alloc(4);
 
         Block ld = r_load(out.result);
         append_string(&out.str, ld.str.str);
         append_format(&out.str, 
-          "\tmov %s, %lld\n"
-          , out.result->loc.reg->name64, ast->a1.num
+          "\tmov %s, %lld\n",
+          g_name(out.result).str.str, ast->a1.num
         );
       }
       break;
@@ -271,8 +265,8 @@ Block g_ast(Ast* ast) {
       append_format(&out.str,
         "\tor %s, %s\n"
         "\tsete %s\n",
-        out.result->loc.reg->name64, out.result->loc.reg->name64,
-        out.result->loc.reg->name64
+        g_name(out.result).str.str, g_name(out.result).str.str,
+        out.result->loc.reg->name8
       );
       break;
     case A_MULTIPLICATION:
@@ -306,7 +300,7 @@ Block g_ast(Ast* ast) {
         append_format(&out.str,
           "\txor rdx, rdx\n"
           "\tidiv %s\n",
-          r.result->loc.reg->name64
+          g_name(r.result).str.str
         );
 
         r_free(rdx.result);
@@ -343,7 +337,7 @@ Block g_ast(Ast* ast) {
         append_format(&out.str,
           "\txor rdx, rdx\n"
           "\tidiv %s\n",
-          r.result->loc.reg->name64
+          g_name(r.result).str.str
         );
 
         r_free(l.result);
@@ -413,12 +407,12 @@ Block g_ast(Ast* ast) {
           "logic_and_%d:\n"
           "\tand %s, 1\n",
           l.str.str,
-          l.result->loc.reg->name64,
+          g_name(l.result).str.str,
           label_count, label_count + 1, label_count,
           r.str.str,
-          r.result->loc.reg->name64, l.result->loc.reg->name8, 
+          g_name(r.result).str.str, l.result->loc.reg->name8,
           label_count + 1,
-          l.result->loc.reg->name64
+          g_name(l.result).str.str
         );
 
         label_count += 2;
@@ -450,12 +444,12 @@ Block g_ast(Ast* ast) {
           "\tand %s, 1\n"
           "logic_or_%d:\n",
           l.str.str,
-          l.result->loc.reg->name64,
+          g_name(l.result).str.str,
           label_count,  
-          l.result->loc.reg->name64, label_count + 1, label_count,
+          g_name(l.result).str.str, label_count + 1, label_count,
           r.str.str,
-          r.result->loc.reg->name64, l.result->loc.reg->name8, 
-          l.result->loc.reg->name64, label_count + 1
+          g_name(r.result).str.str, l.result->loc.reg->name8,
+          g_name(l.result).str.str, label_count + 1
         );
 
         label_count += 2;
@@ -473,7 +467,7 @@ Block g_ast(Ast* ast) {
           "\tcmp %s, 0\n"
           "\tje cond_exp_else_%d\n",
           cond.str.str,
-          cond.result->loc.reg->name64,
+          g_name(cond.result).str.str,
           label_count
         );
         r_free(cond.result);
@@ -644,7 +638,7 @@ Block g_ast(Ast* ast) {
           "\tcmp %s, 0\n"
           "\tje if_end_%d\n",
           cond.str.str,
-          cond.result->loc.reg->name64,
+          g_name(cond.result).str.str,
           lab 
         );
         r_free(cond.result);
@@ -672,7 +666,7 @@ Block g_ast(Ast* ast) {
           "\tcmp %s, 0\n"
           "\tje if_else_%d\n",
           cond.str.str,
-          cond.result->loc.reg->name64,
+          g_name(cond.result).str.str,
           lab 
         );
         r_free(cond.result);
@@ -717,7 +711,7 @@ Block g_ast(Ast* ast) {
           "\tcmp %s, 0\n"
           "\tje loop_end_%d\n",
           label_stack[lab_sp-1], label_stack[lab_sp-1], cond.str.str,
-          cond.result->loc.reg->name64, label_stack[lab_sp-1] 
+          g_name(cond.result).str.str, label_stack[lab_sp-1] 
         );
         r_free(cond.result);
 
@@ -757,7 +751,7 @@ Block g_ast(Ast* ast) {
           "\tjne loop_%d\n\n",
           label_stack[lab_sp-1],
           cond.str.str,
-          cond.result->loc.reg->name64,
+          g_name(cond.result).str.str,
           label_stack[lab_sp-1], label_stack[lab_sp-1]
         );
         r_free(cond.result);
@@ -786,7 +780,7 @@ Block g_ast(Ast* ast) {
           "\tje loop_end_%d\n",
           clause1.str.str,
           label_stack[lab_sp-1], label_stack[lab_sp-1], clause2.str.str,
-          clause2.result->loc.reg->name64, label_stack[lab_sp-1]
+          g_name(clause2.result).str.str, label_stack[lab_sp-1]
         );
 
         Block stat = g_ast(ast->a2.ptr);

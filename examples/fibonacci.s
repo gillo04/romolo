@@ -6,57 +6,57 @@ main:
 	push rbp
 	mov rbp, rsp
 
-	sub rsp, 8
-	mov rax, 0
-	mov qword [rbp - 8], rax
+	sub rsp, 4
+	mov eax, 0
+	mov dword [rbp - 4], eax
 
-	sub rsp, 8
-	mov rax, 1
-	mov qword [rbp - 16], rax
+	sub rsp, 4
+	mov eax, 1
+	mov dword [rbp - 8], eax
 
-	sub rsp, 8
-	mov rax, 2
-	mov qword [rbp - 24], rax
+	sub rsp, 4
+	mov eax, 2
+	mov dword [rbp - 12], eax
 
 loop_0:
 loop_cond_0:
-	mov rax, 1
+	mov eax, 1
 
-	cmp rax, 0
+	cmp eax, 0
 	je loop_end_0
-	sub rsp, 8
-	mov rax, qword [rbp - 8]
-	mov rbx, qword [rbp - 16]
-	add rax, rbx
-	mov qword [rbp - 32], rax
+	sub rsp, 4
+	mov eax, dword [rbp - 4]
+	mov ebx, dword [rbp - 8]
+	add eax, ebx
+	mov dword [rbp - 16], eax
 
-	mov rax, qword [rbp - 16]
-	mov qword [rbp - 8], rax
+	mov eax, dword [rbp - 8]
+	mov dword [rbp - 4], eax
 
-	mov rax, qword [rbp - 32]
-	mov qword [rbp - 16], rax
+	mov eax, dword [rbp - 16]
+	mov dword [rbp - 8], eax
 
-	mov rax, qword [rbp - 24]
-	inc rax
-	mov qword [rbp - 24], rax
+	mov eax, dword [rbp - 12]
+	inc eax
+	mov dword [rbp - 12], eax
 
-	mov rax, qword [rbp - 24]
-	mov rbx, 10
-	cmp rax, rbx
+	mov eax, dword [rbp - 12]
+	mov ebx, 10
+	cmp eax, ebx
 	setg al
-	and rax, 1
-	cmp rax, 0
+	and eax, 1
+	cmp eax, 0
 	je if_else_1
 	jmp loop_end_0
 	jmp if_end_1
 if_else_1:
 	jmp loop_cond_0
 if_end_1:
-	add rsp, 8
+	add rsp, 4
 	jmp loop_0
 loop_end_0:
 
-	mov rax, qword [rbp - 16]
+	mov eax, dword [rbp - 8]
 	mov rsp, rbp
 	pop rbp
 	ret
