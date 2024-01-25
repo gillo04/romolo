@@ -10,6 +10,7 @@
 
 extern Token* toks;
 extern char* src;
+extern int error_flag;
 
 Ast m_labeled_statement(int* i) {
   int j = *i;
@@ -85,14 +86,17 @@ Ast m_compound_statement(int* i) {
 
 Ast m_expression_statement(int* i) {
   Ast out = m_expression(i);
+
   if (tokcmp(toks[*i], (Token) {T_PUNCTUATOR, ";"})) {
     if (out.node_type == A_NONE) {
       out.node_type = A_NULL_STATEMENT;
+    } else {
+      out.node_type = A_EXPRESSION_STATEMENT;
     }
-    out.node_type = A_EXPRESSION_STATEMENT;
     *i += 1;
     return out;
   }
+
   return (Ast) {A_NONE};
 }
 

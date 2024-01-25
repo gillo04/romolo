@@ -65,8 +65,8 @@ void log_msg(int type, char* msg, int line) {
   printf("%s", msg);
   if (line != -1) {
     print_source_line(line);
+    printf("\n");
   }
-  printf("\n");
 }
 
 void print_ast_stack(Ast* ast, int indent) {
@@ -405,8 +405,12 @@ void print_ast(Ast* ast, int indent) {
 
     case A_DECLARATION_SPECIFIERS:
       printf("DECLARATION SPECIFIERS\n");
-      for (int i = 0; i < indent+1; i++) printf("  ");
-      print_ast_stack(ast->a1.ptr, 0);
+      if (ast->a1.ptr->node_type == A_STRUCT_SPECIFIER || ast->a1.ptr->node_type == A_UNION_SPECIFIER) {
+        print_ast_stack(ast->a1.ptr, indent+1);
+      } else {
+        for (int i = 0; i < indent+1; i++) printf("  ");
+        print_ast_stack(ast->a1.ptr, 0);
+      }
       printf("\n");
       break;
     case A_DECLARATION:
@@ -522,7 +526,9 @@ void print_ast(Ast* ast, int indent) {
      */
     case A_STRUCT_DECLARATOR:
       printf("STRUCT DECLARATOR\n");
-      print_ast(ast->a1.ptr, indent+1);
+      if (ast->a1.ptr->node_type != A_NONE) {
+        print_ast(ast->a1.ptr, indent+1);
+      }
       if (ast->a2.ptr->node_type != A_NONE) {
         print_ast(ast->a2.ptr, indent+1);
       }

@@ -1,7 +1,9 @@
-int function() {
-  return 40;
-}
-
 int main() {
-  return  function() + 2;
+  int a = 42;
+  
+  a += 5;
+
+  x*=3;
+
+  return 0;
 }

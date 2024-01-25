@@ -286,6 +286,7 @@ Token* lexer(char* source) {
       while (source[i] != '\n' && source[i] != 0) {
         i++;
       }
+      line = i+1;
     }
     if (source[i] == '/' && source[i + 1] == '*') {
       i += 2;
@@ -293,6 +294,7 @@ Token* lexer(char* source) {
         i++;
       }
       i++;
+      line = i+1;
     }
 
     if (isspace(source[i])) {

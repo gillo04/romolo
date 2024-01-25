@@ -10,6 +10,7 @@
 
 extern Token* toks;
 extern char* src;
+extern int error_flag;
 
 Ast m_struct_declarator(int* i) {
   int j = *i;
@@ -71,13 +72,19 @@ Ast m_struct_declaration(int* i) {
     return (Ast) {A_NONE};
   }
   Ast sdl = m_struct_declarator_list(i);
-  if (!tokcmp(toks[*i], (Token) {T_PUNCTUATOR, ";"})) {
-    return (Ast) {A_NONE};
+  if (tokcmp(toks[*i], (Token) {T_PUNCTUATOR, ";"})) {
+    (*i)++;
+    astcpy(&out.a1.ptr, spec_qual);
+    astcpy(&out.a2.ptr, sdl);
+    return out;
   }
-  (*i)++;
-  astcpy(&out.a1.ptr, spec_qual);
-  astcpy(&out.a2.ptr, sdl);
-  return out;
+
+  if (toks[*i].type == T_IDENTIFIER || toks[*i].type == T_KEYWORD) {
+    log_msg(ERROR, "missing ';'\n", toks[*i-1].line);
+    error_flag = 1;
+    return out;
+  }
+  return (Ast) {A_NONE};
 }
 
 Ast m_struct_declaration_list(int* i) {
@@ -314,6 +321,12 @@ Ast m_declaration(int* i) {
   astcpy(&out.a2.ptr, m_init_declarator_list(i));
   if (tokcmp(toks[*i], (Token) {T_PUNCTUATOR, ";"})) {
     (*i)++;
+    return out;
+  }
+
+  if (toks[*i].type == T_IDENTIFIER || toks[*i].type == T_KEYWORD) {
+    log_msg(ERROR, "missing ';'\n", toks[*i-1].line);
+    error_flag = 1;
     return out;
   }
   return (Ast) {A_NONE};

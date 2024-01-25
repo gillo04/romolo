@@ -13,6 +13,7 @@
 
 Token* toks;
 char* src;
+int error_flag;
 
 Ast m_declaration_list(int* i) {
   int j = *i;
@@ -101,9 +102,14 @@ Ast m_translation_unit(int* i) {
 Ast parser(Token* tokens, char* source) {
   toks = tokens;
   src = source;
+  error_flag = 0;
+
   int i = 0;
   Ast out = m_translation_unit(&i);
 
+  if (error_flag) {
+    return (Ast) {A_NONE};
+  }
   return out;
 }
 

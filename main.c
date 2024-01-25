@@ -15,27 +15,27 @@ int main(int argc, char* argv[]) {
   if (source_code == 0) {
     return 1;
   }
-  printf("SOURCE LOADED\n");
+  log_msg(INFO, "source loaded\n", -1);
 
   init_logger(source_code);
 
   Token* tokens = lexer(source_code);
   if (tokens == 0) {
-    printf("Error lexing\n");
+    log_msg(ERROR, "error lexing\n", -1);
     return 1;
   }
-  printf("LEXER FINISHED\n");
+  log_msg(INFO, "lexer finished\n", -1);
   // print_tokens(tokens);
   
   Ast ast = parser(tokens, source_code);
   if (ast.node_type == 0) {
-    printf("Error parsing\n");
+    log_msg(ERROR, "error parsing\n", -1);
     return 1;
   }  
-  printf("PARSER FINISHED\n");
+  log_msg(INFO, "parser finished\n", -1);
 
   // optimizer(&ast);
-  // printf("OPTIMIZER FINISHED\n");
+  // log_msg(INFO, "optimizer finished\n", -1);
   print_ast(&ast, 0);
   return 0;
 
@@ -49,10 +49,10 @@ int main(int argc, char* argv[]) {
 
   char* assembly_code = generator(&ast);
   if (assembly_code == 0) {
-    printf("Error generating code\n");
+    log_msg(ERROR, "error generating code\n", -1);
     return 1;
-  }  
-  printf("CODE GENERATION FINISHED\n\n");
+  }
+  log_msg(INFO, "code generation finished\n\n", -1);
   printf("%s\n", assembly_code);
 
   save(argc, argv, assembly_code);
