@@ -3,6 +3,17 @@
 #include "lexer.h"
 #include "parser.h"
 
+#define TC_RED    "\033[0;31m"
+#define TC_YELLOW "\033[0;33m"
+#define TC_CYAN   "\033[0;36m"
+#define TC_WHITE  "\033[0;37m"
+
+char* source;
+
+void init_logger(char* src) {
+  source = src;
+}
+
 void print_tokens(Token* t) {
   while (t->type != T_NONE) {
     printf("%d\t", t->line);
@@ -31,10 +42,31 @@ void print_tokens(Token* t) {
   }
 }
 
-void print_source_line(char* source, int line) {
+void print_source_line(int line) {
   while(source[line] != 0 && source[line] != '\n') {
     putchar(source[line++]);
   }
+}
+
+void log_msg(int type, char* msg, int line) {
+  switch (type) {
+    case ERROR:
+      printf(TC_RED "Error: " TC_WHITE);
+      break; 
+    case WARN:
+      printf(TC_YELLOW "Warning: " TC_WHITE);
+      break; 
+    case INFO:
+      printf(TC_CYAN "Info: " TC_WHITE);
+      break; 
+  }
+  
+
+  printf("%s", msg);
+  if (line != -1) {
+    print_source_line(line);
+  }
+  printf("\n");
 }
 
 void print_ast_stack(Ast* ast, int indent) {

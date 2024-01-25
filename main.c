@@ -17,6 +17,8 @@ int main(int argc, char* argv[]) {
   }
   printf("SOURCE LOADED\n");
 
+  init_logger(source_code);
+
   Token* tokens = lexer(source_code);
   if (tokens == 0) {
     printf("Error lexing\n");
@@ -35,6 +37,7 @@ int main(int argc, char* argv[]) {
   // optimizer(&ast);
   // printf("OPTIMIZER FINISHED\n");
   print_ast(&ast, 0);
+  return 0;
 
   /* TODO:
    * int verified = verify(&ast);
