@@ -11,6 +11,7 @@
 extern Register registers[REGISTERS_DIM+2];
 extern Mem_obj objects[OBJECTS_DIM];
 extern Variable variables[VARIABLES_DIM];
+extern Function functions[FUNCTIONS_DIM];
 
 int label_stack[LABELS_DIM];
 int lab_sp = 0;
@@ -845,6 +846,13 @@ Block g_ast(Ast* ast) {
       break;
     case A_FUNCTION_DEFINITION:
       {
+        Function func = {
+          ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr[0].a1.str,
+          ast->a1.ptr->a1.ptr,
+          ast->a1.ptr->a2.ptr,
+        };
+        func_push(func);
+
         if (ast->a2.ptr->node_type != A_NONE) {
           Block body = g_ast(ast->a2.ptr);
           CHECK(body.str);

@@ -33,6 +33,12 @@ typedef struct {
   Mem_obj* obj;
 } Variable;
 
+typedef struct {
+  char* name;     
+  Ast* dec_spec;  // Declaration specifiers
+  Ast* dec;       // Declarator
+} Function;
+
 struct mem_obj_s {
   int type;
   int size;

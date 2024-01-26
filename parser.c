@@ -73,15 +73,15 @@ Ast m_function_definition(int* i) {
 
 Ast m_external_declaration(int* i) {
   int j = *i;
-  Ast fun = m_function_definition(&j);
-  if (fun.node_type != A_NONE) {
+  Ast dec = m_declaration(&j);
+  if (dec.node_type != A_NONE) {
     *i = j;
-    return fun;
+    return dec;
   }
 
-  Ast dec = m_declaration(&j);
+  Ast func = m_function_definition(&j);
   *i = j;
-  return dec;
+  return func;
 }
 
 Ast m_translation_unit(int* i) {

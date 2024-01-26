@@ -66,24 +66,21 @@ Ast m_specifier_qualifier_list(int* i) {
 
 Ast m_struct_declaration(int* i) {
   // TODO: Static assert declaration
+  int j = *i;
   Ast out = {A_STRUCT_DECLARATION};
-  Ast spec_qual = m_specifier_qualifier_list(i);
+  Ast spec_qual = m_specifier_qualifier_list(&j);
   if (spec_qual.node_type == A_NONE) {
     return (Ast) {A_NONE};
   }
-  Ast sdl = m_struct_declarator_list(i);
-  if (tokcmp(toks[*i], (Token) {T_PUNCTUATOR, ";"})) {
-    (*i)++;
+  Ast sdl = m_struct_declarator_list(&j);
+  if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, ";"})) {
+    j++;
     astcpy(&out.a1.ptr, spec_qual);
     astcpy(&out.a2.ptr, sdl);
+    *i = j;
     return out;
   }
 
-  if (toks[*i].type == T_IDENTIFIER || toks[*i].type == T_KEYWORD) {
-    log_msg(ERROR, "missing ';'\n", toks[*i-1].line);
-    error_flag = 1;
-    return out;
-  }
   return (Ast) {A_NONE};
 }
 
@@ -312,21 +309,17 @@ Ast m_init_declarator_list(int* i) {
 }
 
 Ast m_declaration(int* i) {
+  int j = *i;
   Ast out = {A_DECLARATION};
-  astcpy(&out.a1.ptr, m_declaration_specifier_list(i));
+  astcpy(&out.a1.ptr, m_declaration_specifier_list(&j));
   if (out.a1.ptr->node_type == A_NONE) {
     return (Ast) {A_NONE};
   }
 
-  astcpy(&out.a2.ptr, m_init_declarator_list(i));
-  if (tokcmp(toks[*i], (Token) {T_PUNCTUATOR, ";"})) {
-    (*i)++;
-    return out;
-  }
-
-  if (toks[*i].type == T_IDENTIFIER || toks[*i].type == T_KEYWORD) {
-    log_msg(ERROR, "missing ';'\n", toks[*i-1].line);
-    error_flag = 1;
+  astcpy(&out.a2.ptr, m_init_declarator_list(&j));
+  if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, ";"})) {
+    j++;
+    *i = j;
     return out;
   }
   return (Ast) {A_NONE};

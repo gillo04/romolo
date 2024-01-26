@@ -35,6 +35,9 @@ int hw_sp = 0;    // Stack pointer
 
 int tmp_bytes_to_clear = 0;
 
+Function functions[FUNCTIONS_DIM];
+int func_sp = 0;
+
 void print_mem_structs() {
   printf("\nRegisters:\n");
   for (int i = 1; i < REGISTERS_DIM + 1; i++) {
@@ -78,6 +81,7 @@ void init_memory() {
   hw_bp = 0;
   hw_sp = 0;
   tmp_bytes_to_clear = 0;
+  func_sp = 0;
 }
 
 Mem_obj* obj_alloc(Mem_obj obj) {
@@ -407,3 +411,14 @@ Block r_store(Mem_obj* obj) {
   return out;
 }
 
+void func_push(Function func) {
+  for (int i = func_sp-1; i >= 0; i--) {
+    printf("%s\n", functions[i].name);
+    if (strcmp(functions[i].name, func.name) == 0) {
+      return;
+    }
+  }
+  printf("\n");
+  functions[func_sp] = func;
+  func_sp++;
+}

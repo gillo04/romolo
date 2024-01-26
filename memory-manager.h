@@ -5,6 +5,7 @@
 #define OBJECTS_DIM     256
 #define VARIABLES_DIM   256
 #define HW_STACK_DIM    256
+#define FUNCTIONS_DIM   256
 
 void print_mem_structs();
 
@@ -53,3 +54,5 @@ Block g_mov(Mem_obj* dest, Mem_obj src);
 
 // Generates assembly name of obj
 Block g_name(Mem_obj* obj);
+
+void func_push(Function func);

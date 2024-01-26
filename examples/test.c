@@ -1,9 +1,9 @@
+int function();
+
 int main() {
-  int a = 42;
-  
-  a += 5;
+  return function() + 2;
+}
 
-  x*=3;
-
-  return 0;
+int function() {
+  return 40;
 }

@@ -2,18 +2,20 @@
 .global main
 
 .text
-function:
-	push rbp
-	mov rbp, rsp
-
-	mov rax, 40
-	mov rsp, rbp
-	pop rbp
-	ret
+	sub rsp, -1
 
 main:
 	push rbp
 	mov rbp, rsp
 
+
+function:
+	push rbp
+	mov rbp, rsp
+
+	mov eax, 40
+	mov rsp, rbp
+	pop rbp
+	ret
 
 
