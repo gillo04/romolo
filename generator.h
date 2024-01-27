@@ -37,6 +37,7 @@ typedef struct {
   char* name;     
   Ast* dec_spec;  // Declaration specifiers
   Ast* dec;       // Declarator
+  int output_size;
 } Function;
 
 struct mem_obj_s {

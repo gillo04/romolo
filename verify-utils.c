@@ -41,8 +41,6 @@ int type_sizeof(Ast* dec_spec, Ast* dec) {
   while (dec->a2.ptr->a1.ptr[i].node_type != A_NONE) {
     if (dec->a2.ptr->a1.ptr[i].node_type == A_ARRAY_DIRECT_DECLARATOR) {
       size *= dec->a2.ptr->a1.ptr[i].a2.ptr->a1.num;
-    } else {
-      return -1;
     }
     i++;
   }

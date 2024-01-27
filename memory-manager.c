@@ -1,6 +1,7 @@
 #include <string.h>
 #include "memory-manager.h"
 #include "parser.h"
+#include "log.h"
 
 Register registers[REGISTERS_DIM+2] = {
   {0},       // Null value 
@@ -91,7 +92,7 @@ Mem_obj* obj_alloc(Mem_obj obj) {
       return &objects[i];
     }
   }
-  printf("Error: objects table is full\n");
+  log_msg(WARN, "objects table is full\n", -1);
   return 0;
 }
 
@@ -99,7 +100,7 @@ Block var_push(Variable var) {
   Block out = {0, 0};
   // TODO: Turn into a dynamic stack 
   if (var_sp >= VARIABLES_DIM) {
-    printf("Error: variables stack overflow\n");
+    log_msg(WARN, "variables stack overflow\n", -1);
     return out;
   }
   hw_sp += var.size;
@@ -121,7 +122,7 @@ Block var_push(Variable var) {
 
 void var_pop() {
   if (var_sp <= var_bp) {
-    printf("Error: variable stack underflow\n");
+    log_msg(WARN, "variables stack underflow\n", -1);
   }
   var_sp --;
   r_free(variables[var_sp].obj);
@@ -133,6 +134,7 @@ Variable* var_find(char* name) {
       return &variables[i];
     }
   }
+  log_msg(WARN, "couldn't find variable name\n", -1);
   return 0;
 }
 
@@ -228,7 +230,7 @@ Block r_free(Mem_obj* obj) {
     obj->type = M_NONE;
     set_string(&out.str, "");
   } else {
-    printf("Error: trying to free empty Mem_obj\n");
+    log_msg(WARN, "trying to free empty Mem_obj\n", -1);
   }
   out.result = 0;
   return out;
@@ -251,25 +253,25 @@ Block g_name(Mem_obj* obj) {
         append_string(&out.str, obj->loc.reg->name64);
         break;
       default:
-        printf("Error: memory object of invalid size\n");
+        log_msg(WARN, "memory object of invalid size\n", -1);
         return out;
     }
   } else {
     switch (obj->size) {
       case 1:
-        append_string(&out.str, "byte ");
+        append_string(&out.str, "byte ptr ");
         break;
       case 2:
-        append_string(&out.str, "word ");
+        append_string(&out.str, "word ptr ");
         break;
       case 4:
-        append_string(&out.str, "dword ");
+        append_string(&out.str, "dword ptr ");
         break;
       case 8:
-        append_string(&out.str, "qword ");
+        append_string(&out.str, "qword ptr ");
         break;
       default:
-        printf("Error: memory object of invalid size\n");
+        log_msg(WARN, "memory object of invalid size\n", -1);
         return out;
     }
 
@@ -297,12 +299,13 @@ Block r_move(Mem_obj* obj, int reg) {
   // TODO: use stack if necessary
   Block out = {0, 0};
   if (registers[reg].locked) {
-    printf("Error: trying to move to a locked register\n");
+    log_msg(WARN, "trying to move to a locked register\n", -1);
     return out;
   }
 
   if (reg == obj->loc.reg - registers) {
     set_string(&out.str, "");
+    out.result = obj;
     return out; 
   }
   if (registers[reg].used) {
@@ -369,7 +372,7 @@ Block r_load(Mem_obj* obj) {
 
     if (reg == 0) {
       if (reg_backup == 0) {
-        printf("Error: all registers are currently locked\n");
+        log_msg(WARN, "all registers are currently locked\n", -1);
       }
       reg = reg_backup;
     }
@@ -396,7 +399,7 @@ Block r_store(Mem_obj* obj) {
   Block out = {0, 0};
   if (obj->type == M_REG) {
     if (obj->var == 0) {
-      printf("Error: trying to store a memory object that's not a variable\n");
+      log_msg(WARN, "trying to store a memory object that's not a variable\n", -1);
     } else {
       Mem_obj tmp = *obj;
       obj->type = M_STACK;
@@ -413,12 +416,20 @@ Block r_store(Mem_obj* obj) {
 
 void func_push(Function func) {
   for (int i = func_sp-1; i >= 0; i--) {
-    printf("%s\n", functions[i].name);
     if (strcmp(functions[i].name, func.name) == 0) {
       return;
     }
   }
-  printf("\n");
   functions[func_sp] = func;
   func_sp++;
+}
+
+Function* func_find(char* name) {
+  for (int i = func_sp - 1; i >= 0; i--) {
+    if (functions[i].name != 0 && strcmp(name, functions[i].name) == 0) {
+      return &functions[i];
+    }
+  }
+  log_msg(WARN, "couldn't find function name\n", -1);
+  return 0;
 }

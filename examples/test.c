@@ -1,9 +1,8 @@
-int function();
+int add(int a, int b) {
+  return a + b;
+}
 
 int main() {
-  return function() + 2;
+  return add(40, 2);
 }
 
-int function() {
-  return 40;
-}

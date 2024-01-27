@@ -2,6 +2,7 @@
 #include "generator.h"
 #include "memory-manager.h"
 #include "verify-utils.h"
+#include "log.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -171,6 +172,70 @@ Block g_lvalue(Ast* ast) {
   return out;
 }
 
+int arg_regs[6] = {6, 5, 4, 3, 7, 8};
+Block g_arguments(Ast* ast) {
+  int i = 0;
+  Block out = {0, 0};
+  if (ast == 0) {
+    set_string(&out.str, "");
+    return out;
+  }
+  Mem_obj* args[OBJECTS_DIM];
+  while (ast[i].node_type != A_NONE) {
+    Block tmp = g_ast(&ast[i]);
+    CHECK(tmp.str);
+    
+    Block move = r_move(tmp.result, arg_regs[i]);
+    r_lock(tmp.result);
+    append_string(&out.str, tmp.str.str);
+    append_string(&out.str, move.str.str);
+
+    args[i] = tmp.result;
+    i++;
+  }
+
+  for (int j = 0; j < i; j++) {
+    r_free(args[j]);
+  }
+  return out;
+}
+
+Block g_parameters(Ast* ast) {
+  int i = 0;
+  Block out = {0, 0};
+  if (ast == 0) {
+    set_string(&out.str, "");
+    return out;
+  }
+  while (ast[i].node_type != A_NONE) {
+    Variable var = {
+      ast[i].a2.ptr->a2.ptr->a1.ptr->a1.str,
+      ast[i].a1.ptr,
+      ast[i].a2.ptr,
+      0,
+      -1,
+      0
+    };
+    var.size = type_sizeof(var.dec_spec, var.dec);
+
+    Block dec = var_push(var);
+    CHECK(dec.str);
+
+    Block move = g_mov(dec.result, (Mem_obj) {
+      M_REG,
+      var.size,
+      .loc.reg = registers + arg_regs[i],
+      0
+    });
+    append_string(&out.str, dec.str.str);
+    append_string(&out.str, move.str.str);
+    r_free(dec.result);
+    i++;
+  }
+
+  return out;
+}
+
 Block g_ast(Ast* ast) {
   Block out = {0, 0};
 
@@ -249,6 +314,26 @@ Block g_ast(Ast* ast) {
     case A_DEREFERENCE:
       printf("DEREFERENCE\n");
       print_ast(ast->a1.ptr, indent+1);
+      break;
+    case A_FUNCTION_CALL:
+      Function* func = func_find(ast->a1.ptr->a1.str);
+      
+      // Pass arguments
+      out = g_arguments(ast->a2.ptr->a1.ptr);
+      CHECK(out.str);
+
+      // Make room for result
+      if (func->output_size != 0) {
+        Block reserve = r_alloc(func->output_size);
+        Block move = r_move(reserve.result, 1);
+        out.result = move.result;
+        append_string(&out.str, move.str.str);
+      }
+
+      append_format(&out.str, 
+        "\tcall %s\n",
+        func->name
+      );
       break;
 
     case A_UNARY_PLUS:
@@ -846,25 +931,32 @@ Block g_ast(Ast* ast) {
       break;
     case A_FUNCTION_DEFINITION:
       {
+        var_push_stack_frame();
+
         Function func = {
           ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr[0].a1.str,
           ast->a1.ptr->a1.ptr,
           ast->a1.ptr->a2.ptr,
         };
+        func.output_size = type_sizeof(func.dec_spec, func.dec);
         func_push(func);
 
-        if (ast->a2.ptr->node_type != A_NONE) {
-          Block body = g_ast(ast->a2.ptr);
-          CHECK(body.str);
+        Block para = g_parameters(ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr[1].a1.ptr->a1.ptr);
+        CHECK(para.str);
 
-          append_format(&out.str,
-            "%s:\n"
-            "\tpush rbp\n"
-            "\tmov rbp, rsp\n\n"
-            "%s\n",
-            ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr->a1.str, body.str.str
-          );
-        }
+        Block body = g_ast(ast->a2.ptr);
+        CHECK(body.str);
+
+        append_format(&out.str,
+          "%s:\n"
+          "\tpush rbp\n"
+          "\tmov rbp, rsp\n"
+          "%s\n"
+          "%s\n",
+          ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr->a1.str, 
+          para.str.str, body.str.str
+        );
+        var_pop_stack_frame();
       }
       break;
     case A_TRANSLATION_UNIT:
