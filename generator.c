@@ -316,24 +316,46 @@ Block g_ast(Ast* ast) {
       print_ast(ast->a1.ptr, indent+1);
       break;
     case A_FUNCTION_CALL:
-      Function* func = func_find(ast->a1.ptr->a1.str);
-      
-      // Pass arguments
-      out = g_arguments(ast->a2.ptr->a1.ptr);
-      CHECK(out.str);
+      {
+        Function* func = func_find(ast->a1.ptr->a1.str);
+        
+        // Pass arguments
+        out = g_arguments(ast->a2.ptr->a1.ptr);
+        CHECK(out.str);
 
-      // Make room for result
-      if (func->output_size != 0) {
-        Block reserve = r_alloc(func->output_size);
-        Block move = r_move(reserve.result, 1);
-        out.result = move.result;
-        append_string(&out.str, move.str.str);
+        // Make room for result
+        if (func->output_size != 0) {
+          Block reserve = r_alloc(func->output_size);
+          Block move = r_move(reserve.result, 1);
+          out.result = move.result;
+          append_string(&out.str, move.str.str);
+        }
+
+        // Save memory objects
+        for (int i = 0; i < OBJECTS_DIM; i++) {
+          if (objects[i].type == M_REG && objects[i].loc.reg - registers != 1) {
+            append_format(&out.str, 
+              "\tpush %s\n",
+              objects[i].loc.reg->name64
+            );
+          }
+        }
+
+        append_format(&out.str, 
+          "\tcall %s\n",
+          func->name
+        );
+
+        // Restore memory objects
+        for (int i = OBJECTS_DIM; i >= 0; i--) {
+          if (objects[i].type == M_REG && objects[i].loc.reg - registers != 1) {
+            append_format(&out.str, 
+              "\tpop %s\n",
+              objects[i].loc.reg->name64
+            );
+          }
+        }
       }
-
-      append_format(&out.str, 
-        "\tcall %s\n",
-        func->name
-      );
       break;
 
     case A_UNARY_PLUS:

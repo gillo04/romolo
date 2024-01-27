@@ -7,6 +7,10 @@
 #define HW_STACK_DIM    256
 #define FUNCTIONS_DIM   256
 
+void print_regs();
+
+void print_var();
+
 void print_mem_structs();
 
 void init_memory();

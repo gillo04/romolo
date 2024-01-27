@@ -39,7 +39,7 @@ int tmp_bytes_to_clear = 0;
 Function functions[FUNCTIONS_DIM];
 int func_sp = 0;
 
-void print_mem_structs() {
+void print_regs() {
   printf("\nRegisters:\n");
   for (int i = 1; i < REGISTERS_DIM + 1; i++) {
     printf("%s\t%d\t%d\n", registers[i].name64, registers[i].used, registers[i].locked);
@@ -55,16 +55,22 @@ void print_mem_structs() {
       printf("\t%p\n", objects[i].var);
     }
   }
+}
 
+void print_var() {
   printf("\nVariables:\n");
   for (int i = 0; i < var_sp; i++) {
     if (variables[i].name != 0) {
-      printf("%s\t%d\n", variables[i].name, variables[i].stack_off);
+      printf("%s\t%d\t%d\n", variables[i].name, variables[i].stack_off, variables[i].size);
     } else {
       printf("var_bp\t%d\n", variables[i].stack_off);
-    }
+    } 
   }
+}
 
+void print_mem() {
+  print_regs();
+  print_var();
   printf("Stack var: %d %d %d\n", hw_bp, hw_sp, tmp_bytes_to_clear);
 }
 
@@ -148,7 +154,7 @@ Block var_pop_stack_frame() {
   Block out = {0, 0};
 
   int to_remove = 0;
-  for (int i = var_sp - 1; i <= var_bp; i++) {
+  for (int i = var_sp - 1; i >= var_bp; i--) {
     to_remove += variables[i].size;
   }
   var_sp = var_bp;
