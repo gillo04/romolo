@@ -14,9 +14,12 @@ To build the compiler execute the command
 
 To run the compiler on a file, run the command
     
-    ./romolo path/to/file.c
+    ./romolo path/to/source.c path/to/output.s
 
-This will output an assembly file which you can then assemble and link using gcc with the command
+This will output an assembly file which you can then assemble and link using gcc with the commands
 
-    gcc -m64 path/to/file.s -o path/to/executable 
+	nasm -f elf64 path/to/output.s -o path/to/object.o
+	ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 -lc -e main path/to/object.o -o path/to/executable
+    # Optional
+	rm path/to/object.o
 
