@@ -1,19 +1,17 @@
-.intel_syntax noprefix
-.global main
+bits 64
+section .data
 
-.text
+section .text
+global main
 main:
 	push rbp
 	mov rbp, rsp
 
-	sub rsp, 8
 	mov rax, 5
-	mov qword ptr [rbp - 8], rax
-
-	mov rax, qword ptr [rbp - 8]
 	mov rsp, rbp
 	pop rbp
-	ret
-	add rsp, 8
+	mov ebx, eax
+	mov eax, 1
+	int 0x80
 
 

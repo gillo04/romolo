@@ -1,31 +1,32 @@
-.intel_syntax noprefix
-.global main
+bits 64
+section .data
 
-.text
+section .text
+global main
 fib:
 	push rbp
 	mov rbp, rsp
 	sub rsp, 4
-	mov dword ptr [rbp - 4], edi
+	mov dword [rbp - 4], edi
 
-	mov eax, dword ptr [rbp - 4]
+	mov eax, dword [rbp - 4]
 	mov rbx, 2
 	cmp eax, ebx
 	setl al
 	and eax, 1
 	cmp eax, 0
 	je if_end_0
-	mov eax, dword ptr [rbp - 4]
+	mov eax, dword [rbp - 4]
 	mov rsp, rbp
 	pop rbp
 	ret
 if_end_0:
-	mov eax, dword ptr [rbp - 4]
+	mov eax, dword [rbp - 4]
 	mov rbx, 1
 	sub eax, ebx
 	mov edi, eax
 	call fib
-	mov ebx, dword ptr [rbp - 4]
+	mov ebx, dword [rbp - 4]
 	mov rcx, 2
 	sub ebx, ecx
 	mov edi, ebx
@@ -46,14 +47,16 @@ main:
 
 	sub rsp, 4
 	mov rax, 10
-	mov dword ptr [rbp - 4], eax
+	mov dword [rbp - 4], eax
 
-	mov eax, dword ptr [rbp - 4]
+	mov eax, dword [rbp - 4]
 	mov edi, eax
 	call fib
 	mov rsp, rbp
 	pop rbp
-	ret
+	mov ebx, eax
+	mov eax, 1
+	int 0x80
 	add rsp, 4
 
 

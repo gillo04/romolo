@@ -18,6 +18,10 @@ int label_stack[LABELS_DIM];
 int lab_sp = 0;
 int label_count = 0;
 
+String data_section = {0};
+
+int is_main = 0;
+
 void label_push() {
   label_stack[lab_sp] = label_count;
   lab_sp++;
@@ -279,7 +283,17 @@ Block g_ast(Ast* ast) {
       }
       break;
     case A_STRING_LITERAL:
-      printf("STRING LITERAL \"%s\"\n", ast->a1.str);
+      append_format(&data_section,
+        "lit_%d db \"%s\", 0\n",
+        label_count, ast->a1.str
+      );
+
+      out = r_alloc(8);
+      append_format(&out.str, 
+        "\tmov %s, lit_%d\n",
+        g_name(out.result).str.str, label_count
+      );
+      label_count++;
       break;
     case A_MEMBER:
       printf("MEMBER %s\n", ast->a2.str);
@@ -946,13 +960,25 @@ Block g_ast(Ast* ast) {
         out = g_ast(ast->a1.ptr);
         CHECK(out.str);
 
-        append_format(&out.str, 
-          "%s"
-          "\tmov rsp, rbp\n"
-          "\tpop rbp\n"
-          "\tret\n",
-          r_move(out.result, 1).str.str
-        );
+        if (is_main) {
+          append_format(&out.str, 
+            "%s"
+            "\tmov rsp, rbp\n"
+            "\tpop rbp\n"
+            "\tmov ebx, eax\n"
+            "\tmov eax, 1\n"
+            "\tint 0x80\n",
+            r_move(out.result, 1).str.str
+          );
+        } else {
+          append_format(&out.str, 
+            "%s"
+            "\tmov rsp, rbp\n"
+            "\tpop rbp\n"
+            "\tret\n",
+            r_move(out.result, 1).str.str
+          );
+        }
         r_free(out.result);
       }
       break;
@@ -974,6 +1000,8 @@ Block g_ast(Ast* ast) {
         func.output_size = type_sizeof(func.dec_spec, func.dec);
         func_push(func);
 
+        is_main = (strcmp(func.name, "main") == 0) ? 1 : 0;
+
         Block para = g_parameters(ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr[1].a1.ptr->a1.ptr);
         CHECK(para.str);
 
@@ -994,12 +1022,16 @@ Block g_ast(Ast* ast) {
       break;
     case A_TRANSLATION_UNIT:
       {
+        set_string(&data_section, "");
         Block stack = g_ast_stack(ast->a1.ptr);
         append_format(&out.str,
-          ".intel_syntax noprefix\n"
-          ".global main\n\n"
-          ".text\n"
+          "bits 64\n"
+          "section .data\n"
+          "%s\n"
+          "section .text\n"
+          "global main\n"
           "%s",
+          data_section.str,
           stack.str.str
         );
       }

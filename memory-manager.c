@@ -265,16 +265,16 @@ Block g_name(Mem_obj* obj) {
   } else {
     switch (obj->size) {
       case 1:
-        append_string(&out.str, "byte ptr ");
+        append_string(&out.str, "byte ");
         break;
       case 2:
-        append_string(&out.str, "word ptr ");
+        append_string(&out.str, "word ");
         break;
       case 4:
-        append_string(&out.str, "dword ptr ");
+        append_string(&out.str, "dword ");
         break;
       case 8:
-        append_string(&out.str, "qword ptr ");
+        append_string(&out.str, "qword ");
         break;
       default:
         log_msg(WARN, "memory object of invalid size\n", -1);
