@@ -63,6 +63,14 @@ Block g_unary_op(Ast* ast, char* op) {
   return out;
 }
 
+void fix_size(Mem_obj* l, Mem_obj* r) {
+  if (l->size > r->size) {
+    l->size = r->size;
+  } else if (l->size < r->size) {
+    r->size = l->size;
+  }
+}
+
 Block g_binary_op(Ast* ast, char* op) {
   Block out = {0, 0};
   Block l = g_ast(ast->a1.ptr);
@@ -72,6 +80,8 @@ Block g_binary_op(Ast* ast, char* op) {
   CHECK(r.str);
   r_lock(r.result);
 
+  // Drop to smalest
+  fix_size(l.result, r.result);
   append_format(&out.str,
     "%s"
     "%s"
@@ -95,6 +105,7 @@ Block g_binary_logic_op(Ast* ast, char* op) {
   CHECK(r.str);
   r_lock(r.result);
 
+  fix_size(l.result, r.result);
   append_format(&out.str,
     "%s"
     "%s"
@@ -257,7 +268,7 @@ Block g_ast(Ast* ast) {
       break;
     case A_CONSTANT:
       {
-        out = r_alloc(4);
+        out = r_alloc(8);
 
         Block ld = r_load(out.result);
         append_string(&out.str, ld.str.str);

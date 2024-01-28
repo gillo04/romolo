@@ -293,10 +293,24 @@ Block g_mov(Mem_obj* dest, Mem_obj src) {
   out.result = dest;
 
   Block d_name = g_name(dest);
-  Block s_name = g_name(&src);
 
-  append_format(&out.str,
-    "\tmov %s, %s\n", d_name.str.str, s_name.str.str);
+  if (dest->size == src.size) {
+    Block s_name = g_name(&src);
+    append_format(&out.str,
+      "\tmov %s, %s\n", d_name.str.str, s_name.str.str);
+  } else if (dest->size < src.size) {
+    log_msg(WARN, "truncating value\n", -1);
+    src.size = dest->size;
+    Block s_name = g_name(&src);
+    append_format(&out.str,
+      "\tmov %s, %s\n", d_name.str.str, s_name.str.str);
+  } else {
+    // TODO: account for signedness 
+    Block s_name = g_name(&src);
+    append_format(&out.str,
+      "\tmovzx %s, %s\n", d_name.str.str, s_name.str.str);
+  }
+
 
   return out;
 }

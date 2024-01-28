@@ -9,5 +9,6 @@ int fib(int n) {
 }
 
 int main() {
-  return fib(10);
+  int num = 10;
+  return fib(num);
 }
