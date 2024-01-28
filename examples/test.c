@@ -1,4 +1,8 @@
+int puts(char*);
+
 int main() {
-  return 5;
+  char* msg = "Hello world";
+  puts(msg);
+  return 0;
 }
 

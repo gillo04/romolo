@@ -59,6 +59,6 @@ Block g_mov(Mem_obj* dest, Mem_obj src);
 // Generates assembly name of obj
 Block g_name(Mem_obj* obj);
 
-void func_push(Function func);
+Function* func_push(Function func);
 
 Function* func_find(char* name);

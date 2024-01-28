@@ -434,14 +434,15 @@ Block r_store(Mem_obj* obj) {
   return out;
 }
 
-void func_push(Function func) {
+Function* func_push(Function func) {
   for (int i = func_sp-1; i >= 0; i--) {
     if (strcmp(functions[i].name, func.name) == 0) {
-      return;
+      return 0;
     }
   }
   functions[func_sp] = func;
   func_sp++;
+  return &functions[func_sp - 1];
 }
 
 Function* func_find(char* name) {

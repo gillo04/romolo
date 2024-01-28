@@ -13,12 +13,14 @@ extern Register registers[REGISTERS_DIM+2];
 extern Mem_obj objects[OBJECTS_DIM];
 extern Variable variables[VARIABLES_DIM];
 extern Function functions[FUNCTIONS_DIM];
+extern int func_sp;
 
 int label_stack[LABELS_DIM];
 int lab_sp = 0;
 int label_count = 0;
 
 String data_section = {0};
+String extern_section = {0};
 
 int is_main = 0;
 
@@ -694,35 +696,51 @@ Block g_ast(Ast* ast) {
      */
     case A_DECLARATION:
       {
-        int i = 0;
-        while (ast->a2.ptr->a1.ptr[i].node_type != A_NONE) {
-          Variable var = {
-            ast->a2.ptr->a1.ptr[i].a1.ptr->a2.ptr->a1.ptr->a1.str,
+        int decl_type = declaration_type(ast);
+
+        if (decl_type == D_SCALAR) {
+          int i = 0;
+          while (ast->a2.ptr->a1.ptr[i].node_type != A_NONE) {
+            Variable var = {
+              ast->a2.ptr->a1.ptr[i].a1.ptr->a2.ptr->a1.ptr->a1.str,
+              ast->a1.ptr,
+              ast->a2.ptr->a1.ptr[i].a1.ptr,
+              0,
+              -1,
+              0
+            };
+            var.size = type_sizeof(var.dec_spec, var.dec);
+
+            Block dec = var_push(var);
+            CHECK(dec.str);
+
+            append_string(&out.str, dec.str.str);
+            if (ast->a2.ptr->a1.ptr[i].a2.ptr->node_type != A_NONE) {
+              Block init = g_ast(ast->a2.ptr->a1.ptr[i].a2.ptr->a1.ptr);
+              CHECK(init.str);
+
+              append_string(&out.str, init.str.str);
+              append_string(&out.str, g_mov(dec.result, *init.result).str.str);
+              r_free(init.result);
+
+              append_string(&out.str, r_store(dec.result).str.str);
+              r_free(dec.result);
+            }
+            append_string(&out.str, "\n");
+            i++;
+          }
+        } else if (decl_type == D_FUNCTION) {
+          Function func = {
+            ast->a2.ptr->a1.ptr->a1.ptr->a2.ptr->a1.ptr->a1.str,
             ast->a1.ptr,
-            ast->a2.ptr->a1.ptr[i].a1.ptr,
-            0,
-            -1,
+            ast->a2.ptr->a1.ptr->a1.ptr,
             0
           };
-          var.size = type_sizeof(var.dec_spec, var.dec);
-
-          Block dec = var_push(var);
-          CHECK(dec.str);
-
-          append_string(&out.str, dec.str.str);
-          if (ast->a2.ptr->a1.ptr[i].a2.ptr->node_type != A_NONE) {
-            Block init = g_ast(ast->a2.ptr->a1.ptr[i].a2.ptr->a1.ptr);
-            CHECK(init.str);
-
-            append_string(&out.str, init.str.str);
-            append_string(&out.str, g_mov(dec.result, *init.result).str.str);
-            r_free(init.result);
-
-            append_string(&out.str, r_store(dec.result).str.str);
-            r_free(dec.result);
-          }
-          append_string(&out.str, "\n");
-          i++;
+          func.output_size = type_sizeof(func.dec_spec, func.dec);
+          func_push(func);
+          set_string(&out.str, "");
+        } else {
+          log_msg(WARN, "couldn't recognize declaration type\n", -1);
         }
       }
       break;
@@ -991,16 +1009,25 @@ Block g_ast(Ast* ast) {
     case A_FUNCTION_DEFINITION:
       {
         var_push_stack_frame();
+        
+        Function* find = func_find(ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr[0].a1.str);
+        if (find == 0) {
+          Function func = {
+            ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr[0].a1.str,
+            ast->a1.ptr->a1.ptr,
+            ast->a1.ptr->a2.ptr,
+            -1,
+            1
+          };
+          func.output_size = type_sizeof(func.dec_spec, func.dec);
+          find = func_push(func);
+        } else {
+          find->dec_spec = ast->a1.ptr->a1.ptr;
+          find->dec = ast->a1.ptr->a2.ptr;
+          find->defined = 1;
+        }
 
-        Function func = {
-          ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr[0].a1.str,
-          ast->a1.ptr->a1.ptr,
-          ast->a1.ptr->a2.ptr,
-        };
-        func.output_size = type_sizeof(func.dec_spec, func.dec);
-        func_push(func);
-
-        is_main = (strcmp(func.name, "main") == 0) ? 1 : 0;
+        is_main = (strcmp(find->name, "main") == 0) ? 1 : 0;
 
         Block para = g_parameters(ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr[1].a1.ptr->a1.ptr);
         CHECK(para.str);
@@ -1014,7 +1041,7 @@ Block g_ast(Ast* ast) {
           "\tmov rbp, rsp\n"
           "%s\n"
           "%s\n",
-          ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr->a1.str, 
+          find->name, 
           para.str.str, body.str.str
         );
         var_pop_stack_frame();
@@ -1024,13 +1051,27 @@ Block g_ast(Ast* ast) {
       {
         set_string(&data_section, "");
         Block stack = g_ast_stack(ast->a1.ptr);
+
+        // Find undefined functions
+        set_string(&extern_section, "");
+        for (int i = 0; i < func_sp; i++) {
+          printf("ok\n");
+          if (!functions[i].defined) {
+            append_format(&extern_section,
+              "extern %s\n",
+              functions[i].name);
+          }
+        }
+
         append_format(&out.str,
           "bits 64\n"
+          "%s\n"
           "section .data\n"
           "%s\n"
           "section .text\n"
           "global main\n"
           "%s",
+          extern_section.str,
           data_section.str,
           stack.str.str
         );

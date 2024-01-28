@@ -1,8 +1,27 @@
 bits 64
+
 section .data
 
 section .text
 global main
+main:
+	push rbp
+	mov rbp, rsp
+
+	sub rsp, 4
+	mov rax, 10
+	mov dword [rbp - 4], eax
+
+	mov eax, dword [rbp - 4]
+	mov edi, eax
+	call fib
+	mov rsp, rbp
+	pop rbp
+	mov ebx, eax
+	mov eax, 1
+	int 0x80
+	add rsp, 4
+
 fib:
 	push rbp
 	mov rbp, rsp
@@ -40,23 +59,5 @@ if_end_0:
 	mov rsp, rbp
 	pop rbp
 	ret
-
-main:
-	push rbp
-	mov rbp, rsp
-
-	sub rsp, 4
-	mov rax, 10
-	mov dword [rbp - 4], eax
-
-	mov eax, dword [rbp - 4]
-	mov edi, eax
-	call fib
-	mov rsp, rbp
-	pop rbp
-	mov ebx, eax
-	mov eax, 1
-	int 0x80
-	add rsp, 4
 
 

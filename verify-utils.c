@@ -54,3 +54,16 @@ int type_sizeof(Ast* dec_spec, Ast* dec) {
 
   return size;
 }
+
+int declaration_type(Ast* dec) {
+  Ast* dd = &dec->a2.ptr->a1.ptr->a1.ptr->a2.ptr->a1.ptr[1];
+  if (dd->node_type == A_NONE) {
+    return D_SCALAR;
+  } else if (dd->node_type == A_ARRAY_DIRECT_DECLARATOR) {
+    return D_ARRAY;
+  } else if (dd->node_type == A_FUNCTION_DIRECT_DECLARATOR) {
+    return D_FUNCTION;
+  }
+
+  return D_NONE;
+}
