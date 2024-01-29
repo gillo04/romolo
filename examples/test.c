@@ -1,8 +1,9 @@
+
 int puts(char*);
+int printf(char*, int);
 
 int main() {
-  char* msg = "Hello world";
-  puts(msg);
+  printf("num: %d", 123);
   return 0;
 }
 

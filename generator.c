@@ -22,8 +22,6 @@ int label_count = 0;
 String data_section = {0};
 String extern_section = {0};
 
-int is_main = 0;
-
 void label_push() {
   label_stack[lab_sp] = label_count;
   lab_sp++;
@@ -368,8 +366,12 @@ Block g_ast(Ast* ast) {
           }
         }
 
+        Block align = align_stack();
         append_format(&out.str, 
+          // "\tmov rax, 0\n"
+          "%s"
           "\tcall %s\n",
+          align.str.str,
           func->name
         );
 
@@ -978,25 +980,14 @@ Block g_ast(Ast* ast) {
         out = g_ast(ast->a1.ptr);
         CHECK(out.str);
 
-        if (is_main) {
-          append_format(&out.str, 
-            "%s"
-            "\tmov rsp, rbp\n"
-            "\tpop rbp\n"
-            "\tmov ebx, eax\n"
-            "\tmov eax, 1\n"
-            "\tint 0x80\n",
-            r_move(out.result, 1).str.str
-          );
-        } else {
-          append_format(&out.str, 
-            "%s"
-            "\tmov rsp, rbp\n"
-            "\tpop rbp\n"
-            "\tret\n",
-            r_move(out.result, 1).str.str
-          );
-        }
+        append_format(&out.str, 
+          "%s"
+          "\tmov rsp, rbp\n"
+          "\tpop rbp\n"
+          "\tret\n",
+          r_move(out.result, 1).str.str
+        );
+
         r_free(out.result);
       }
       break;
@@ -1027,8 +1018,6 @@ Block g_ast(Ast* ast) {
           find->defined = 1;
         }
 
-        is_main = (strcmp(find->name, "main") == 0) ? 1 : 0;
-
         Block para = g_parameters(ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr[1].a1.ptr->a1.ptr);
         CHECK(para.str);
 
@@ -1055,7 +1044,6 @@ Block g_ast(Ast* ast) {
         // Find undefined functions
         set_string(&extern_section, "");
         for (int i = 0; i < func_sp; i++) {
-          printf("ok\n");
           if (!functions[i].defined) {
             append_format(&extern_section,
               "extern %s\n",
@@ -1068,8 +1056,17 @@ Block g_ast(Ast* ast) {
           "%s\n"
           "section .data\n"
           "%s\n"
+
           "section .text\n"
-          "global main\n"
+          "global _start\n"
+
+          "_start:\n"
+          "; align stack\n"
+          "\tcall main\n"
+          "\tmov ebx, eax\n"
+          "\tmov eax, 1\n"
+          "\tint 0x80\n"
+
           "%s",
           extern_section.str,
           data_section.str,

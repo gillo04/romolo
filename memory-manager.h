@@ -62,3 +62,6 @@ Block g_name(Mem_obj* obj);
 Function* func_push(Function func);
 
 Function* func_find(char* name);
+
+// Align stack
+Block align_stack();

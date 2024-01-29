@@ -1,29 +1,31 @@
 bits 64
 extern puts
+extern printf
 
 section .data
-lit_0 db "Hello world", 0
+lit_0 db "num: %d", 10, 0
 
 section .text
-global main
+global _start
+_start:
+; align stack
+	call main
+	mov ebx, eax
+	mov eax, 1
+	int 0x80
 main:
 	push rbp
 	mov rbp, rsp
 
-	sub rsp, 8
 	mov rax, lit_0
-	mov qword [rbp - 8], rax
-
-	mov rax, qword [rbp - 8]
 	mov rdi, rax
-	call puts
+	mov rax, 123
+	mov rsi, rax
+	call printf
 
 	mov rax, 0
 	mov rsp, rbp
 	pop rbp
-	mov ebx, eax
-	mov eax, 1
-	int 0x80
-	add rsp, 8
+	ret
 
 

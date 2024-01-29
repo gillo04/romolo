@@ -4,6 +4,7 @@ section .data
 
 section .text
 global main
+push byte 8
 main:
 	push rbp
 	mov rbp, rsp

@@ -454,3 +454,19 @@ Function* func_find(char* name) {
   log_msg(WARN, "couldn't find function name\n", -1);
   return 0;
 }
+
+Block align_stack() {
+  Block out = {0, 0};
+  int align = 16 - hw_sp % 16;
+  if (align != 16) {
+    append_format(&out.str.str,
+      "\tsub rsp, %d\n",
+      align 
+    );
+    hw_sp -= align;
+  } else {
+    set_string(&out.str, "");
+  }
+
+  return out;
+}

@@ -1,9 +1,9 @@
-example_name = fibonacci
+example_name = test
 
 run: all
 	./romolo examples/$(example_name).c examples/$(example_name).s
 	nasm -f elf64 examples/$(example_name).s -o examples/$(example_name).o
-	ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 -lc -e main examples/$(example_name).o -o examples/$(example_name)
+	ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 -lc examples/$(example_name).o -o examples/$(example_name)
 	rm examples/$(example_name).o
 	./examples/$(example_name) || echo $$?
 
