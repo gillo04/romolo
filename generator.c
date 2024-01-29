@@ -283,17 +283,36 @@ Block g_ast(Ast* ast) {
       }
       break;
     case A_STRING_LITERAL:
-      append_format(&data_section,
-        "lit_%d db \"%s\", 0\n",
-        label_count, ast->a1.str
-      );
+      {
+        append_format(&data_section,
+          "lit_%d db \"",
+          label_count
+        );
 
-      out = r_alloc(8);
-      append_format(&out.str, 
-        "\tmov %s, lit_%d\n",
-        g_name(out.result).str.str, label_count
-      );
-      label_count++;
+        // Decode string
+        int i = 0;
+        while (ast->a1.str[i] != 0) {
+          if (ast->a1.str[i] >= ' ') {
+            append_char(&data_section, ast->a1.str[i]);
+          } else {
+            append_format(&data_section,
+              "\", %d, \"",
+              ast->a1.str[i]
+            );
+          }
+          i++;
+        }
+        append_format(&data_section,
+          "\", 0\n"
+        );
+
+        out = r_alloc(8);
+        append_format(&out.str, 
+          "\tmov %s, lit_%d\n",
+          g_name(out.result).str.str, label_count
+        );
+        label_count++;
+      }
       break;
     case A_MEMBER:
       printf("MEMBER %s\n", ast->a2.str);

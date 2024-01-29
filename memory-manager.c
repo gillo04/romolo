@@ -459,7 +459,7 @@ Block align_stack() {
   Block out = {0, 0};
   int align = 16 - hw_sp % 16;
   if (align != 16) {
-    append_format(&out.str.str,
+    append_format(&out.str,
       "\tsub rsp, %d\n",
       align 
     );

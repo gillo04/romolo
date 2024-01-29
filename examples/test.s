@@ -3,7 +3,7 @@ extern puts
 extern printf
 
 section .data
-lit_0 db "num: %d", 10, 0
+lit_0 db "num: %d", 10, "", 0
 
 section .text
 global _start
