@@ -17,15 +17,21 @@ main:
 	push rbp
 	mov rbp, rsp
 
+	sub rsp, 4
+	mov rax, 1234
+	mov dword [rbp - 4], eax
+
 	mov rax, lit_0
 	mov rdi, rax
-	mov rax, 123
-	mov rsi, rax
+	mov eax, dword [rbp - 4]
+	mov esi, eax
+	sub rsp, 12
 	call printf
 
 	mov rax, 0
 	mov rsp, rbp
 	pop rbp
 	ret
+	add rsp, 4
 
 

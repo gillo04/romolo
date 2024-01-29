@@ -1,9 +1,13 @@
-// Returns the 10th number of the fibonacci sequence
+int printf(char*, int, int);
+
 int fib(int);
 
 int main() {
-  int num = 10;
-  return fib(num);
+  printf("Fibonacci sequence from 0 to 10:\n", 0, 0);
+  for (int i = 0; i <= 10; ++i) {
+    printf("%d: %d\n", i, fib(i));
+  }
+  return 0;
 }
 
 int fib(int n) {

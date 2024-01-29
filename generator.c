@@ -200,16 +200,15 @@ Block g_arguments(Ast* ast) {
     Block tmp = g_ast(&ast[i]);
     CHECK(tmp.str);
     
-    Block move = r_move(tmp.result, arg_regs[i]);
-    r_lock(tmp.result);
     append_string(&out.str, tmp.str.str);
-    append_string(&out.str, move.str.str);
 
     args[i] = tmp.result;
     i++;
   }
 
   for (int j = 0; j < i; j++) {
+    Block move = r_move(args[j], arg_regs[j]);
+    append_string(&out.str, move.str.str);
     r_free(args[j]);
   }
   return out;
@@ -385,14 +384,27 @@ Block g_ast(Ast* ast) {
           }
         }
 
-        Block align = align_stack();
+        // Align stack
+        int align = align_stack();
+        if (align != 16) {
+          append_format(&out.str,
+            "\tsub rsp, %d\n",
+            align 
+          );
+        } 
+
         append_format(&out.str, 
           // "\tmov rax, 0\n"
-          "%s"
           "\tcall %s\n",
-          align.str.str,
           func->name
         );
+
+        if (align != 16) {
+          append_format(&out.str,
+            "\tadd rsp, %d\n",
+            align 
+          );
+        } 
 
         // Restore memory objects
         for (int i = OBJECTS_DIM; i >= 0; i--) {
@@ -403,6 +415,7 @@ Block g_ast(Ast* ast) {
             );
           }
         }
+
       }
       break;
 
@@ -941,7 +954,6 @@ Block g_ast(Ast* ast) {
 
         Block clause2 = g_ast(ast->a1.ptr->a2.ptr);
         CHECK(clause2.str);
-        r_free(clause2.result);
 
         append_format(&out.str,
           "%s\n"
@@ -954,6 +966,7 @@ Block g_ast(Ast* ast) {
           label_stack[lab_sp-1], label_stack[lab_sp-1], clause2.str.str,
           g_name(clause2.result).str.str, label_stack[lab_sp-1]
         );
+        r_free(clause2.result);
 
         Block stat = g_ast(ast->a2.ptr);
         CHECK(stat.str);

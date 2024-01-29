@@ -244,6 +244,12 @@ Block r_free(Mem_obj* obj) {
 
 Block g_name(Mem_obj* obj) {
   Block out = {0, 0};
+  if (obj->type == M_NONE) {
+    set_string(&out.str, "");
+    log_msg(WARN, "trying to get the name of an invalid Mem_obj\n", -1);
+    return out;
+  }
+
   if (obj->type == M_REG) {
     switch (obj->size) {
       case 1:
@@ -455,18 +461,7 @@ Function* func_find(char* name) {
   return 0;
 }
 
-Block align_stack() {
-  Block out = {0, 0};
+int align_stack() {
   int align = 16 - hw_sp % 16;
-  if (align != 16) {
-    append_format(&out.str,
-      "\tsub rsp, %d\n",
-      align 
-    );
-    hw_sp -= align;
-  } else {
-    set_string(&out.str, "");
-  }
-
-  return out;
+  return align;
 }
