@@ -9,7 +9,7 @@ enum {
 };
 
 // Accepts declaration specfiers and a declarator
-int type_sizeof(Ast* dec_spec, Ast* dec);
+int type_sizeof(Ast* dec_spec, Ast* dec, int ptr_stair);
 
 // Accepts a declaration
 int declaration_type(Ast* dec);

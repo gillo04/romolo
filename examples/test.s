@@ -1,5 +1,4 @@
 bits 64
-extern puts
 extern printf
 
 section .data
@@ -8,7 +7,6 @@ lit_0 db "num: %d", 10, "", 0
 section .text
 global _start
 _start:
-; align stack
 	call main
 	mov ebx, eax
 	mov eax, 1
@@ -21,17 +19,26 @@ main:
 	mov rax, 1234
 	mov dword [rbp - 4], eax
 
+	sub rsp, 8
+	mov rax, rbp
+	sub rax, 4
+	mov qword [rbp - 12], rax
+
+	sub rsp, 8
+
 	mov rax, lit_0
+	mov rbx, qword [rbp - 12]
+	mov ecx, dword [rbx]
 	mov rdi, rax
-	mov eax, dword [rbp - 4]
-	mov esi, eax
+	mov esi, ecx
 	sub rsp, 12
 	call printf
+	add rsp, 12
 
 	mov rax, 0
 	mov rsp, rbp
 	pop rbp
 	ret
-	add rsp, 4
+	add rsp, 20
 
 

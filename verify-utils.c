@@ -3,10 +3,16 @@
 #include "verify-utils.h"
 #include <stdio.h>
 
-int type_sizeof(Ast* dec_spec, Ast* dec) {
+int type_sizeof(Ast* dec_spec, Ast* dec, int ptr_stair) {
   int size = 0;
-  
-  if (dec->a1.ptr->node_type == A_NONE) {
+
+  // Descend pointer list
+  Ast* cur = dec->a1.ptr;
+  for (int i = 0; i < ptr_stair && cur->node_type != A_NONE; i++) {
+    cur = cur->a2.ptr;
+  }
+
+  if (cur->node_type == A_NONE) {
     // Count declaration specifiers
     int c_char = 0, c_short = 0, c_int = 0, c_long = 0;
     int i = 0;

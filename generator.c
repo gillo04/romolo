@@ -230,7 +230,7 @@ Block g_parameters(Ast* ast) {
       -1,
       0
     };
-    var.size = type_sizeof(var.dec_spec, var.dec);
+    var.size = type_sizeof(var.dec_spec, var.dec, 0);
 
     Block dec = var_push(var);
     CHECK(dec.str);
@@ -351,12 +351,39 @@ Block g_ast(Ast* ast) {
       }
       break;
     case A_ADDRESS:
-      printf("ADDRESS\n");
-      print_ast(ast->a1.ptr, indent+1);
+      {
+        Block block = g_lvalue(ast->a1.ptr);
+        CHECK(block.str);
+
+        Block reg = r_alloc(8);
+        append_format(&out.str,
+          "\tmov %s, rbp\n"
+          "\tsub %s, %d\n",
+          g_name(reg.result).str.str,
+          g_name(reg.result).str.str,
+          block.result->loc.stack_off
+        );
+        r_free(block.result);
+        out.result = reg.result;
+      }
       break;
     case A_DEREFERENCE:
-      printf("DEREFERENCE\n");
-      print_ast(ast->a1.ptr, indent+1);
+      {
+        Block block = g_ast(ast->a1.ptr);
+        CHECK(block.str);
+
+        // int size = type_sizeof();
+        Block reg = r_alloc(4);
+        append_format(&out.str,
+          "%s"
+          "\tmov %s, dword [%s]\n",
+          block.str.str,
+          g_name(reg.result).str.str,
+          g_name(block.result).str.str
+        );
+        r_free(block.result);
+        out.result = reg.result;
+      }
       break;
     case A_FUNCTION_CALL:
       {
@@ -743,7 +770,7 @@ Block g_ast(Ast* ast) {
               -1,
               0
             };
-            var.size = type_sizeof(var.dec_spec, var.dec);
+            var.size = type_sizeof(var.dec_spec, var.dec, 0);
 
             Block dec = var_push(var);
             CHECK(dec.str);
@@ -770,7 +797,7 @@ Block g_ast(Ast* ast) {
             ast->a2.ptr->a1.ptr->a1.ptr,
             0
           };
-          func.output_size = type_sizeof(func.dec_spec, func.dec);
+          func.output_size = type_sizeof(func.dec_spec, func.dec, 0);
           func_push(func);
           set_string(&out.str, "");
         } else {
@@ -1042,7 +1069,7 @@ Block g_ast(Ast* ast) {
             -1,
             1
           };
-          func.output_size = type_sizeof(func.dec_spec, func.dec);
+          func.output_size = type_sizeof(func.dec_spec, func.dec, 0);
           find = func_push(func);
         } else {
           find->dec_spec = ast->a1.ptr->a1.ptr;
@@ -1093,7 +1120,6 @@ Block g_ast(Ast* ast) {
           "global _start\n"
 
           "_start:\n"
-          "; align stack\n"
           "\tcall main\n"
           "\tmov ebx, eax\n"
           "\tmov eax, 1\n"

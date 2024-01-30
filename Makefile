@@ -1,4 +1,4 @@
-example_name = fibonacci
+example_name = test
 
 run: all
 	./romolo examples/$(example_name).c examples/$(example_name).s
