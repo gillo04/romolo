@@ -25,11 +25,8 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   log_msg(INFO, "lexer finished\n", -1);
-  print_tokens(tokens);
+  // print_tokens(tokens);
   
-  free(source_code);
-  free_tokens(tokens);
-  return 0;
   Ast ast = parser(tokens, source_code);
   if (ast.node_type == 0) {
     log_msg(ERROR, "error parsing\n", -1);
@@ -41,6 +38,9 @@ int main(int argc, char* argv[]) {
   // log_msg(INFO, "optimizer finished\n", -1);
   print_ast(&ast, 0);
 
+  free(source_code);
+  free_tokens(tokens);
+  return 0;
   /* TODO:
    * int verified = verify(&ast);
    * if (!verified) {
