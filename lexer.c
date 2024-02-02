@@ -39,6 +39,7 @@ Token lex_keyword(char* source, int* i) {
 
   if (isalnum(*(source + *i)) || *(source + *i) == '_') {
     *i = j;
+    free(out.val.str);
     return (Token) {T_NONE};
   }
 
@@ -64,16 +65,22 @@ Token lex_punctuator(char* source, int* i) {
   }
 
   if (strcmp(out.val.str, "<:") == 0) {
+    free(out.val.str);
     strcpy(out.val.str, "[");
   } else if (strcmp(out.val.str, ":>") == 0) {
+    free(out.val.str);
     strcpy(out.val.str, "]");
   } else if (strcmp(out.val.str, "<%") == 0) {
+    free(out.val.str);
     strcpy(out.val.str, "{");
   } else if (strcmp(out.val.str, "%>") == 0) {
+    free(out.val.str);
     strcpy(out.val.str, "}");
   } else if (strcmp(out.val.str, "%:") == 0) {
+    free(out.val.str);
     strcpy(out.val.str, "#");
   } else if (strcmp(out.val.str, "%:%:") == 0) {
+    free(out.val.str);
     strcpy(out.val.str, "##");
   }
 
@@ -118,6 +125,7 @@ Token lex_integer(char* source, int* i) {
       memcpy(tmp, source + *i, j - *i);
       tmp[j - *i] = 0;
       out.val.num = strtol(tmp, 0, 10);
+      free(tmp);
     } else if (tolower(source[j+1]) == 'x') {
       // Lex hexadecimal integer
       j += 2;
@@ -129,8 +137,9 @@ Token lex_integer(char* source, int* i) {
       memcpy(tmp, source + *i, j - *i);
       tmp[j - *i] = 0;
       out.val.num = strtol(tmp, 0, 16);
+      free(tmp);
     } else {
-      // Lex hexadecimal integer
+      // Lex octal integer
       while (source[j] >= '0' && source[j] <= '7') {
         j++;
       }
@@ -139,6 +148,7 @@ Token lex_integer(char* source, int* i) {
       memcpy(tmp, source + *i, j - *i);
       tmp[j - *i] = 0;
       out.val.num = strtol(tmp, 0, 8);
+      free(tmp);
     }
     *i = j;
     return out;
@@ -254,14 +264,16 @@ Token lex_string_literal(char* source, int* i) {
       tmp_c = lex_character(source, &j, '"');
     }
 
-    out.val.str = (char*) malloc(tmp.len+1);
-    strcpy(out.val.str, tmp.str);
-
     if (source[j] == '"') {
+      out.val.str = (char*) malloc(tmp.len+1);
+      strcpy(out.val.str, tmp.str);
+      free(tmp.str);
+
       j++;
       *i = j;
       return out;
     }
+    free(tmp.str);
   }
 
   return (Token) {T_NONE};

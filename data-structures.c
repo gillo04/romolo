@@ -25,7 +25,6 @@ void append_char(String* dest, char c) {
   dest->len++;
   dest->str[dest->len-1] = c;
   dest->str[dest->len] = 0;
-
 }
 
 void append_string(String* dest, char* src) {
