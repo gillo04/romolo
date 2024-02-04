@@ -730,7 +730,8 @@ void print_ast(Ast* ast, int indent) {
       print_ast_stack(ast->a1.ptr, indent+1);
       break;
     default:
-      printf("Couldn't recognize type %d\n", ast->node_type);
+      log_msg(ERROR, "error logging\n", -1);
+      printf("\tCouldn't recognize type %d\n", ast->node_type);
   }
 }
 

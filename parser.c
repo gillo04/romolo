@@ -39,6 +39,7 @@ Ast m_function_prototype(int* i) {
 
   Ast dec = m_declarator(&j);
   if (dec.node_type == A_NONE) {
+    free_ast(&dec_spec, 0);
     return (Ast) {A_NONE};
   }
 
@@ -60,6 +61,7 @@ Ast m_function_definition(int* i) {
 
   Ast stat = m_compound_statement(&j);
   if (stat.node_type == A_NONE) {
+    free_ast(&prot, 0);
     return (Ast) {A_NONE};
   }
 

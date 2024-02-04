@@ -34,6 +34,7 @@ Ast m_primary_expression(int* i) {
     if (out.node_type != A_NONE && tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"})) {
       *i = j+1;
     } else {
+      free_ast(&out, 0);
       out.node_type = A_NONE;
     }
   }
@@ -83,6 +84,7 @@ Ast m_postfix_expression(int* i) {
         } else {
           j--;
           found_postfix = 0;
+          free_ast(&exp, 0);
         }
       } else if (tokcmp(toks[j], (Token) {T_PUNCTUATOR, "("})){
         j++;
@@ -95,6 +97,7 @@ Ast m_postfix_expression(int* i) {
         } else {
           j--;
           found_postfix = 0;
+          free_ast(&exp, 0);
         }
       } else {
         found_postfix = 0;
@@ -153,6 +156,8 @@ Ast m_unary_expression(int* i) {
         tmp.node_type = A_SIZEOF;
         astcpy(&tmp.a1.ptr, out);
         *i = k;
+      } else {
+        free_ast(&out, 0);
       }
       out = tmp;
     }
@@ -179,6 +184,7 @@ Ast m_cast_expression(int* i) {
 
     Ast ce = m_cast_expression(&j);
     if (ce.node_type == A_NONE) {
+      free_ast(&tn, 0);
       return (Ast) {A_NONE};
     }
     
@@ -220,10 +226,12 @@ Ast m_binary_expression(int* i, Ast (*prev_exp)(), char* strings[], int types[])
 
         if (!found_match) {
           found_op = 0;
+          free_ast(&right, 0);
         }
         out = op;
       } else {
         found_op = 0;
+        free_ast(&right, 0);
       }
     }
     *i = j;
@@ -359,7 +367,9 @@ Ast m_assignment_expression(int* i) {
         *i = j;
         return out;
       }
+      free_ast(&assign, 0);
     }
+    free_ast(&unary, 0);
   }
 
   out.node_type = A_NONE;

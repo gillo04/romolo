@@ -6,6 +6,7 @@
 #include "lexer.h"
 #include "data-structures.h"
 #include "parser.h"
+#include "parser-utils.h"
 #include "optimizer.h"
 #include "generator.h"
 #include "memory-manager.h"
@@ -36,10 +37,11 @@ int main(int argc, char* argv[]) {
 
   // optimizer(&ast);
   // log_msg(INFO, "optimizer finished\n", -1);
-  print_ast(&ast, 0);
+  // print_ast(&ast, 0);
 
   free(source_code);
   free_tokens(tokens);
+  free_ast(&ast, 0);
   return 0;
   /* TODO:
    * int verified = verify(&ast);
@@ -61,6 +63,6 @@ int main(int argc, char* argv[]) {
 
   free(source_code);
   free_tokens(tokens);
-  // TODO: free_ast(ast);
+  free_ast(&ast, 0);
   free(assembly_code);
 }

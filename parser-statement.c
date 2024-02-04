@@ -21,10 +21,12 @@ Ast m_labeled_statement(int* i) {
     int k = j + 2;
     Ast stat = m_statement(&k);
     if (stat.node_type != A_NONE) {
-      astcpy(&out.a2.ptr, stat);
       *i = k;
+      astcpy(&out.a2.ptr, stat);
       return out;
     }
+    free(out.a1.str);
+    free_ast(&stat, 0);
   } else if (tokcmp(toks[j], (Token) {T_KEYWORD, "case"})) {
     int k = j+1;
     Ast out = {A_CASE};
@@ -38,7 +40,9 @@ Ast m_labeled_statement(int* i) {
         *i = k;
         return out;
       }
+      free_ast(&stat, 0);
     }
+    free_ast(&exp, 0);
   } else if (tokcmp(toks[j], (Token) {T_KEYWORD, "default"}) && tokcmp(toks[j+1], (Token) {T_PUNCTUATOR, ":"})) {
     Ast out = {A_DEFAULT};
     int k = j + 2;
@@ -48,6 +52,7 @@ Ast m_labeled_statement(int* i) {
       *i = k;
       return out;
     }
+    free_ast(&stat, 0);
   }
 
   return (Ast) {A_NONE};
@@ -78,6 +83,7 @@ Ast m_compound_statement(int* i) {
   } while (out.a1.ptr[k-1].node_type != A_NONE);
 
   if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, "}"})) {
+    free_ast(&out, 0);
     return (Ast) {A_NONE};
   }
   *i = j+1;
@@ -97,6 +103,7 @@ Ast m_expression_statement(int* i) {
     return out;
   }
 
+  free_ast(&out, 0);
   return (Ast) {A_NONE};
 }
 
@@ -112,6 +119,7 @@ Ast m_if_else(int* i) {
 
   if (!(tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"}) &&
     exp.node_type != A_NONE)) {
+    free_ast(&exp, 0);
     return (Ast) {A_NONE};
   }
   
@@ -155,6 +163,7 @@ Ast m_switch(int* i) {
 
   if (!(tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"}) &&
     exp.node_type != A_NONE)) {
+    free_ast(&exp, 0);
     return (Ast) {A_NONE};
   }
   
@@ -193,6 +202,7 @@ Ast m_while_loop(int* i) {
 
   if (!(tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"}) &&
     exp.node_type != A_NONE)) {
+    free_ast(&exp, 0);
     return (Ast) {A_NONE};
   }
   
@@ -221,6 +231,7 @@ Ast m_do_while_loop(int* i) {
   if (!(tokcmp(toks[j], (Token) {T_KEYWORD, "while"}) &&
     tokcmp(toks[j+1], (Token) {T_PUNCTUATOR, "("}) &&
     stat.node_type != A_NONE)) {
+    free_ast(&stat, 0);
     return (Ast) {A_NONE};
   }
 
@@ -230,6 +241,7 @@ Ast m_do_while_loop(int* i) {
   if (!(tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"}) &&
     tokcmp(toks[j+1], (Token) {T_PUNCTUATOR, ";"}) &&
     exp.node_type != A_NONE)) {
+    free_ast(&exp, 0);
     return (Ast) {A_NONE};
   }
   
@@ -256,6 +268,7 @@ Ast m_for_loop(int* i) {
     exp1 = m_expression(&j);
 
     if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, ";"})) {
+      free_ast(&exp1, 0);
       return (Ast) {A_NONE};
     }
     j++;
@@ -264,6 +277,7 @@ Ast m_for_loop(int* i) {
   Ast exp2 = m_expression(&j);
 
   if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, ";"})) {
+    free_ast(&exp2, 0);
     return (Ast) {A_NONE};
   }
 
@@ -271,6 +285,7 @@ Ast m_for_loop(int* i) {
   Ast exp3 = m_expression(&j);
 
   if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"})) {
+    free_ast(&exp3, 0);
     return (Ast) {A_NONE};
   }
   

@@ -139,6 +139,7 @@ Ast m_parameter_declaration(int* i) {
   Ast out = {A_PARAMETER_DECLARATION};
   astcpy(&out.a1.ptr, m_declaration_specifier_list(i));
   if (out.a1.ptr->a1.ptr[0].node_type == A_NONE) {
+    free_ast(out.a1.ptr, 1);
     return (Ast) {A_NONE};
   }
 
@@ -197,6 +198,7 @@ Ast m_pointer(int* i) {
   if (out.a1.ptr->node_type != A_NONE) {
     astcpy(&out.a2.ptr, m_pointer(&j));
   } else {
+    free_ast(&out, 0);
     return (Ast) {A_NONE};
   }
 
@@ -222,9 +224,12 @@ Ast m_direct_declarator(int* i) {
     if (tmp.node_type !=  A_NONE && tokcmp(toks[l], (Token) {T_PUNCTUATOR, ")"})) {
       j = l+1;
     } else {
+      free_ast(&out, 0);
+      free_ast(&tmp, 0);
       return (Ast) {A_NONE};
     }
   } else {
+    free(out.a1.ptr);
     return (Ast) {A_NONE};
   }
   out.a1.ptr[0] = tmp;
@@ -289,6 +294,7 @@ Ast m_declarator(int* i) {
   astcpy(&out.a1.ptr, m_pointer(i));
   astcpy(&out.a2.ptr, m_direct_declarator(i));
   if (out.a2.ptr->node_type == A_NONE) {
+    free_ast(&out, 0);
     return (Ast) {A_NONE};
   }
 

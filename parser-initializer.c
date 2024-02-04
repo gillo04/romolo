@@ -22,6 +22,7 @@ Ast m_designator(int* i) {
     }
 
     if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, "]"})) {
+      free_ast(&exp, 0);
       return (Ast) {A_NONE};
     }
     j++;
@@ -63,6 +64,7 @@ Ast m_designation(int* i) {
   }
 
   if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, "="})) {
+    free_ast(&des, 0);
     return (Ast) {A_NONE};
   }
   j++;
@@ -76,6 +78,7 @@ Ast m_initializer_list_element(int* i) {
   Ast init = m_initializer(&j);
 
   if (init.node_type == A_NONE) {
+    free_ast(&des, 0);
     return (Ast) {A_NONE};
   }
 
@@ -111,6 +114,7 @@ Ast m_initializer(int* i) {
     j++;
   }
   if (init.node_type == A_NONE && !tokcmp(toks[j], (Token) {T_PUNCTUATOR, "}"})) {
+    free_ast(&init, 0);
     return (Ast) {A_NONE};
   }
   j++;

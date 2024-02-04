@@ -296,6 +296,7 @@ Ast m_init_declarator(int* i) {
     (*i)++;
     Ast initializer = m_initializer(i);
     if (initializer.node_type == A_NONE) {
+      free_ast(&out, 0);
       return (Ast) {A_NONE};
     }
     *out.a2.ptr = initializer;
@@ -322,5 +323,6 @@ Ast m_declaration(int* i) {
     *i = j;
     return out;
   }
+  free_ast(&out, 0);
   return (Ast) {A_NONE};
 }
