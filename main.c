@@ -8,6 +8,7 @@
 #include "parser.h"
 #include "parser-utils.h"
 #include "optimizer.h"
+#include "verify-utils.h"
 #include "generator.h"
 #include "memory-manager.h"
 
@@ -39,10 +40,6 @@ int main(int argc, char* argv[]) {
   // log_msg(INFO, "optimizer finished\n", -1);
   // print_ast(&ast, 0);
 
-  free(source_code);
-  free_tokens(tokens);
-  free_ast(&ast, 0);
-  return 0;
   /* TODO:
    * int verified = verify(&ast);
    * if (!verified) {
@@ -65,4 +62,5 @@ int main(int argc, char* argv[]) {
   free_tokens(tokens);
   free_ast(&ast, 0);
   free(assembly_code);
+  return 0;
 }

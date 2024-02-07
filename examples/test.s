@@ -2,7 +2,7 @@ bits 64
 extern printf
 
 section .data
-lit_0 db "num: %d", 10, "", 0
+lit_0 db "%d", 10, "", 0
 
 section .text
 global _start
@@ -24,21 +24,15 @@ main:
 	sub rax, 4
 	mov qword [rbp - 12], rax
 
-	sub rsp, 8
-
 	mov rax, lit_0
 	mov rbx, qword [rbp - 12]
 	mov ecx, dword [rbx]
 	mov rdi, rax
 	mov esi, ecx
-	sub rsp, 12
+	sub rsp, 4
 	call printf
-	add rsp, 12
+	add rsp, 4
 
-	mov rax, 0
-	mov rsp, rbp
-	pop rbp
-	ret
-	add rsp, 20
+	add rsp, 12
 
 

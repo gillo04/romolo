@@ -14,3 +14,7 @@ int type_sizeof(Ast* dec_spec, Ast* dec, int ptr_stair);
 // Accepts a declaration
 int declaration_type(Ast* dec);
 
+Ast* ast_stack_deep_copy(Ast* ast);
+
+// Makes a deep copy of ast
+Ast* ast_deep_copy(Ast* ast);
