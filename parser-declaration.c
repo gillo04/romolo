@@ -81,6 +81,8 @@ Ast m_struct_declaration(int* i) {
     return out;
   }
 
+  free_ast(&sdl, 0);
+  free_ast(&spec_qual, 0);
   return (Ast) {A_NONE};
 }
 
@@ -125,6 +127,7 @@ Ast m_struct_or_union_specifier(int* i) {
   Ast sdl = m_struct_declaration_list(&j);
 
   if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, "}"}) || sdl.node_type == A_NONE) {
+    free_ast(&sdl, 0);
     return (Ast) {A_NONE};
   }
   j++;
@@ -153,6 +156,7 @@ Ast m_enumerator(int* i) {
   j++;
   Ast exp = m_conditional_expression(&j);
   if (exp.node_type == A_NONE) {
+    free(exp.a1.str);
     return (Ast) {A_NONE};
   }
 
@@ -196,6 +200,7 @@ Ast m_enum_specifier(int* i) {
     j++;
   }
   if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, "}"})) {
+    free_ast(&out, 0);
     return (Ast) {A_NONE};
   }
   j++;

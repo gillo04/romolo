@@ -8,7 +8,6 @@ lit_2 db "%d: %d", 10, "", 0
 section .text
 global _start
 _start:
-; align stack
 	call main
 	mov ebx, eax
 	mov eax, 1

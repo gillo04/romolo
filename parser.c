@@ -110,6 +110,7 @@ Ast parser(Token* tokens, char* source) {
   Ast out = m_translation_unit(&i);
 
   if (error_flag) {
+    free_ast(&out, 0);
     return (Ast) {A_NONE};
   }
   return out;

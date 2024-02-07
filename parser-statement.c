@@ -26,7 +26,7 @@ Ast m_labeled_statement(int* i) {
       return out;
     }
     free(out.a1.str);
-    free_ast(&stat, 0);
+    // free_ast(&stat, 0);
   } else if (tokcmp(toks[j], (Token) {T_KEYWORD, "case"})) {
     int k = j+1;
     Ast out = {A_CASE};
@@ -52,7 +52,7 @@ Ast m_labeled_statement(int* i) {
       *i = k;
       return out;
     }
-    free_ast(&stat, 0);
+    // free_ast(&stat, 0);
   }
 
   return (Ast) {A_NONE};
@@ -127,6 +127,7 @@ Ast m_if_else(int* i) {
   Ast then_stat = m_statement(&j);
 
   if (then_stat.node_type == A_NONE) {
+    free_ast(&exp, 0);
     return (Ast) {A_NONE};
   }
 
@@ -134,6 +135,8 @@ Ast m_if_else(int* i) {
     j++;
     Ast else_stat = m_statement(&j);
     if (else_stat.node_type == A_NONE) {
+      free_ast(&exp, 0);
+      free_ast(&then_stat, 0);
       return (Ast) {A_NONE};
     }
     Ast out = {A_IF_ELSE};
@@ -171,6 +174,7 @@ Ast m_switch(int* i) {
   Ast stat = m_statement(&j);
 
   if (stat.node_type == A_NONE) {
+    free_ast(&exp, 0);
     return (Ast) {A_NONE};
   }
 
@@ -210,6 +214,7 @@ Ast m_while_loop(int* i) {
   Ast stat = m_statement(&j);
 
   if (stat.node_type == A_NONE) {
+    free_ast(&exp, 0);
     return (Ast) {A_NONE};
   }
 
@@ -241,6 +246,7 @@ Ast m_do_while_loop(int* i) {
   if (!(tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"}) &&
     tokcmp(toks[j+1], (Token) {T_PUNCTUATOR, ";"}) &&
     exp.node_type != A_NONE)) {
+    free_ast(&stat, 0);
     free_ast(&exp, 0);
     return (Ast) {A_NONE};
   }
@@ -277,6 +283,7 @@ Ast m_for_loop(int* i) {
   Ast exp2 = m_expression(&j);
 
   if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, ";"})) {
+    free_ast(&exp1, 0);
     free_ast(&exp2, 0);
     return (Ast) {A_NONE};
   }
@@ -285,6 +292,8 @@ Ast m_for_loop(int* i) {
   Ast exp3 = m_expression(&j);
 
   if (!tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"})) {
+    free_ast(&exp1, 0);
+    free_ast(&exp2, 0);
     free_ast(&exp3, 0);
     return (Ast) {A_NONE};
   }
@@ -293,6 +302,9 @@ Ast m_for_loop(int* i) {
   Ast stat = m_statement(&j);
 
   if (stat.node_type == A_NONE) {
+    free_ast(&exp1, 0);
+    free_ast(&exp2, 0);
+    free_ast(&exp3, 0);
     return (Ast) {A_NONE};
   }
 

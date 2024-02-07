@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
   }
   log_msg(INFO, "lexer finished\n", -1);
   // print_tokens(tokens);
-  
+
   Ast ast = parser(tokens, source_code);
   if (ast.node_type == 0) {
     log_msg(ERROR, "error parsing\n", -1);

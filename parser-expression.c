@@ -178,6 +178,7 @@ Ast m_cast_expression(int* i) {
     j++;
     Ast tn = m_type_name(&j);
     if (tn.node_type == A_NONE || !tokcmp(toks[j], (Token) {T_PUNCTUATOR, ")"})) {
+      free_ast(&tn, 0);
       return (Ast) {A_NONE};
     }
     j++;
@@ -231,11 +232,10 @@ Ast m_binary_expression(int* i, Ast (*prev_exp)(), char* strings[], int types[])
         out = op;
       } else {
         found_op = 0;
-        free_ast(&right, 0);
+        // free_ast(&right, 0);
       }
     }
     *i = j;
-
   }
 
   return out;
@@ -330,6 +330,8 @@ Ast m_conditional_expression(int* i) {
           astcpy(&out.a3.ptr, cexp);
           *i = j;
         }
+      } else {
+        free_ast(&exp, 0);
       }
     } else {
       out = lor;
@@ -367,7 +369,6 @@ Ast m_assignment_expression(int* i) {
         *i = j;
         return out;
       }
-      free_ast(&assign, 0);
     }
     free_ast(&unary, 0);
   }

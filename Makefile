@@ -1,4 +1,4 @@
-example_name = test
+example_name = fibonacci
 
 run: all
 	./romolo examples/$(example_name).c examples/$(example_name).s
@@ -10,3 +10,7 @@ run: all
 
 all:
 	gcc -o romolo *.c
+
+valgrind:
+	gcc -g -Og -o romolo *.c
+	valgrind --leak-check=full ./romolo examples/$(example_name).c examples/$(example_name).s
