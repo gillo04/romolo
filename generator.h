@@ -49,6 +49,9 @@ struct mem_obj_s {
     int stack_off; // Offset from hardware stack base pointer
   } loc;
   Variable* var;
+
+  Ast* dec_spec;  // Declaration specifiers
+  Ast* dec;       // Declarator
 };
 
 typedef struct {

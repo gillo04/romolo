@@ -1,5 +1,6 @@
 #include "log.h" 
 #include "parser.h" 
+#include "parser-utils.h"
 #include "verify-utils.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -73,6 +74,27 @@ int declaration_type(Ast* dec) {
   }
 
   return D_NONE;
+}
+
+int is_pointer(Ast* dec) {
+  return dec->a1.ptr->node_type != A_NONE;
+}
+
+void prune_pointer(Ast* dec) {
+  Ast* prev = 0;
+  Ast* cur = dec->a1.ptr;
+  if (cur->node_type == A_NONE) {
+    log_msg(WARN, "trying to prune empty pointer list\n", -1);
+    return;
+  }
+
+  while (cur->node_type != A_NONE) {
+    prev = cur;
+    cur = cur->a2.ptr;
+  }
+  
+  free_ast(prev, 0);
+  prev->node_type = A_NONE;
 }
 
 Ast* ast_stack_deep_copy(Ast* ast) {

@@ -3,6 +3,7 @@ extern printf
 
 section .data
 lit_0 db "%d", 10, "", 0
+lit_1 db "%d", 10, "", 0
 
 section .text
 global _start
@@ -25,6 +26,14 @@ main:
 	mov qword [rbp - 12], rax
 
 	mov rax, lit_0
+	mov ebx, dword [rbp - 4]
+	mov rdi, rax
+	mov esi, ebx
+	sub rsp, 4
+	call printf
+	add rsp, 4
+
+	mov rax, lit_1
 	mov rbx, qword [rbp - 12]
 	mov ecx, dword [rbx]
 	mov rdi, rax
@@ -33,6 +42,10 @@ main:
 	call printf
 	add rsp, 4
 
+	mov rax, 0
+	mov rsp, rbp
+	pop rbp
+	ret
 	add rsp, 12
 
 

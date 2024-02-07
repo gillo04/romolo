@@ -224,13 +224,13 @@ Block g_parameters(Ast* ast) {
   while (ast[i].node_type != A_NONE) {
     Variable var = {
       ast[i].a2.ptr->a2.ptr->a1.ptr->a1.str,
-      ast[i].a1.ptr,
-      ast[i].a2.ptr,
-      0,
-      -1,
-      0
     };
+
+    var.dec_spec = ast_deep_copy(ast[i].a1.ptr);
+    var.dec = ast_deep_copy(ast[i].a2.ptr);
     var.size = type_sizeof(var.dec_spec, var.dec, 0);
+    var.stack_off = -1;
+    var.obj = 0;
 
     Block dec = var_push(var);
     CHECK(dec.str);
@@ -266,6 +266,8 @@ Block g_ast(Ast* ast) {
           append_string(&out.str, r_load(out.result).str.str);
           append_string(&out.str, g_mov(out.result, (Mem_obj) {M_STACK, var->size, .loc.stack_off = var->stack_off, var}).str.str);
           out.result->var = var;
+          out.result->dec_spec = ast_deep_copy(var->dec_spec);
+          out.result->dec = ast_deep_copy(var->dec);
         }
       }
       break;
@@ -764,13 +766,13 @@ Block g_ast(Ast* ast) {
           while (ast->a2.ptr->a1.ptr[i].node_type != A_NONE) {
             Variable var = {
               ast->a2.ptr->a1.ptr[i].a1.ptr->a2.ptr->a1.ptr->a1.str,
-              ast->a1.ptr,
-              ast->a2.ptr->a1.ptr[i].a1.ptr,
-              0,
-              -1,
-              0
             };
+
+            var.dec_spec = ast_deep_copy(ast->a1.ptr);
+            var.dec = ast_deep_copy(ast->a2.ptr->a1.ptr[i].a1.ptr);
             var.size = type_sizeof(var.dec_spec, var.dec, 0);
+            var.stack_off = -1;
+            var.obj = 0;
 
             Block dec = var_push(var);
             CHECK(dec.str);

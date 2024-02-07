@@ -1,6 +1,8 @@
 #include <string.h>
 #include "memory-manager.h"
 #include "parser.h"
+#include "parser-utils.h"
+#include "verify-utils.h"
 #include "log.h"
 
 Register registers[REGISTERS_DIM+2] = {
@@ -132,6 +134,8 @@ void var_pop() {
   }
   var_sp --;
   r_free(variables[var_sp].obj);
+  free_ast(variables[var_sp].dec_spec, 1);
+  free_ast(variables[var_sp].dec, 1);
 }
 
 Variable* var_find(char* name) {
