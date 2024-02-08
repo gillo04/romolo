@@ -53,12 +53,6 @@ Block r_store(Mem_obj* obj);
 // Moves obj to the register indexed reg
 Block r_move(Mem_obj* obj, int reg);
 
-// Generates assembly to move src to dest
-Block g_mov(Mem_obj* dest, Mem_obj src);
-
-// Generates assembly name of obj
-Block g_name(Mem_obj* obj);
-
 Function* func_push(Function func);
 
 Function* func_find(char* name);

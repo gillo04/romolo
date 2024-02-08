@@ -2,6 +2,7 @@
 #include "parser.h"
 #include "data-structures.h"
 
+#define CHECK(x) if (x.str == 0) { return (Block) {0, 0}; }
 #define LABELS_DIM 256
 
 typedef struct mem_obj_s Mem_obj;
@@ -59,5 +60,7 @@ typedef struct {
   Mem_obj* result;
 } Block;
 
+
+Block g_ast(Ast* ast);
 
 char* generator(Ast* ast);

@@ -1,13 +1,11 @@
-#include "data-structures.h"
 #include "generator.h"
+#include "generator-utils.h"
 #include "memory-manager.h"
 #include "verify-utils.h"
 #include "log.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-#define CHECK(x) if (x.str == 0) { return (Block) {0, 0}; }
 
 extern Register registers[REGISTERS_DIM+2];
 extern Mem_obj objects[OBJECTS_DIM];
@@ -32,8 +30,6 @@ void label_pop() {
   lab_sp--;
 }
 
-Block g_ast(Ast* ast);
-
 Block g_ast_stack(Ast* ast) {
   int i = 0;
   Block out = {0, 0};
@@ -48,112 +44,6 @@ Block g_ast_stack(Ast* ast) {
     append_string(&out.str, tmp.str.str);
     out.result = tmp.result;
   }
-  return out;
-}
-
-Block g_unary_op(Ast* ast, char* op) {
-  Block out = {0, 0};
-  Block s = g_ast(ast->a1.ptr);
-  CHECK(s.str);
-
-  append_format(&out.str,
-    "%s"
-    "\t%s %s\n",
-    s.str.str,
-    op, g_name(s.result).str.str
-  );
-
-  out.result = s.result;
-  return out;
-}
-
-void fix_size(Mem_obj* l, Mem_obj* r) {
-  if (l->size > r->size) {
-    l->size = r->size;
-  } else if (l->size < r->size) {
-    r->size = l->size;
-  }
-}
-
-Block g_binary_op(Ast* ast, char* op) {
-  Block out = {0, 0};
-  Block l = g_ast(ast->a1.ptr);
-  CHECK(l.str);
-
-  Block r = g_ast(ast->a2.ptr);
-  CHECK(r.str);
-  r_lock(r.result);
-
-  // Drop to smalest
-  fix_size(l.result, r.result);
-  append_format(&out.str,
-    "%s"
-    "%s"
-    "\t%s %s, %s\n",
-    l.str.str,
-    r.str.str,
-    op, g_name(l.result).str.str, g_name(r.result).str.str
-  );
-
-  r_free(r.result);
-  out.result = l.result;
-  return out;
-}
-
-Block g_binary_logic_op(Ast* ast, char* op) {
-  Block out = {0, 0};
-  Block l = g_ast(ast->a1.ptr);
-  CHECK(l.str);
-
-  Block r = g_ast(ast->a2.ptr);
-  CHECK(r.str);
-  r_lock(r.result);
-
-  fix_size(l.result, r.result);
-  append_format(&out.str,
-    "%s"
-    "%s"
-    "\tcmp %s, %s\n"
-    "\t%s %s\n"
-    "\tand %s, 1\n",
-    l.str.str,
-    r.str.str,
-    g_name(l.result).str.str, g_name(r.result).str.str,
-    op, l.result->loc.reg->name8,
-    g_name(l.result).str.str
-  );
-
-  r_free(r.result);
-  out.result = l.result;
-  return out;
-}
-
-Block g_assign(Ast* ast, char* op) {
-  Block out = {0, 0};
-  Block unary = g_ast(ast->a1.ptr);
-  CHECK(unary.str);
-
-  Block exp = g_ast(ast->a2.ptr);
-  CHECK(exp.str);
-  r_lock(exp.result);
-
-  Block ld = r_load(unary.result);
-  Register* reg = unary.result->loc.reg;
-  append_format(&out.str,
-    "%s"
-    "%s"
-    "%s"
-    "\t%s %s, %s\n",
-    unary.str.str, exp.str.str, ld.str.str,
-    op, g_name(unary.result).str.str, g_name(exp.result).str.str
-  );
-
-  append_string(&out.str, r_store(unary.result).str.str);
-  // Make sure the result register is still reserved
-  r_move(unary.result, reg - registers);
-
-  r_free(exp.result);
-  out.result = unary.result;
   return out;
 }
 
@@ -373,6 +263,10 @@ Block g_ast(Ast* ast) {
       {
         Block block = g_ast(ast->a1.ptr);
         CHECK(block.str);
+
+        if (block.result->dec != 0) {
+          print_ast(block.result->dec, 0);
+        }
 
         // int size = type_sizeof();
         Block reg = r_alloc(4);

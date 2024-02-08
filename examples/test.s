@@ -34,7 +34,11 @@ main:
 	add rsp, 4
 
 	mov rax, lit_1
-	mov rbx, qword [rbp - 12]
+	mov rbx, 0
+	mov rcx, qword [rbp - 12]
+	add rbx, rcx
+	mov rcx, 0
+	add rbx, rcx
 	mov ecx, dword [rbx]
 	mov rdi, rax
 	mov esi, ecx

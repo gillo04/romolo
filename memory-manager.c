@@ -4,6 +4,7 @@
 #include "parser-utils.h"
 #include "verify-utils.h"
 #include "log.h"
+#include "generator-utils.h"
 
 Register registers[REGISTERS_DIM+2] = {
   {0},       // Null value 
@@ -222,6 +223,11 @@ Block r_free(Mem_obj* obj) {
   if (obj == 0) {
     return out;
   }
+
+  if (obj->dec_spec != 0 && obj->dec != 0) {
+    free_ast(obj->dec_spec, 1);
+    free_ast(obj->dec, 1);
+  }
   if (obj->type == M_STACK) {
     if (obj->var == 0) {
       tmp_bytes_to_clear += obj->size;
@@ -242,86 +248,8 @@ Block r_free(Mem_obj* obj) {
   } else {
     log_msg(WARN, "trying to free empty Mem_obj\n", -1);
   }
+
   out.result = 0;
-  return out;
-}
-
-Block g_name(Mem_obj* obj) {
-  Block out = {0, 0};
-  if (obj->type == M_NONE) {
-    set_string(&out.str, "");
-    log_msg(WARN, "trying to get the name of an invalid Mem_obj\n", -1);
-    return out;
-  }
-
-  if (obj->type == M_REG) {
-    switch (obj->size) {
-      case 1:
-        append_string(&out.str, obj->loc.reg->name8);
-        break;
-      case 2:
-        append_string(&out.str, obj->loc.reg->name16);
-        break;
-      case 4:
-        append_string(&out.str, obj->loc.reg->name32);
-        break;
-      case 8:
-        append_string(&out.str, obj->loc.reg->name64);
-        break;
-      default:
-        log_msg(WARN, "memory object of invalid size\n", -1);
-        return out;
-    }
-  } else {
-    switch (obj->size) {
-      case 1:
-        append_string(&out.str, "byte ");
-        break;
-      case 2:
-        append_string(&out.str, "word ");
-        break;
-      case 4:
-        append_string(&out.str, "dword ");
-        break;
-      case 8:
-        append_string(&out.str, "qword ");
-        break;
-      default:
-        log_msg(WARN, "memory object of invalid size\n", -1);
-        return out;
-    }
-
-    append_format(&out.str,
-      "[rbp - %d]", obj->loc.stack_off);
-  }
-  out.result = obj;
-  return out;
-}
-
-Block g_mov(Mem_obj* dest, Mem_obj src) {
-  Block out = {0, 0};
-  out.result = dest;
-
-  Block d_name = g_name(dest);
-
-  if (dest->size == src.size) {
-    Block s_name = g_name(&src);
-    append_format(&out.str,
-      "\tmov %s, %s\n", d_name.str.str, s_name.str.str);
-  } else if (dest->size < src.size) {
-    log_msg(WARN, "truncating value\n", -1);
-    src.size = dest->size;
-    Block s_name = g_name(&src);
-    append_format(&out.str,
-      "\tmov %s, %s\n", d_name.str.str, s_name.str.str);
-  } else {
-    // TODO: account for signedness 
-    Block s_name = g_name(&src);
-    append_format(&out.str,
-      "\tmovzx %s, %s\n", d_name.str.str, s_name.str.str);
-  }
-
-
   return out;
 }
 
