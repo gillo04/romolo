@@ -1,15 +1,14 @@
 #include "log.h" 
-#include "parser.h" 
 #include "parser-utils.h"
 #include "verify-utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-int type_sizeof(Ast* dec_spec, Ast* dec, int ptr_stair) {
+int type_sizeof(Type t, int ptr_stair) {
   int size = 0;
 
   // Descend pointer list
-  Ast* cur = dec->a1.ptr;
+  Ast* cur = t.dec->a1.ptr;
   for (int i = 0; i < ptr_stair && cur->node_type != A_NONE; i++) {
     cur = cur->a2.ptr;
   }
@@ -18,8 +17,8 @@ int type_sizeof(Ast* dec_spec, Ast* dec, int ptr_stair) {
     // Count declaration specifiers
     int c_char = 0, c_short = 0, c_int = 0, c_long = 0;
     int i = 0;
-    while (dec_spec->a1.ptr[i].node_type != A_NONE) {
-      switch(dec_spec->a1.ptr[i].node_type) {
+    while (t.dec_spec->a1.ptr[i].node_type != A_NONE) {
+      switch(t.dec_spec->a1.ptr[i].node_type) {
         case A_CHAR:
           c_char++;
           break;
@@ -52,9 +51,9 @@ int type_sizeof(Ast* dec_spec, Ast* dec, int ptr_stair) {
 
   // Multiply by array sizes
   int i = 1;
-  while (dec->a2.ptr->a1.ptr[i].node_type != A_NONE) {
-    if (dec->a2.ptr->a1.ptr[i].node_type == A_ARRAY_DIRECT_DECLARATOR) {
-      size *= dec->a2.ptr->a1.ptr[i].a2.ptr->a1.num;
+  while (t.dec->a2.ptr->a1.ptr[i].node_type != A_NONE) {
+    if (t.dec->a2.ptr->a1.ptr[i].node_type == A_ARRAY_DIRECT_DECLARATOR) {
+      size *= t.dec->a2.ptr->a1.ptr[i].a2.ptr->a1.num;
     }
     i++;
   }
@@ -76,13 +75,29 @@ int declaration_type(Ast* dec) {
   return D_NONE;
 }
 
-int is_pointer(Ast* dec) {
-  return dec->a1.ptr->node_type != A_NONE;
+int is_array(Type t) {
+  // TODO: must be updated when introducing function pointers
+  int i = 0;
+  while (t.dec->a2.ptr[i].node_type != A_NONE) {
+    i++;
+  }
+
+  return t.dec->a2.ptr[i-1].node_type == A_ARRAY_DIRECT_DECLARATOR;
 }
 
-void prune_pointer(Ast* dec) {
+int is_pointer(Type t) {
+  // TODO: must be updated when introducing function pointers
+  return t.dec->a1.ptr->node_type != A_NONE && !is_array(t);
+}
+
+int is_integer(Type t) {
+  // TODO: temporary condition, must be updated when introducing structs
+  return !is_pointer(t);
+}
+
+void prune_pointer(Type t) {
   Ast* prev = 0;
-  Ast* cur = dec->a1.ptr;
+  Ast* cur = t.dec->a1.ptr;
   if (cur->node_type == A_NONE) {
     log_msg(WARN, "trying to prune empty pointer list\n", -1);
     return;

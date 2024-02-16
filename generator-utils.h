@@ -2,6 +2,10 @@
 #include "parser.h"
 #include "data-structures.h"
 
+void free_type(Type t);
+
+Type type_copy(Type t);
+
 Block g_unary_op(Ast* ast, char* op);
 
 Block g_binary_op(Ast* ast, char* op);

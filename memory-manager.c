@@ -135,8 +135,7 @@ void var_pop() {
   }
   var_sp --;
   r_free(variables[var_sp].obj);
-  free_ast(variables[var_sp].dec_spec, 1);
-  free_ast(variables[var_sp].dec, 1);
+  free_type(variables[var_sp].obj->t);
 }
 
 Variable* var_find(char* name) {
@@ -193,6 +192,7 @@ Block r_alloc(int size) {
       Mem_obj obj = {M_REG, size};
       obj.loc.reg = &registers[i];
       obj.var = 0;
+      obj.t = (Type) {0, 0};
 
       registers[i].used = 1;
       registers[i].locked = 0;
@@ -209,6 +209,7 @@ Block r_alloc(int size) {
   hw_sp += size;
   obj.loc.stack_off = hw_sp;
   obj.var = 0;
+  obj.t = (Type) {0, 0};
 
   Block out = {0, 0};
   append_format(&out.str,
@@ -224,10 +225,7 @@ Block r_free(Mem_obj* obj) {
     return out;
   }
 
-  if (obj->dec_spec != 0 && obj->dec != 0) {
-    free_ast(obj->dec_spec, 1);
-    free_ast(obj->dec, 1);
-  }
+  free_type(obj->t);
   if (obj->type == M_STACK) {
     if (obj->var == 0) {
       tmp_bytes_to_clear += obj->size;

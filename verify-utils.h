@@ -1,5 +1,6 @@
 #pragma once
 #include "parser.h"
+#include "generator.h"
 
 enum {
   D_NONE = 0,
@@ -8,16 +9,18 @@ enum {
   D_FUNCTION
 };
 
-// Accepts declaration specfiers and a declarator
-int type_sizeof(Ast* dec_spec, Ast* dec, int ptr_stair);
+int type_sizeof(Type t, int ptr_stair);
 
-// Accepts a declaration
+// dec is a declaration
 int declaration_type(Ast* dec);
 
-int is_pointer(Ast* dec);
+int is_array(Type t);
 
-// Accepts a declarator
-void prune_pointer(Ast* dec);
+int is_pointer(Type t);
+
+int is_integer(Type t);
+
+void prune_pointer(Type t);
 
 // Makes a deep copy of ast
 Ast* ast_deep_copy(Ast* ast);

@@ -66,6 +66,7 @@ Block g_lvalue(Ast* ast) {
             .loc.stack_off = var->stack_off,
             var
           });
+          out.result->t = type_copy(var->t);
         }
       }
       break;
@@ -116,9 +117,11 @@ Block g_parameters(Ast* ast) {
       ast[i].a2.ptr->a2.ptr->a1.ptr->a1.str,
     };
 
-    var.dec_spec = ast_deep_copy(ast[i].a1.ptr);
-    var.dec = ast_deep_copy(ast[i].a2.ptr);
-    var.size = type_sizeof(var.dec_spec, var.dec, 0);
+    var.t = type_copy((Type) {
+      ast[i].a1.ptr,
+      ast[i].a2.ptr
+    });
+    var.size = type_sizeof(var.t, 0);
     var.stack_off = -1;
     var.obj = 0;
 
@@ -129,7 +132,8 @@ Block g_parameters(Ast* ast) {
       M_REG,
       var.size,
       .loc.reg = registers + arg_regs[i],
-      0
+      0,
+      {0, 0}
     });
     append_string(&out.str, dec.str.str);
     append_string(&out.str, move.str.str);
@@ -156,8 +160,7 @@ Block g_ast(Ast* ast) {
           append_string(&out.str, r_load(out.result).str.str);
           append_string(&out.str, g_mov(out.result, (Mem_obj) {M_STACK, var->size, .loc.stack_off = var->stack_off, var}).str.str);
           out.result->var = var;
-          out.result->dec_spec = ast_deep_copy(var->dec_spec);
-          out.result->dec = ast_deep_copy(var->dec);
+          out.result->t = type_copy(var->t);
         }
       }
       break;
@@ -264,8 +267,8 @@ Block g_ast(Ast* ast) {
         Block block = g_ast(ast->a1.ptr);
         CHECK(block.str);
 
-        if (block.result->dec != 0) {
-          print_ast(block.result->dec, 0);
+        if (block.result->t.dec != 0) {
+          print_ast(block.result->t.dec, 0);
         }
 
         // int size = type_sizeof();
@@ -662,9 +665,11 @@ Block g_ast(Ast* ast) {
               ast->a2.ptr->a1.ptr[i].a1.ptr->a2.ptr->a1.ptr->a1.str,
             };
 
-            var.dec_spec = ast_deep_copy(ast->a1.ptr);
-            var.dec = ast_deep_copy(ast->a2.ptr->a1.ptr[i].a1.ptr);
-            var.size = type_sizeof(var.dec_spec, var.dec, 0);
+            var.t = type_copy((Type) {
+              ast->a1.ptr,
+              ast->a2.ptr->a1.ptr[i].a1.ptr
+            });
+            var.size = type_sizeof(var.t, 0);
             var.stack_off = -1;
             var.obj = 0;
 
@@ -689,11 +694,14 @@ Block g_ast(Ast* ast) {
         } else if (decl_type == D_FUNCTION) {
           Function func = {
             ast->a2.ptr->a1.ptr->a1.ptr->a2.ptr->a1.ptr->a1.str,
-            ast->a1.ptr,
-            ast->a2.ptr->a1.ptr->a1.ptr,
-            0
           };
-          func.output_size = type_sizeof(func.dec_spec, func.dec, 0);
+
+          func.t = type_copy((Type) {
+            ast->a1.ptr,
+            ast->a2.ptr->a1.ptr->a1.ptr
+          });
+
+          func.output_size = type_sizeof(func.t, 0);
           func_push(func);
           set_string(&out.str, "");
         } else {
@@ -959,17 +967,22 @@ Block g_ast(Ast* ast) {
         Function* find = func_find(ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr[0].a1.str);
         if (find == 0) {
           Function func = {
-            ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr[0].a1.str,
-            ast->a1.ptr->a1.ptr,
-            ast->a1.ptr->a2.ptr,
-            -1,
-            1
+            ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr[0].a1.str
           };
-          func.output_size = type_sizeof(func.dec_spec, func.dec, 0);
+
+          func.t = type_copy((Type) {
+            ast->a1.ptr->a1.ptr,
+            ast->a1.ptr->a2.ptr
+          });
+          func.output_size = type_sizeof(func.t, 0);
+          func.defined = 1;
           find = func_push(func);
         } else {
-          find->dec_spec = ast->a1.ptr->a1.ptr;
-          find->dec = ast->a1.ptr->a2.ptr;
+          free_type(find->t);
+          find->t = type_copy((Type) {
+            ast->a1.ptr->a1.ptr,
+            ast->a1.ptr->a2.ptr
+          });
           find->defined = 1;
         }
 

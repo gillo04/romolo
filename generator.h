@@ -26,9 +26,13 @@ enum {
 };
 
 typedef struct {
-  char* name;     // If null, it's a variable stack base pointer
   Ast* dec_spec;  // Declaration specifiers
   Ast* dec;       // Declarator
+} Type;
+
+typedef struct {
+  char* name;     // If null, it's a variable stack base pointer
+  Type t;
   int size;
   int stack_off;  // Hardware stack offset
   Mem_obj* obj;
@@ -36,8 +40,7 @@ typedef struct {
 
 typedef struct {
   char* name;     
-  Ast* dec_spec;  // Declaration specifiers
-  Ast* dec;       // Declarator
+  Type t;
   int output_size;
   char defined;
 } Function;
@@ -50,9 +53,7 @@ struct mem_obj_s {
     int stack_off; // Offset from hardware stack base pointer
   } loc;
   Variable* var;
-
-  Ast* dec_spec;  // Declaration specifiers
-  Ast* dec;       // Declarator
+  Type t;
 };
 
 typedef struct {

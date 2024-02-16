@@ -145,7 +145,6 @@ enum {
 
 
 typedef struct s_ast Ast;
-typedef struct s_type Type;
 
 typedef union {
   Ast* ptr;

@@ -1,3 +1,4 @@
+#include "parser-utils.h"
 #include "generator.h"
 #include "generator-utils.h"
 #include "memory-manager.h"
@@ -12,6 +13,26 @@ extern Mem_obj objects[OBJECTS_DIM];
 extern Variable variables[VARIABLES_DIM];
 extern Function functions[FUNCTIONS_DIM];
 extern int func_sp;
+
+void free_type(Type t) {
+  return;
+  if (t.dec_spec != 0) {
+    print_ast(t.dec_spec, 0);
+    free_ast(t.dec_spec, 1);
+  }
+  if (t.dec != 0) {
+    // print_ast(t.dec, 0);
+    free_ast(t.dec, 1);
+  }
+}
+
+Type type_copy(Type t) {
+  Type out = {
+    ast_deep_copy(t.dec_spec),
+    ast_deep_copy(t.dec)
+  };
+  return out;
+}
 
 Block g_unary_op(Ast* ast, char* op) {
   Block out = {0, 0};
@@ -199,7 +220,6 @@ Block g_mov(Mem_obj* dest, Mem_obj src) {
     append_format(&out.str,
       "\tmovzx %s, %s\n", d_name.str.str, s_name.str.str);
   }
-
 
   return out;
 }

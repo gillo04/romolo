@@ -86,7 +86,7 @@ Ast m_list(int* i, Ast(*match)(int*), int node_type) {
 
 void free_ast_stack(Ast* ast) {
   int i = 0;
-  while (ast[i].node_type != A_NONE) {
+  while (ast[i].node_type != A_NONE) { 
     free_ast(&ast[i], 0);
     i++;
   }
