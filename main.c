@@ -38,9 +38,7 @@ int main(int argc, char* argv[]) {
 
   // optimizer(&ast);
   // log_msg(INFO, "optimizer finished\n", -1);
-  print_ast(&ast, 0);
-
-  return 0;
+  // print_ast(&ast, 0);
 
   /* TODO:
    * int verified = verify(&ast);
@@ -56,7 +54,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   log_msg(INFO, "code generation finished\n\n", -1);
-  // printf("%s\n", assembly_code);
+  printf("%s\n", assembly_code);
 
   save(argc, argv, assembly_code);
 

@@ -42,7 +42,35 @@ Block integer_promotion(Mem_obj* obj) {
   }
 
   int size = type_sizeof(obj->t);
-  int sign = is_signed(obj->t);
+  if (size < 4) {
+    int to_find = (size == 2) ? A_SHORT : A_CHAR;
+    int i = 0;
+    while (obj->t.dec_spec->a1.ptr[i].node_type == A_NONE) {
+      if (obj->t.dec_spec->a1.ptr[i].node_type == to_find) {
+        obj->t.dec_spec->a1.ptr[i].node_type = A_INT;
+        break;
+      }
+      i++;
+    }
+
+    if (is_signed(obj->t)) {
+      append_format(&out.str,
+        "\tmovsx %s, %s\n",
+        obj->loc.reg->name32,
+        g_name(obj).str.str
+      );
+    } else {
+      append_format(&out.str,
+        "\tmovzx %s, %s\n",
+        obj->loc.reg->name32,
+        g_name(obj).str.str
+      );
+    }
+    obj->size = 4;
+  } else {
+    set_string(&out.str, "");
+  }
+  return out;
 }
 
 Type choose_common_type(Type a, Type b) {

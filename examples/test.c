@@ -1,5 +1,3 @@
-int printf(char*, int);
-
 int main() {
   int a = 1;
   long unsigned int b = 2;

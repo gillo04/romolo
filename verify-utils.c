@@ -65,6 +65,7 @@ int is_signed(Type t) {
     if (t.dec_spec->a1.ptr[i].node_type == A_UNSIGNED) {
       return 0;
     }
+    i++;
   }
   return 1;
 }
