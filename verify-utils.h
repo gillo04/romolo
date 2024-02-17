@@ -9,10 +9,12 @@ enum {
   D_FUNCTION
 };
 
-int type_sizeof(Type t, int ptr_stair);
+int type_sizeof(Type t);
+
+int is_signed(Type t);
 
 // dec is a declaration
-int declaration_type(Ast* dec);
+int is_function_decl(Ast* dec);
 
 int is_array(Type t);
 

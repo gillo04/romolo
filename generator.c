@@ -121,7 +121,7 @@ Block g_parameters(Ast* ast) {
       ast[i].a1.ptr,
       ast[i].a2.ptr
     });
-    var.size = type_sizeof(var.t, 0);
+    var.size = type_sizeof(var.t);
     var.stack_off = -1;
     var.obj = 0;
 
@@ -656,9 +656,7 @@ Block g_ast(Ast* ast) {
      */
     case A_DECLARATION:
       {
-        int decl_type = declaration_type(ast);
-
-        if (decl_type == D_SCALAR) {
+        if (!is_function_decl(ast)) {
           int i = 0;
           while (ast->a2.ptr->a1.ptr[i].node_type != A_NONE) {
             Variable var = {
@@ -669,7 +667,7 @@ Block g_ast(Ast* ast) {
               ast->a1.ptr,
               ast->a2.ptr->a1.ptr[i].a1.ptr
             });
-            var.size = type_sizeof(var.t, 0);
+            var.size = type_sizeof(var.t);
             var.stack_off = -1;
             var.obj = 0;
 
@@ -691,7 +689,7 @@ Block g_ast(Ast* ast) {
             append_string(&out.str, "\n");
             i++;
           }
-        } else if (decl_type == D_FUNCTION) {
+        } else {
           Function func = {
             ast->a2.ptr->a1.ptr->a1.ptr->a2.ptr->a1.ptr->a1.str,
           };
@@ -701,11 +699,9 @@ Block g_ast(Ast* ast) {
             ast->a2.ptr->a1.ptr->a1.ptr
           });
 
-          func.output_size = type_sizeof(func.t, 0);
+          func.output_size = type_sizeof(func.t);
           func_push(func);
           set_string(&out.str, "");
-        } else {
-          log_msg(WARN, "couldn't recognize declaration type\n", -1);
         }
       }
       break;
@@ -974,7 +970,7 @@ Block g_ast(Ast* ast) {
             ast->a1.ptr->a1.ptr,
             ast->a1.ptr->a2.ptr
           });
-          func.output_size = type_sizeof(func.t, 0);
+          func.output_size = type_sizeof(func.t);
           func.defined = 1;
           find = func_push(func);
         } else {

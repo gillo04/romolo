@@ -34,6 +34,24 @@ Type type_copy(Type t) {
   return out;
 }
 
+Block integer_promotion(Mem_obj* obj) {
+  Block out = {0, 0};
+  if (!is_integer(obj->t)) {
+    log_msg(WARN, "cannot perform integer promotion\n", -1);
+    return out;
+  }
+
+  int size = type_sizeof(obj->t);
+  int sign = is_signed(obj->t);
+}
+
+Type choose_common_type(Type a, Type b) {
+
+}
+
+// Converts the type of obj, also generates the needed assembly
+Block convert_type(Mem_obj* obj, Type t);
+
 Block g_unary_op(Ast* ast, char* op) {
   Block out = {0, 0};
   Block s = g_ast(ast->a1.ptr);

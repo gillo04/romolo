@@ -4,16 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int type_sizeof(Type t, int ptr_stair) {
+int type_sizeof(Type t) {
   int size = 0;
 
-  // Descend pointer list
-  Ast* cur = t.dec->a1.ptr;
-  for (int i = 0; i < ptr_stair && cur->node_type != A_NONE; i++) {
-    cur = cur->a2.ptr;
-  }
-
-  if (cur->node_type == A_NONE) {
+  if (t.dec->a1.ptr->node_type == A_NONE) {
     // Count declaration specifiers
     int c_char = 0, c_short = 0, c_int = 0, c_long = 0;
     int i = 0;
@@ -58,21 +52,26 @@ int type_sizeof(Type t, int ptr_stair) {
     i++;
   }
 
-
   return size;
 }
 
-int declaration_type(Ast* dec) {
-  Ast* dd = &dec->a2.ptr->a1.ptr->a1.ptr->a2.ptr->a1.ptr[1];
-  if (dd->node_type == A_NONE) {
-    return D_SCALAR;
-  } else if (dd->node_type == A_ARRAY_DIRECT_DECLARATOR) {
-    return D_ARRAY;
-  } else if (dd->node_type == A_FUNCTION_DIRECT_DECLARATOR) {
-    return D_FUNCTION;
-  }
+int is_signed(Type t) {
+  int i = 0;
+  while (t.dec_spec->a1.ptr[i].node_type != A_NONE) {
+    if (t.dec_spec->a1.ptr[i].node_type == A_SIGNED) {
+      return 1;
+    }
 
-  return D_NONE;
+    if (t.dec_spec->a1.ptr[i].node_type == A_UNSIGNED) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int is_function_decl(Ast* dec) {
+  Ast* dd = &dec->a2.ptr->a1.ptr->a1.ptr->a2.ptr->a1.ptr[1];
+  return dd->node_type == A_FUNCTION_DIRECT_DECLARATOR;
 }
 
 int is_array(Type t) {

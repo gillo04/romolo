@@ -1,11 +1,11 @@
 int printf(char*, int);
 
 int main() {
-  int a = 1234;
-  int ***b = &a;
-
-  printf("%d\n", a);
-  printf("%d\n", *(0+b+0));
+  int a = 1;
+  long unsigned int b = 2;
+  short signed c = 3;
+  signed char d = 4;
+  unsigned char e = 5;
   return 0;
 }
 
