@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   log_msg(INFO, "code generation finished\n\n", -1);
-  printf("%s\n", assembly_code);
+  // printf("%s\n", assembly_code);
 
   save(argc, argv, assembly_code);
 

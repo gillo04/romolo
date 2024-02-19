@@ -74,7 +74,70 @@ Block integer_promotion(Mem_obj* obj) {
 }
 
 Type choose_common_type(Type a, Type b) {
+  if (!is_integer(a) || !is_integer(b)) {
+    log_msg(WARN, "cannot choose common type for non integer types\n", -1);
+    return (Type) {0, 0};
+  }
 
+  int size_a = type_sizeof(a);
+  int size_b = type_sizeof(b);
+
+  int sign_a = is_signed(a);
+  int sign_b = is_signed(b);
+  if (size_a == size_b && sign_a == sign_b) {
+    return type_copy(a);
+  }
+
+  // Equal sign
+  if (sign_a == sign_b) {
+    if (size_a > size_b) {
+      return type_copy(a);
+    } else {
+      return type_copy(b);
+    }
+  }
+
+  // Unsigned grater rank
+  if (size_a >= size_b && !sign_a) {
+    return type_copy(a);
+  }
+
+  if (size_b >= size_a && !sign_b) {
+    return type_copy(b);
+  }
+  
+  // Signed grater rank
+  if (size_a > size_b && sign_a) {
+    return type_copy(a);
+  }
+
+  if (size_b > size_a && sign_b) {
+    return type_copy(b);
+  }
+
+  // Otherwise
+  Type out;
+  if (sign_a) {
+    out = type_copy(a);
+  } else {
+    out = type_copy(b);
+  }
+
+  int i = 0;
+  int found = 0;
+  while (out.dec_spec->a1.ptr[i].node_type == A_NONE) {
+    if (out.dec_spec->a1.ptr[i].node_type == A_SIGNED) {
+      out.dec_spec->a1.ptr[i].node_type = A_UNSIGNED;
+      found = 1;
+      break;
+    }
+    i++;
+  }
+  if (!found) {
+    out.dec_spec->a1.ptr = realloc(out.dec_spec->a1.ptr, sizeof(Ast) * (i+2));
+    out.dec_spec->a1.ptr[i].node_type = A_UNSIGNED;
+    out.dec_spec->a1.ptr[i+1].node_type = A_NONE;
+  }
 }
 
 // Converts the type of obj, also generates the needed assembly
