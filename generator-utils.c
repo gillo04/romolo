@@ -45,7 +45,7 @@ Block integer_promotion(Mem_obj* obj) {
   if (size < 4) {
     int to_find = (size == 2) ? A_SHORT : A_CHAR;
     int i = 0;
-    while (obj->t.dec_spec->a1.ptr[i].node_type == A_NONE) {
+    while (obj->t.dec_spec->a1.ptr[i].node_type != A_NONE) {
       if (obj->t.dec_spec->a1.ptr[i].node_type == to_find) {
         obj->t.dec_spec->a1.ptr[i].node_type = A_INT;
         break;
@@ -101,7 +101,6 @@ Type choose_common_type(Type a, Type b) {
   if (size_a >= size_b && !sign_a) {
     return type_copy(a);
   }
-
   if (size_b >= size_a && !sign_b) {
     return type_copy(b);
   }
@@ -110,7 +109,6 @@ Type choose_common_type(Type a, Type b) {
   if (size_a > size_b && sign_a) {
     return type_copy(a);
   }
-
   if (size_b > size_a && sign_b) {
     return type_copy(b);
   }
@@ -141,7 +139,46 @@ Type choose_common_type(Type a, Type b) {
 }
 
 // Converts the type of obj, also generates the needed assembly
-Block convert_type(Mem_obj* obj, Type t);
+Block convert_type(Mem_obj* obj, Type t) {
+  Block out = {0, 0};
+  // The same
+  if (type_sizeof(obj->t) == type_sizeof(t) && is_signed(obj->t) == is_signed(t)) {
+    set_string(&out.str, "");
+    return out;
+  }
+
+  // Truncate 
+  if (type_sizeof(obj->t) >= type_sizeof(t)) {
+    Mem_obj old = *obj;
+    free_type(obj->t);
+    obj->t = type_copy(t);
+    obj->size = type_sizeof(t);
+
+    append_string(&out.str, g_mov(obj, old).str.str);
+    return out;
+  }
+
+  // Extend
+  Mem_obj old = *obj;
+  free_type(obj->t);
+  obj->t = type_copy(t);
+  obj->size = type_sizeof(t);
+
+  if (is_signed(old.t)) {
+    append_format(&out.str,
+      "\tmovsx %s, %s\n",
+      g_name(obj).str.str,
+      g_name(&old).str.str
+    );
+  } else {
+    append_format(&out.str,
+      "\tmovzx %s, %s\n",
+      g_name(obj).str.str,
+      g_name(&old).str.str
+    );
+  }
+  return out;
+}
 
 Block g_unary_op(Ast* ast, char* op) {
   Block out = {0, 0};
@@ -171,26 +208,30 @@ Block g_binary_op(Ast* ast, char* op) {
   Block out = {0, 0};
   Block l = g_ast(ast->a1.ptr);
   CHECK(l.str);
+  Block l_prom = integer_promotion(l.result);
 
   Block r = g_ast(ast->a2.ptr);
   CHECK(r.str);
   r_lock(r.result);
+  Block r_prom = integer_promotion(r.result);
 
-  // Drop to smalest
-  fix_size(l.result, r.result);
+  Type common_type = choose_common_type(l.result->t, r.result->t);
+  Block l_conv = convert_type(l.result, common_type);
+  Block r_conv = convert_type(r.result, common_type);
+
   append_format(&out.str,
-    "%s"
-    "%s"
+    "%s%s%s"
+    "%s%s%s"
     "\t%s %s, %s\n",
     l.str.str,
+    l_prom.str.str,
+    l_conv.str.str,
+
     r.str.str,
+    r_prom.str.str,
+    r_conv.str.str,
     op, g_name(l.result).str.str, g_name(r.result).str.str
   );
-
-  // Chose type
-  // apply_conversion(&out.result, l.result, r.result);
-  /*out.result->dec_spec = ast_deep_copy(var->dec_spec);
-  out.result->dec = ast_deep_copy(var->dec);*/
 
   r_free(r.result);
   out.result = l.result;

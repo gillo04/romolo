@@ -1,3 +1,4 @@
+#include "parser-utils.h"
 #include "generator.h"
 #include "generator-utils.h"
 #include "memory-manager.h"
@@ -166,7 +167,7 @@ Block g_ast(Ast* ast) {
       break;
     case A_CONSTANT:
       {
-        out = r_alloc(8);
+        out = r_alloc(4);
 
         Block ld = r_load(out.result);
         append_string(&out.str, ld.str.str);
@@ -174,6 +175,30 @@ Block g_ast(Ast* ast) {
           "\tmov %s, %lld\n",
           g_name(out.result).str.str, ast->a1.num
         );
+
+        // Build integer type
+        // TODO: check if size of constant matches int
+        Type t;
+
+        Ast dec_spec = {A_DECLARATION_SPECIFIERS};
+        dec_spec.a1.ptr = (Ast*) malloc(sizeof(Ast) * 2);
+
+        Ast int_ast = {A_INT};
+        Ast none_ast = {A_NONE};
+        dec_spec.a1.ptr[0] = int_ast;
+        dec_spec.a1.ptr[1] = none_ast;
+        astcpy(&t.dec_spec, dec_spec);
+
+        Ast dec = {A_DECLARATOR};
+        astcpy(&dec.a1.ptr, none_ast);
+        Ast dd_ast = {A_DIRECT_DECLARATOR};
+        dd_ast.a1.ptr = (Ast*) malloc(sizeof(Ast) * 2);
+        dd_ast.a1.ptr[0] = none_ast;
+        dd_ast.a1.ptr[1] = none_ast;
+        astcpy(&dec.a2.ptr, dd_ast);
+        astcpy(&t.dec, dec);
+
+        out.result->t = t;
       }
       break;
     case A_STRING_LITERAL:
@@ -342,6 +367,7 @@ Block g_ast(Ast* ast) {
           }
         }
 
+        out.result->t = type_copy(func->t);
       }
       break;
 

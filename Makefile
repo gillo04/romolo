@@ -13,4 +13,5 @@ all:
 
 valgrind:
 	gcc -g -Og -o romolo *.c
-	valgrind --leak-check=full ./romolo examples/$(example_name).c examples/$(example_name).s
+	valgrind ./romolo examples/$(example_name).c examples/$(example_name).s
+	#valgrind --leak-check=full ./romolo examples/$(example_name).c examples/$(example_name).s

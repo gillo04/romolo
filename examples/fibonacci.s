@@ -17,22 +17,22 @@ main:
 	mov rbp, rsp
 
 	mov rax, lit_0
-	mov rbx, 0
-	mov rcx, 0
+	mov ebx, 0
+	mov ecx, 0
 	mov rdi, rax
-	mov rsi, rbx
-	mov rdx, rcx
+	mov esi, ebx
+	mov edx, ecx
 	call printf
 
 	sub rsp, 2
-	mov rax, 0
+	mov eax, 0
 	mov word [rbp - 2], ax
 
 
 loop_1:
 loop_cond_1:
 	mov ax, word [rbp - 2]
-	mov rbx, 10
+	mov ebx, 10
 	cmp ax, bx
 	setle al
 	and ax, 1
@@ -66,7 +66,7 @@ loop_cond_1:
 loop_end_1:
 
 	add rsp, 2
-	mov rax, 0
+	mov eax, 0
 	mov rsp, rbp
 	pop rbp
 	ret
@@ -78,7 +78,7 @@ fib:
 	mov word [rbp - 2], di
 
 	mov ax, word [rbp - 2]
-	mov rbx, 2
+	mov ebx, 2
 	cmp ax, bx
 	setl al
 	and ax, 1
@@ -90,16 +90,18 @@ fib:
 	ret
 if_end_3:
 	mov ax, word [rbp - 2]
-	mov rbx, 1
-	sub ax, bx
-	mov di, ax
+	movsx eax, ax
+	mov ebx, 1
+	sub eax, ebx
+	mov edi, eax
 	sub rsp, 14
 	call fib
 	add rsp, 14
 	mov bx, word [rbp - 2]
-	mov rcx, 2
-	sub bx, cx
-	mov di, bx
+	movsx ebx, bx
+	mov ecx, 2
+	sub ebx, ecx
+	mov edi, ebx
 	mov ecx, eax
 	mov eax, ebx
 	push rcx
