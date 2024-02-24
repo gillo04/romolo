@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 
   // optimizer(&ast);
   // log_msg(INFO, "optimizer finished\n", -1);
-  // print_ast(&ast, 0);
+  print_ast(&ast, 0);
 
   /* TODO:
    * int verified = verify(&ast);

@@ -85,6 +85,7 @@ fib:
 	cmp ax, 0
 	je if_end_3
 	mov ax, word [rbp - 2]
+	movsx eax, ax
 	mov rsp, rbp
 	pop rbp
 	ret

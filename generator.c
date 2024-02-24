@@ -21,6 +21,8 @@ int label_count = 0;
 String data_section = {0};
 String extern_section = {0};
 
+Function* current_func;
+
 void label_push() {
   label_stack[lab_sp] = label_count;
   lab_sp++;
@@ -965,11 +967,15 @@ Block g_ast(Ast* ast) {
         out = g_ast(ast->a1.ptr);
         CHECK(out.str);
 
+        Block convert = convert_type(out.result, get_return_type(current_func->t));
+
         append_format(&out.str, 
+          "%s"
           "%s"
           "\tmov rsp, rbp\n"
           "\tpop rbp\n"
           "\tret\n",
+          convert.str.str,
           r_move(out.result, 1).str.str
         );
 
@@ -1007,6 +1013,7 @@ Block g_ast(Ast* ast) {
           });
           find->defined = 1;
         }
+        current_func = find;
 
         Block para = g_parameters(ast->a1.ptr->a2.ptr->a2.ptr->a1.ptr[1].a1.ptr->a1.ptr);
         CHECK(para.str);
@@ -1073,6 +1080,7 @@ Block g_ast(Ast* ast) {
 char* generator(Ast* ast) {
   lab_sp = 0;
   label_count = 0;
+  current_func = 0;
   init_memory();
 
   Block out = g_ast(ast);

@@ -1,6 +1,7 @@
+#include "verify-utils.h"
 #include "log.h" 
 #include "parser-utils.h"
-#include "verify-utils.h"
+#include "generator-utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -110,6 +111,15 @@ void prune_pointer(Type t) {
   
   free_ast(prev, 0);
   prev->node_type = A_NONE;
+}
+
+Type get_return_type(Type t) {
+  // TODO: include array return types (?)
+  Type out = type_copy(t);
+  free_ast(&out.dec->a2.ptr->a1.ptr[1], 0);
+  out.dec->a2.ptr->a1.ptr[1].node_type = A_NONE;
+
+  return out;
 }
 
 Ast* ast_stack_deep_copy(Ast* ast) {
