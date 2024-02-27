@@ -1,9 +1,11 @@
+int printf(char*, int);
+
 int main() {
-  int a = 1;
-  long unsigned int b = 2;
-  short signed c = 3;
-  signed char d = 4;
-  unsigned char e = 5;
+  int a = 1234;
+  int *b = &a;
+  int **c = &b;
+
+  printf("%d\n", **c);
   return 0;
 }
 

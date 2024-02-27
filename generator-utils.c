@@ -207,10 +207,18 @@ void fix_size(Mem_obj* l, Mem_obj* r) {
 Block g_binary_op(Ast* ast, char* op) {
   Block out = {0, 0};
   Block l = g_ast(ast->a1.ptr);
+  if (is_pointer(l.result->t)) {
+    log_msg(ERROR, "cannot perform pointer arithmetic yet\n", -1);
+    return out;
+  }
   CHECK(l.str);
   Block l_prom = integer_promotion(l.result);
 
   Block r = g_ast(ast->a2.ptr);
+  if (is_pointer(r.result->t)) {
+    log_msg(ERROR, "cannot perform pointer arithmetic yet\n", -1);
+    return out;
+  }
   CHECK(r.str);
   r_lock(r.result);
   Block r_prom = integer_promotion(r.result);

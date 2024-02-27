@@ -206,25 +206,37 @@ Block g_ast(Ast* ast) {
     case A_STRING_LITERAL:
       {
         append_format(&data_section,
-          "lit_%d db \"",
+          "lit_%d db ",
           label_count
         );
 
         // Decode string
         int i = 0;
+        int first_char = 1;
         while (ast->a1.str[i] != 0) {
           if (ast->a1.str[i] >= ' ') {
+            if (first_char) {
+              append_char(&data_section, '\"');
+              first_char = 0;
+            }
             append_char(&data_section, ast->a1.str[i]);
           } else {
+            if (!first_char) {
+              append_string(&data_section, "\", ");
+              first_char = 1;
+            }
             append_format(&data_section,
-              "\", %d, \"",
+              "%d, ",
               ast->a1.str[i]
             );
           }
           i++;
         }
+        if (!first_char) {
+          append_string(&data_section, "\", ");
+        }
         append_format(&data_section,
-          "\", 0\n"
+          " 0\n"
         );
 
         out = r_alloc(8);
@@ -294,15 +306,14 @@ Block g_ast(Ast* ast) {
         Block block = g_ast(ast->a1.ptr);
         CHECK(block.str);
 
-        if (block.result->t.dec != 0) {
-          print_ast(block.result->t.dec, 0);
-        }
+        prune_pointer(block.result->t);
+        int size = type_sizeof(block.result->t);
+        Block reg = r_alloc(size);
+        reg.result->t = type_copy(block.result->t);
 
-        // int size = type_sizeof();
-        Block reg = r_alloc(4);
         append_format(&out.str,
           "%s"
-          "\tmov %s, dword [%s]\n",
+          "\tmov %s, [%s]\n",
           block.str.str,
           g_name(reg.result).str.str,
           g_name(block.result).str.str
@@ -967,7 +978,9 @@ Block g_ast(Ast* ast) {
         out = g_ast(ast->a1.ptr);
         CHECK(out.str);
 
-        Block convert = convert_type(out.result, get_return_type(current_func->t));
+        Type conv = get_return_type(current_func->t);
+        Block convert = convert_type(out.result, conv);
+        free_type(conv);
 
         append_format(&out.str, 
           "%s"
