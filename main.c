@@ -36,8 +36,8 @@ int main(int argc, char* argv[]) {
   }  
   log_msg(INFO, "parser finished\n", -1);
 
-  // optimizer(&ast);
-  // log_msg(INFO, "optimizer finished\n", -1);
+  optimizer(&ast);
+  log_msg(INFO, "optimizer finished\n", -1);
   // print_ast(&ast, 0);
 
   /* TODO:

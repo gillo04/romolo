@@ -262,11 +262,28 @@ Block g_ast(Ast* ast) {
       out = g_unary_op(ast, "dec");
       break;*/
     case A_ARRAY_SUBSCRIPT:
-      printf("ARRAY SUBSCRIPT\n");
-      print_ast(ast->a1.ptr, indent+1);
-      for (int i = 0; i < indent; i++) printf("  ");
-      printf("AT INDEX\n");
-      print_ast(ast->a2.ptr, indent+1);
+      {
+        Block block = g_ast(ast->a1.ptr);
+        CHECK(block.str);
+
+        long long index = ast->a2.ptr->a1.num;
+
+        prune_pointer(block.result->t);
+        int size = type_sizeof(block.result->t);
+        Block reg = r_alloc(size);
+        reg.result->t = type_copy(block.result->t);
+
+        append_format(&out.str,
+          "%s"
+          "\tmov %s, [%s + %d * %lld]\n",
+          block.str.str,
+          g_name(reg.result).str.str,
+          g_name(block.result).str.str,
+          size, index
+        );
+        r_free(block.result);
+        out.result = reg.result;
+      }
       break;
     case A_PRE_INCREMENT:
       {

@@ -154,6 +154,10 @@ int solve_constant_exp(Ast* ast) {
         }
       }
       return 0;
+    case A_ARRAY_SUBSCRIPT:
+      solve_constant_exp(ast->a1.ptr);
+      solve_constant_exp(ast->a2.ptr);
+      break;
     case A_MULTIPLICATION:
     case A_DIVISION:
     case A_MODULO:

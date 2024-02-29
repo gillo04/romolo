@@ -98,6 +98,7 @@ int is_integer(Type t) {
 }
 
 void prune_pointer(Type t) {
+  // TODO: must also prune arrays
   Ast* prev = 0;
   Ast* cur = t.dec->a1.ptr;
   if (cur->node_type == A_NONE) {
