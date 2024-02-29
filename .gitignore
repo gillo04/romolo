@@ -1,1 +1,3 @@
 standard-notes.md
+examples/*.s
+!*.*
