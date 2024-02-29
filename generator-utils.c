@@ -15,13 +15,10 @@ extern Function functions[FUNCTIONS_DIM];
 extern int func_sp;
 
 void free_type(Type t) {
-  return;
   if (t.dec_spec != 0) {
-    print_ast(t.dec_spec, 0);
     free_ast(t.dec_spec, 1);
   }
   if (t.dec != 0) {
-    // print_ast(t.dec, 0);
     free_ast(t.dec, 1);
   }
 }
@@ -159,22 +156,25 @@ Block convert_type(Mem_obj* obj, Type t) {
   }
 
   // Extend
-  Mem_obj old = *obj;
+  Type old_type = type_copy(obj->t);
+  Mem_obj old_obj = *obj;
   free_type(obj->t);
+  old_obj.t = old_type;
+
   obj->t = type_copy(t);
   obj->size = type_sizeof(t);
 
-  if (is_signed(old.t)) {
+  if (is_signed(old_obj.t)) {
     append_format(&out.str,
       "\tmovsx %s, %s\n",
       g_name(obj).str.str,
-      g_name(&old).str.str
+      g_name(&old_obj).str.str
     );
   } else {
     append_format(&out.str,
       "\tmovzx %s, %s\n",
       g_name(obj).str.str,
-      g_name(&old).str.str
+      g_name(&old_obj).str.str
     );
   }
   return out;

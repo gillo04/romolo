@@ -387,7 +387,6 @@ Function* func_find(char* name) {
       return &functions[i];
     }
   }
-  log_msg(WARN, "couldn't find function name\n", -1);
   return 0;
 }
 

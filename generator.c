@@ -773,6 +773,8 @@ Block g_ast(Ast* ast) {
     case A_COMPOUND_STATEMENT:
       var_push_stack_frame();
       out = g_ast_stack(ast->a1.ptr);
+      r_free(out.result);
+      out.result = 0;
       append_string(&out.str, var_pop_stack_frame().str.str);
       break;
     case A_NULL_STATEMENT:
@@ -797,7 +799,6 @@ Block g_ast(Ast* ast) {
         // Generate true branch
         Block t = g_ast(ast->a2.ptr);
         CHECK(t.str);
-        r_free(t.result);
         
         append_format(&out.str,
           "%s"
@@ -993,6 +994,7 @@ Block g_ast(Ast* ast) {
         );
 
         r_free(out.result);
+        out.result = 0;
       }
       break;
     case A_EXPRESSION_STATEMENT:

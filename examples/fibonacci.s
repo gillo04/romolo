@@ -2,8 +2,8 @@ bits 64
 extern printf
 
 section .data
-lit_0 db "Fibonacci sequence from 0 to 10:", 10, "", 0
-lit_2 db "%hu: %d", 10, "", 0
+lit_0 db "Fibonacci sequence from 0 to 10:", 10,  0
+lit_2 db "%hu: %d", 10,  0
 
 section .text
 global _start

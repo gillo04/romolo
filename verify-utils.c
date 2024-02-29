@@ -58,6 +58,7 @@ int type_sizeof(Type t) {
 
 int is_signed(Type t) {
   int i = 0;
+
   while (t.dec_spec->a1.ptr[i].node_type != A_NONE) {
     if (t.dec_spec->a1.ptr[i].node_type == A_SIGNED) {
       return 1;
