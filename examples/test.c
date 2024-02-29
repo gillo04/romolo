@@ -5,7 +5,7 @@ int main() {
   int *b = &a;
   int **c = &b;
 
-  printf("%d\n", **c);
+  printf("%d\n", *&a);
   return 0;
 }
 

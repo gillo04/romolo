@@ -30,11 +30,11 @@ main:
 	mov qword [rbp - 20], rax
 
 	mov rax, lit_0
-	mov rbx, qword [rbp - 20]
-	mov rcx, [rbx]
-	mov ebx, [rcx]
+	mov rbx, rbp
+	sub rbx, 4
+	mov ecx, [rbx]
 	mov rdi, rax
-	mov esi, ebx
+	mov esi, ecx
 	sub rsp, 12
 	call printf
 	add rsp, 12

@@ -290,6 +290,9 @@ Block g_ast(Ast* ast) {
         CHECK(block.str);
 
         Block reg = r_alloc(8);
+        reg.result->t = type_copy(block.result->t);
+        attach_pointer(reg.result->t);
+
         append_format(&out.str,
           "\tmov %s, rbp\n"
           "\tsub %s, %d\n",

@@ -114,6 +114,17 @@ void prune_pointer(Type t) {
   prev->node_type = A_NONE;
 }
 
+void attach_pointer(Type t) {
+  Ast* cur = t.dec->a1.ptr;
+  while (cur->node_type != A_NONE) {
+    cur = cur->a2.ptr;
+  }
+
+  cur->node_type = A_POINTER;
+  astcpy(&cur->a1.ptr, (Ast) {A_NONE});
+  astcpy(&cur->a2.ptr, (Ast) {A_NONE});
+}
+
 Type get_return_type(Type t) {
   // TODO: include array return types (?)
   Type out = type_copy(t);

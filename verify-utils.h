@@ -24,6 +24,8 @@ int is_integer(Type t);
 
 void prune_pointer(Type t);
 
+void attach_pointer(Type t);
+
 Type get_return_type(Type t);
 
 // Makes a deep copy of ast
