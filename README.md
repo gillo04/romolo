@@ -5,7 +5,16 @@ Romolo is a simple C compiler I'm building to better understand the C language. 
 This compiler was written referencing directly the C11 standard. I have very little prior compiler theory knowledge, so don't take what I have written as an example of how things should be done.
  
 # State of the project
-I'm working on code generation. Right now the priority is getting a decent declaration generator. After this, I will start to think about validating the output of the parser and fixing the infinite memory leaks.
+Currently the compiler can generate code for:
+- Arithmetic expressions
+- Conditional statements
+- Iteration statements
+- Integer and pointer declarations
+- Function declaration and definition
+- Basic pointer operations
+
+To get a better taste of what the compiler is capable of, take a look at the `examples/` folder.
+Right now I'm working on implementing arrays. After this, a major missing part of the compiler is verification of the AST produced by the parser, not to speak of the infinite memory leaks in the generator.
 
 # Building and running
 To build the compiler execute the command
