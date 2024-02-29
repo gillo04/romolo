@@ -263,10 +263,11 @@ Block g_ast(Ast* ast) {
       break;*/
     case A_ARRAY_SUBSCRIPT:
       {
+        Block index = g_ast(ast->a2.ptr);
+        CHECK(index.str);
+
         Block block = g_ast(ast->a1.ptr);
         CHECK(block.str);
-
-        long long index = ast->a2.ptr->a1.num;
 
         prune_pointer(block.result->t);
         int size = type_sizeof(block.result->t);
@@ -275,11 +276,16 @@ Block g_ast(Ast* ast) {
 
         append_format(&out.str,
           "%s"
-          "\tmov %s, [%s + %d * %lld]\n",
+          "%s"
+          "\tmovsx %s, %s\n"
+          "\tmov %s, [%s + %d * %s]\n",
+          index.str.str,
           block.str.str,
+          index.result->loc.reg->name64,
+          g_name(index.result).str.str,
           g_name(reg.result).str.str,
           g_name(block.result).str.str,
-          size, index
+          size, index.result->loc.reg->name64
         );
         r_free(block.result);
         out.result = reg.result;
