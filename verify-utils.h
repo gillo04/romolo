@@ -30,3 +30,5 @@ Type get_return_type(Type t);
 
 // Makes a deep copy of ast
 Ast* ast_deep_copy(Ast* ast);
+
+Type type_compiler(char* str);

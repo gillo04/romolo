@@ -180,26 +180,7 @@ Block g_ast(Ast* ast) {
 
         // Build integer type
         // TODO: check if size of constant matches int
-        Type t;
-
-        Ast dec_spec = {A_DECLARATION_SPECIFIERS};
-        dec_spec.a1.ptr = (Ast*) malloc(sizeof(Ast) * 2);
-
-        Ast int_ast = {A_INT};
-        Ast none_ast = {A_NONE};
-        dec_spec.a1.ptr[0] = int_ast;
-        dec_spec.a1.ptr[1] = none_ast;
-        astcpy(&t.dec_spec, dec_spec);
-
-        Ast dec = {A_DECLARATOR};
-        astcpy(&dec.a1.ptr, none_ast);
-        Ast dd_ast = {A_DIRECT_DECLARATOR};
-        dd_ast.a1.ptr = (Ast*) malloc(sizeof(Ast) * 2);
-        dd_ast.a1.ptr[0] = none_ast;
-        dd_ast.a1.ptr[1] = none_ast;
-        astcpy(&dec.a2.ptr, dd_ast);
-        astcpy(&t.dec, dec);
-
+        Type t = type_compiler("int foo;");
         out.result->t = t;
       }
       break;
@@ -285,9 +266,11 @@ Block g_ast(Ast* ast) {
           g_name(index.result).str.str,
           g_name(reg.result).str.str,
           g_name(block.result).str.str,
-          size, index.result->loc.reg->name64
+          size,
+          index.result->loc.reg->name64
         );
         r_free(block.result);
+        r_free(index.result);
         out.result = reg.result;
       }
       break;

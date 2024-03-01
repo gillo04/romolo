@@ -1,5 +1,7 @@
 #include "verify-utils.h"
 #include "log.h" 
+#include "parser.h"
+#include "parser-declaration.h"
 #include "parser-utils.h"
 #include "generator-utils.h"
 #include <stdio.h>
@@ -490,5 +492,29 @@ Ast* ast_deep_copy(Ast* ast) {
       printf("\tCouldn't recognize type %d\n", ast->node_type);
   }
 
+  return out;
+}
+
+Type type_compiler(char* str) {
+  Type out = {0, 0};
+  Token* tokens = lexer(str);
+  if (tokens == 0) {
+    log_msg(ERROR, "error lexing in type_compiler\n", -1);
+    return out;
+  }
+
+  int i = 0;
+  init_parser(tokens, str);
+  Ast ast = m_declaration(&i);
+  if (ast.node_type == 0) {
+    log_msg(ERROR, "error parsing in type_compiler\n", -1);
+    return out;
+  }
+  
+  out = type_copy((Type) {
+    ast.a1.ptr,
+    ast.a2.ptr->a1.ptr[0].a1.ptr
+  });
+  free_ast(&ast, 0);
   return out;
 }

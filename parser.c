@@ -101,10 +101,14 @@ Ast m_translation_unit(int* i) {
   return out;
 }
 
-Ast parser(Token* tokens, char* source) {
+void init_parser(Token* tokens, char* source) {
   toks = tokens;
   src = source;
   error_flag = 0;
+}
+
+Ast parser(Token* tokens, char* source) {
+  init_parser(tokens, source);
 
   int i = 0;
   Ast out = m_translation_unit(&i);

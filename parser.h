@@ -160,4 +160,6 @@ struct s_ast {
   Arg a3;
 };
 
+void init_parser(Token* tokens, char* source);
+
 Ast parser(Token* tokens, char* source);
